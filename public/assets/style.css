@@ -210,6 +210,8 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;letter-spacin
 .step:hover .step-n{transform:rotate(0) translateY(-6px)}
 .step h3{font-size:1.4rem;margin-bottom:8px}
 .step p{color:rgba(247,241,227,.8);max-width:300px;margin:0 auto;font-size:.98rem}
+.step a{color:var(--gold-2);font-weight:700;text-decoration:underline}
+.avatar-cta{text-align:center;margin:-28px 0 28px}
 
 /* pricing */
 .trial{max-width:860px;margin:0 auto 34px;display:flex;align-items:center;gap:24px;background:linear-gradient(120deg,var(--paper),var(--cream-2));border:2px dashed var(--gold);border-radius:var(--r);padding:20px 28px}

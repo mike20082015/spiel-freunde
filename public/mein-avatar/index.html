@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mein Avatar · Spiel-Freunde</title>
+<meta name="description" content="Leg Deinen Namen und Dein Gesicht für den Stammtisch fest. Das Foto bleibt auf Deinem Gerät.">
+<link rel="icon" href="/assets/variante-a-favicon-dunkel.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/variante-a-favicon-dunkel-32.png" sizes="32x32" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<link rel="stylesheet" href="avatar.css">
+</head>
+<body class="ava-page">
+<header class="nav">
+  <div class="wrap nav-in">
+    <div class="nav-brand">
+      <a class="logo" href="/" aria-label="Spiel-Freunde Startseite"><img src="/assets/variante-a-lockup-dunkel-web.svg" alt="Spiel-Freunde" width="796" height="175"></a>
+      <span class="preview-badge">Vorschau</span>
+    </div>
+    <nav class="nav-links" aria-label="Hauptnavigation">
+      <a href="/skat/">Skat spielen</a>
+      <a href="/spielpartner/">Mitspieler</a>
+      <a href="/mein-avatar/" aria-current="page">Mein Avatar</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn btn-gold btn-sm" href="/skat/">An den Tisch</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="ava-hero">
+    <p class="kicker"><span class="dot"></span> Dein Platz am Tisch</p>
+    <h1>Mein Avatar</h1>
+    <p class="lead">Setz Dich mit Deinem Namen und Deinem Gesicht zu Horst und Margarethe. Ein echtes Foto, ein gezeichnetes Gesicht oder ein fertiges Bild.</p>
+    <p class="privacy">Dein Foto bleibt auf deinem Gerät.</p>
+  </section>
+
+  <div class="ava-layout">
+    <aside class="ava-card ava-now" aria-label="So sitzt Du gerade am Tisch">
+      <div class="now-face" id="now-face">Du</div>
+      <div>
+        <p class="now-name" id="now-name">Du</p>
+        <p class="now-kind" id="now-kind">Noch kein eigenes Bild</p>
+        <button class="btn-danger" type="button" id="btn-delete">Avatar löschen</button>
+      </div>
+    </aside>
+
+    <form class="ava-card" id="avatar-form">
+      <h2>So sollen sie Dich nennen</h2>
+      <label class="field">Dein Name am Tisch
+        <input id="player-name" name="name" type="text" maxlength="24" autocomplete="nickname" placeholder="Zum Beispiel Micha">
+      </label>
+
+      <div class="mode-switch" role="tablist" aria-label="Art des Bildes">
+        <button type="button" id="tab-photo" role="tab" aria-selected="true" aria-controls="panel-photo">Echtes Foto</button>
+        <button type="button" id="tab-ki" role="tab" aria-selected="false" aria-controls="panel-ki">KI-Gesicht</button>
+      </div>
+
+      <section class="panel" id="panel-photo" role="tabpanel" aria-labelledby="tab-photo">
+        <p class="hint">Lade ein Bild hoch oder mach ein Selfie. Danach ziehst Du es zurecht und stellst die Größe ein. Wir behalten nur ein kleines Quadrat.</p>
+        <div class="file-row">
+          <label class="btn btn-outline">Foto auswählen
+            <input id="file-upload" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+          </label>
+          <label class="btn btn-outline">Selfie aufnehmen
+            <input id="file-selfie" type="file" accept="image/jpeg,image/png,image/webp" capture="user" hidden>
+          </label>
+        </div>
+        <div class="crop-wrap" id="crop-wrap" hidden>
+          <div class="crop-frame" id="crop-frame">
+            <canvas id="crop-canvas" width="512" height="512" aria-label="Ausschnitt, zum Ziehen und Vergrößern"></canvas>
+          </div>
+          <div class="zoom">
+            <label for="crop-zoom">Größe</label>
+            <input id="crop-zoom" type="range" min="1" max="3" step="0.01" value="1">
+            <p class="hint">Zieh das Bild mit dem Finger oder der Maus.</p>
+            <button class="btn btn-gold" type="button" id="btn-save-photo">Foto so speichern</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-ki" role="tabpanel" aria-labelledby="tab-ki" hidden>
+        <p class="hint">Beschreib ein freundliches, erfundenes Gesicht für die Kneipe. Echte Personen, Kinder und Nacktheit gehen nicht.</p>
+        <label class="field">Typ <span style="font-weight:500;color:var(--ink-2)">(optional)</span>
+          <select id="ki-typ" name="typ">
+            <option value="">Egal</option>
+            <option value="frau">Frau</option>
+            <option value="mann">Mann</option>
+            <option value="divers">Divers</option>
+          </select>
+        </label>
+        <label class="field">Alter
+          <select id="ki-alter" name="alter" required>
+            <option value="30-44" selected>30 bis 44</option>
+            <option value="18-29">18 bis 29</option>
+            <option value="45-59">45 bis 59</option>
+            <option value="60-74">60 bis 74</option>
+            <option value="75+">75 oder älter</option>
+          </select>
+        </label>
+        <label class="field">Haare
+          <select id="ki-haare" name="haare">
+            <option value="">Egal</option>
+            <option value="kurz">Kurz</option>
+            <option value="lang">Lang</option>
+            <option value="lockig">Lockig</option>
+            <option value="glatze">Glatze</option>
+            <option value="grau">Grau</option>
+            <option value="blond">Blond</option>
+            <option value="dunkel">Dunkel</option>
+            <option value="rot">Rot</option>
+          </select>
+        </label>
+        <label class="field">Brille
+          <select id="ki-brille" name="brille">
+            <option value="">Egal</option>
+            <option value="ja">Ja</option>
+            <option value="nein">Nein</option>
+          </select>
+        </label>
+        <label class="field">Stil und Stimmung
+          <select id="ki-stimmung" name="stimmung">
+            <option value="gemuetlich">Gemütlich</option>
+            <option value="">Egal</option>
+            <option value="froh">Fröhlich</option>
+            <option value="nachdenklich">Nachdenklich</option>
+            <option value="schick">Schick</option>
+            <option value="verschmitzt">Verschmitzt</option>
+          </select>
+        </label>
+        <label class="field">Noch etwas zum Aussehen
+          <textarea id="ki-text" name="text" maxlength="180" placeholder="Zum Beispiel Sommersprossen, Bart, rote Strickjacke."></textarea>
+        </label>
+        <div class="row-actions">
+          <button class="btn btn-gold" type="button" id="btn-draw">Gesicht zeichnen</button>
+        </div>
+        <div class="gen-preview" id="gen-preview" hidden>
+          <img id="gen-img" alt="Gezeichnetes Gesicht, noch nicht gespeichert">
+          <button class="btn btn-wine" type="button" id="btn-save-gen">Dieses Gesicht speichern</button>
+        </div>
+      </section>
+
+      <h2 style="margin-top:22px">Fertige Bilder</h2>
+      <p class="hint">Wenn Du kein Foto möchtest oder das Zeichnen gerade nicht geht.</p>
+      <div class="presets" id="presets">
+        <button class="preset" type="button" data-preset="karten"><img src="/assets/avatars/karten.svg" alt="">Karten-König</button>
+        <button class="preset" type="button" data-preset="perlen"><img src="/assets/avatars/perlen.svg" alt="">Perlen</button>
+        <button class="preset" type="button" data-preset="muetze"><img src="/assets/avatars/muetze.svg" alt="">Schiebermütze</button>
+        <button class="preset" type="button" data-preset="sonne"><img src="/assets/avatars/sonne.svg" alt="">Sonnenschein</button>
+      </div>
+
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <p class="links"><a href="/skat/">Zum Skattisch</a><a href="/spielpartner/">Zu den Mitspielern</a></p>
+    </form>
+  </div>
+</main>
+<script src="/assets/avatar-store.js"></script>
+<script src="avatar.js"></script>
+</body>
+</html>
