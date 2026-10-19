@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Illustriertes Gesicht mit Schiebermütze">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3d4a3a"/>
+      <stop offset="1" stop-color="#1c241c"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8b892"/>
+      <stop offset="1" stop-color="#c98960"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" fill="url(#bg)"/>
+  <path d="M46 160c6-20 102-20 108 0v40H46z" fill="#2c3a44"/>
+  <ellipse cx="100" cy="118" rx="48" ry="52" fill="url(#skin)"/>
+  <path d="M40 86c8-28 112-30 124 4 4 12-8 16-20 12-8-20-76-22-88-2-6 8-16 6-16-14z" fill="#3a4650"/>
+  <path d="M36 96c30 16 98 16 132 0 2 8-8 14-16 12-28 10-74 10-102 0-8 2-16-4-14-12z" fill="#2a3440"/>
+  <ellipse cx="82" cy="116" rx="5" ry="6" fill="#241c16"/>
+  <ellipse cx="118" cy="116" rx="5" ry="6" fill="#241c16"/>
+  <path d="M92 132h16" stroke="#a86a50" stroke-width="3" stroke-linecap="round"/>
+  <path d="M78 148c8 12 36 14 48 2" fill="none" stroke="#8d5340" stroke-width="3" stroke-linecap="round"/>
+  <path d="M70 150c6 10 10 16 8 24M130 150c-4 10-8 16-6 24" fill="none" stroke="#d7a07a" stroke-width="6" stroke-linecap="round"/>
+</svg>

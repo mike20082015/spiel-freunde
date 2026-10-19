@@ -2,8 +2,8 @@
 
 /*
  * Lokaler Server für die Seite und /api/chat plus /api/tts.
- * Dieselben Pfade gibt es mit Paketnamen: /api/sf/chat und /api/sf/tts (App Platform).
- * /api/default/chat und /api/default/tts bleiben erreichbar, damit alte Aufrufe nicht ins Leere laufen.
+ * Dieselben Pfade gibt es mit Paketnamen: /api/sf/chat, /api/sf/tts und /api/sf/avatar (App Platform).
+ * /api/default/chat, /api/default/tts und /api/default/avatar bleiben erreichbar, damit alte Aufrufe nicht ins Leere laufen.
  * Auf App Platform laufen dieselben Handler als Functions, nicht dieser Prozess.
  *
  *   node api/server.js              Seite und API, Schlüssel aus der Umgebung
@@ -47,6 +47,7 @@ function mockEnv() {
     VOICE_HORST: 'MockHorstVoice01',
     VOICE_MARGARETHE: '28LWddKi67H2YN9L2PvK',
     XAI_MODEL: 'grok-4.3',
+    XAI_IMAGE_MODEL: 'grok-imagine-image-2.0',
     ELEVEN_MODEL: 'eleven_flash_v2_5',
     DAILY_LIMIT: '1000',
   };
@@ -56,6 +57,16 @@ function mockFetch(delayMs) {
   return async function fetchMock(url, options) {
     if (delayMs) await new Promise((resolve) => setTimeout(resolve, delayMs));
     const target = String(url);
+    if (target.indexOf('/images/') !== -1) {
+      const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => 'application/json' },
+        json: async () => ({ data: [{ b64_json: jpeg.toString('base64') }] }),
+        arrayBuffer: async () => jpeg,
+      };
+    }
     if (target.indexOf('api.x.ai') !== -1) {
       let system = '';
       try { system = JSON.parse(options.body).messages[0].content; } catch (e) { system = ''; }
@@ -141,7 +152,8 @@ async function handleNodeRequest(req, res, options) {
   const deps = { env: optionsSafe.env || process.env, fetch: optionsSafe.fetch || fetch };
   const isChat = url.pathname === '/api/chat' || url.pathname === '/api/sf/chat' || url.pathname === '/api/default/chat';
   const isTts = url.pathname === '/api/tts' || url.pathname === '/api/sf/tts' || url.pathname === '/api/default/tts';
-  if (isChat || isTts) {
+  const isAvatar = url.pathname === '/api/avatar' || url.pathname === '/api/sf/avatar' || url.pathname === '/api/default/avatar';
+  if (isChat || isTts || isAvatar) {
     let raw = '';
     if (req.method === 'POST') {
       try { raw = await readBody(req); }
@@ -160,6 +172,10 @@ async function handleNodeRequest(req, res, options) {
     };
     if (isChat) {
       sendResult(res, await handlers.handleChat(event, deps));
+      return;
+    }
+    if (isAvatar) {
+      sendResult(res, await handlers.handleAvatar(event, deps));
       return;
     }
     if (optionsSafe.stream && req.method === 'POST') {
