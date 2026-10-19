@@ -49,7 +49,8 @@
     },
     { id: 'romme', label: 'Rommé', href: '/romme/', opponents: 3, defaults: ['horst', 'margarethe', 'hilde'] },
     { id: 'schnapsen', label: 'Schnapsen', href: '/schnapsen/', opponents: 1, defaults: ['sepp'] },
-    { id: 'watten', label: 'Watten', href: '/watten/', opponents: 3, defaults: ['horst', 'sepp', 'hilde'] }
+    { id: 'watten', label: 'Watten', href: '/watten/', opponents: 3, defaults: ['horst', 'sepp', 'hilde'] },
+    { id: 'bridge', label: 'Bridge', href: '/bridge/', opponents: 3, defaults: ['jonas', 'margarethe', 'ruediger'] }
   ];
 
   function gameById(id) {

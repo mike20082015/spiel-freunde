@@ -451,7 +451,7 @@
 
   function install() {
     if (!root) return;
-    ['SkatTalk', 'CanastaTalk', 'SchafkopfTalk', 'JassTalk', 'DoppelkopfTalk', 'MauMauTalk', 'RommeTalk', 'SchnapsenTalk', 'WattenTalk'].forEach(function (name) {
+    ['SkatTalk', 'CanastaTalk', 'SchafkopfTalk', 'JassTalk', 'DoppelkopfTalk', 'MauMauTalk', 'RommeTalk', 'SchnapsenTalk', 'WattenTalk', 'BridgeTalk'].forEach(function (name) {
       patchTalk(root[name]);
     });
   }
