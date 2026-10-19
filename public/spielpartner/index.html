@@ -3,31 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mitspieler · Spiel-Freunde</title>
-<meta name="description" content="Horst, Margarethe und Uschi warten am Tisch. Leg vorher Deinen eigenen Avatar an.">
+<title>Deine Spielpartner · Spiel-Freunde</title>
+<meta name="description" content="Deine Spielpartner bei Spiel-Freunde: Horst, Margarethe und die Premium-Runde. 14 Tage gratis, danach Standard oder Premium. Nichts wird automatisch abgebucht.">
 <link rel="icon" href="/assets/variante-a-favicon-dunkel.svg" type="image/svg+xml">
 <link rel="icon" href="/assets/variante-a-favicon-dunkel-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/assets/variante-a-icon-dunkel-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
-<style>
-  .sp-page{background:var(--cream);min-height:100vh}
-  .sp-page .nav{position:relative}
-  .sp-hero{padding:36px 0 10px}
-  .sp-hero h1{font-size:clamp(2rem,4vw,3rem);margin:10px 0 8px}
-  .sp-hero p{max-width:640px;color:var(--ink-2)}
-  .sp-you{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:22px 0 8px;padding:16px 18px;background:var(--paper);border:1px solid var(--line);border-radius:18px}
-  .sp-list{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:22px 0 72px}
-  .sp-card{background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}
-  .sp-card img{width:100%;height:220px;object-fit:cover;object-position:50% 15%}
-  .sp-card div{padding:14px 16px 18px}
-  .sp-card p{color:var(--ink-2);font-size:.95rem}
-  @media (max-width:800px){.sp-list{grid-template-columns:1fr}}
-</style>
+<link rel="stylesheet" href="spielpartner.css">
 </head>
 <body class="sp-page">
-<header class="nav">
+
+<header class="nav" id="top">
   <div class="wrap nav-in">
     <div class="nav-brand">
       <a class="logo" href="/" aria-label="Spiel-Freunde Startseite"><img src="/assets/variante-a-lockup-dunkel-web.svg" alt="Spiel-Freunde" width="796" height="175"></a>
@@ -35,38 +24,114 @@
     </div>
     <nav class="nav-links" aria-label="Hauptnavigation">
       <a href="/skat/">Skat spielen</a>
-      <a href="/spielpartner/" aria-current="page">Mitspieler</a>
+      <a href="/spielpartner/" aria-current="page">Spielpartner</a>
       <a href="/mein-avatar/">Mein Avatar</a>
+      <a href="/#spiele">Spiele</a>
+      <a href="/#orte">Orte</a>
+      <a href="/#preise">Preise</a>
+      <a href="/#faq">Fragen</a>
     </nav>
     <div class="nav-cta">
-      <a class="btn btn-gold btn-sm" href="/mein-avatar/">Mein Avatar</a>
+      <a class="link-login" href="/#preise">Preise</a>
+      <a class="btn btn-gold btn-sm" href="#testen">Kostenlos testen</a>
     </div>
   </div>
 </header>
-<main class="wrap">
-  <section class="sp-hero">
-    <p class="kicker"><span class="dot"></span> Die Runde</p>
-    <h1>Deine Mitspieler</h1>
-    <p>Horst meckert, Margarethe glänzt, Uschi lacht. Du sitzt mit Deinem eigenen Gesicht dabei.</p>
-    <div class="sp-you">
-      <p><b>Dein Platz:</b> Name und Bild bleiben auf Deinem Gerät. <span class="privacy" style="display:inline">Dein Foto bleibt auf deinem Gerät.</span></p>
-      <a class="btn btn-gold" href="/mein-avatar/">Mein Avatar anlegen</a>
+
+<main>
+  <section class="sp-hero" id="testen">
+    <div class="wrap">
+      <p class="kicker"><span class="dot"></span> Die Runde am Tisch</p>
+      <h1>Deine Spielpartner</h1>
+      <p class="lead">Setz Dich dazu, mit wem Du magst. Horst meckert aus Berlin, Margarethe erzählt von der Kreuzfahrt, und mit Premium wird die Runde richtig voll: sportlich, bayerisch, bernisch oder mit einem Weintipp aus dem Beaujolais. Um Geld wird hier nicht gespielt.</p>
+      <div class="sp-hero-cta">
+        <a class="btn btn-gold btn-lg js-trial" href="#mitgliedschaft">14 Tage alle Spielpartner gratis testen</a>
+        <a class="btn btn-line btn-lg" href="/mein-avatar/">Mein Avatar anlegen</a>
+        <p class="sp-status" id="sp-status" role="status"></p>
+        <p class="sp-privacy">Dein Foto bleibt auf deinem Gerät.</p>
+      </div>
+      <ul class="sp-reassure">
+        <li>14 Tage Premium, alle Spielpartner</li>
+        <li>Danach wählst Du selbst</li>
+        <li>Nichts wird automatisch abgebucht</li>
+      </ul>
     </div>
   </section>
-  <section class="sp-list" aria-label="Mitspieler">
-    <article class="sp-card">
-      <img src="/assets/figur-witwe-foto.jpg" alt="Margarethe von Hohenfels">
-      <div><h2>Margarethe</h2><p>Die reiche Witwe. Perlen, Kreuzfahrten und riskante Solos.</p></div>
-    </article>
-    <article class="sp-card">
-      <img src="/assets/figur-berliner-foto.jpg" alt="Horst Kaluppke">
-      <div><h2>Horst</h2><p>Der Stinkstiefel aus Berlin. Unter der Mütze ein großes Herz.</p></div>
-    </article>
-    <article class="sp-card">
-      <img src="/assets/figur-nachbarin-foto.jpg" alt="Uschi Lammert">
-      <div><h2>Uschi</h2><p>Die lustige Nachbarin. Alle unterschätzen sie.</p></div>
-    </article>
+
+  <section class="sec cream" id="runde">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Die Runde</p>
+        <h2>Zwölf Gesichter, ein Tisch</h2>
+        <p class="sub">Horst und Margarethe gehören zum Standard. Premium holt die ganze Runde dazu. Fehlt ein Bild noch, siehst Du die Initialen auf warmem Holz.</p>
+      </div>
+      <div class="sp-filters" role="group" aria-label="Spielpartner filtern">
+        <button type="button" data-filter="alle" aria-pressed="true">Alle</button>
+        <button type="button" data-filter="standard" aria-pressed="false">Standard</button>
+        <button type="button" data-filter="premium" aria-pressed="false">Premium</button>
+      </div>
+      <div class="sp-grid" id="sp-grid" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="sec cream sp-member" id="mitgliedschaft">
+    <div class="wrap">
+      <div class="sec-head">
+        <p class="eyebrow">Mitgliedschaft</p>
+        <h2>Erst testen, dann entscheiden</h2>
+        <p class="sub">Jede neue Runde in diesem Browser beginnt mit 14 Tagen Premium: alle Spielpartner sind frei. Ein Konto gibt es noch nicht. Nach den 14 Tagen wählst Du Standard oder Premium. Es wird nichts automatisch abgebucht. Wenn Du nichts wählst, bleiben Horst und Margarethe.</p>
+      </div>
+      <div class="trial">
+        <span class="trial-big">14 Tage</span>
+        <span class="trial-txt"><b>alle Spielpartner gratis</b> Danach 9,95 €/Monat oder 14,95 €/Monat. Nichts läuft von allein weiter.</span>
+        <a class="btn btn-wine js-trial" href="#testen">14 Tage alle Spielpartner gratis testen</a>
+      </div>
+      <div class="plans">
+        <article class="plan">
+          <h3>Standard</h3>
+          <p class="price"><span class="amt">9,95 €</span><span class="per">/Monat</span></p>
+          <ul>
+            <li>Horst und Margarethe</li>
+            <li>Auch nach dem Test dabei</li>
+            <li>Keine automatische Abbuchung</li>
+          </ul>
+          <button type="button" class="btn btn-outline" disabled>Bald verfügbar</button>
+        </article>
+        <article class="plan plan-hot">
+          <span class="ribbon">Alle</span>
+          <h3>Premium</h3>
+          <p class="price"><span class="amt">14,95 €</span><span class="per">/Monat</span></p>
+          <ul>
+            <li>Alle Spielpartner</li>
+            <li>Die ersten 14 Tage gratis</li>
+            <li>Keine automatische Abbuchung</li>
+          </ul>
+          <button type="button" class="btn btn-gold" disabled>Bald verfügbar</button>
+        </article>
+      </div>
+      <p class="sp-fine">Bezahlen kannst Du hier noch nicht. Die Knöpfe bleiben auf „Bald verfügbar“, bis es soweit ist. Bis dahin kostet Dich der Test nichts, und es wird nichts automatisch abgebucht.</p>
+    </div>
   </section>
 </main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div class="foot-brand">
+      <a class="logo logo-foot" href="/"><img src="/assets/variante-a-lockup-dunkel-web.svg" alt="Spiel-Freunde" width="796" height="175"></a>
+      <p>Die besten Kartenspiele aus Deutschland, Österreich und der Schweiz. Kein Glücksspiel, keine Einsätze.</p>
+    </div>
+    <div class="foot-col"><b>Spielen</b><a href="/skat/">Skat ausprobieren</a><a href="/spielpartner/">Spielpartner</a><a href="/mein-avatar/">Mein Avatar</a><a href="/#spiele">Alle Spiele</a></div>
+    <div class="foot-col"><b>Runde</b><a href="#runde">Gesichter</a><a href="#mitgliedschaft">Mitgliedschaft</a><a href="/">Startseite</a></div>
+  </div>
+  <div class="wrap foot-bottom">
+    <span>© 2026 Spiel-Freunde</span>
+    <span>Kein Glücksspiel. Nur Spaß.</span>
+    <a class="powered" href="https://lead-monster.net" target="_blank" rel="noopener">powered by lead-monster.net</a>
+  </div>
+</footer>
+
+<script src="entitlement.js"></script>
+<script src="cards.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

@@ -341,3 +341,21 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;letter-spacin
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.cl,.reveal{opacity:1!important;transform:none}}
 
+/* Spielpartner in der Navigation und als schmale Leiste */
+.nav-links{gap:14px}
+.nav-links a{font-size:.9rem}
+.sp-tease{background:
+  radial-gradient(ellipse at 0% 50%,rgba(212,168,75,.16),transparent 52%),
+  linear-gradient(100deg,#3a2414,#2a180f);
+  color:var(--cream);
+  border-top:1px solid rgba(212,168,75,.35);
+  border-bottom:1px solid rgba(212,168,75,.28)}
+.sp-tease-in{display:flex;align-items:center;justify-content:space-between;gap:28px;padding-top:26px;padding-bottom:26px;min-width:0}
+.sp-tease-kicker{font-family:var(--serif);font-size:1.35rem;color:var(--gold-2);line-height:1.2}
+.sp-tease p{color:rgba(247,241,227,.82);font-size:.98rem;max-width:640px;margin-top:4px}
+.sp-tease .btn{flex:none;white-space:normal;text-align:center;max-width:100%}
+@media (max-width:900px){
+  .sp-tease-in{flex-direction:column;align-items:stretch;text-align:center}
+  .sp-tease p{margin-left:auto;margin-right:auto}
+}
+

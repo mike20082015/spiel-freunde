@@ -1,0 +1,134 @@
+[
+  {
+    "name": "Horst Kaluppke",
+    "slug": "horst",
+    "intro": "Meckert über jede Karte und über das Wetter. Unter der Schiebermütze spielt er kühl, und er schummelt nie.",
+    "origin": "Berlin",
+    "personality": "Grantig, treu und eiskalt im Spiel.",
+    "tier": "standard",
+    "portrait": "/media/spielpartner/horst.jpg",
+    "hasVideo": false,
+    "video": ""
+  },
+  {
+    "name": "Margarethe von Hohenfels",
+    "slug": "margarethe",
+    "intro": "Elegant, ein wenig eitel und am liebsten im Mittelpunkt. Zwischen zwei Stichen erzählt sie von der letzten Kreuzfahrt.",
+    "origin": "Zwischen Oper und Promenade",
+    "personality": "Charmant, riskant, immer ein bisschen zu laut für die Perlen.",
+    "tier": "standard",
+    "portrait": "/media/spielpartner/margarethe.jpg",
+    "hasVideo": false,
+    "video": ""
+  },
+  {
+    "name": "Lena Berger",
+    "slug": "lena",
+    "intro": "Mitte zwanzig, modern und sportlich. Sie kommt direkt vom Training und mischt mit, als hätte sie den ganzen Abend Zeit.",
+    "origin": "Köln",
+    "personality": "Frisch, direkt, fair im Sieg und in der Niederlage.",
+    "tier": "premium",
+    "portrait": "/media/spielpartner/lena.jpg",
+    "hasVideo": false,
+    "video": ""
+  },
+  {
+    "name": "Jonas Rehm",
+    "slug": "jonas",
+    "intro": "Ein attraktiver Typ Ende zwanzig. Er hält Dir die Tür auf, lächelt, und sticht danach trotzdem Dein Ass.",
+    "origin": "Hamburg",
+    "personality": "Charmant, etwas eitel, spielt mit Ruhe.",
+    "tier": "premium",
+    "portrait": "/media/spielpartner/jonas.jpg",
+    "hasVideo": false,
+    "video": ""
+  },
+  {
+    "name": "Ömer Aydin",
+    "slug": "oemer",
+    "intro": "Herzlicher Gastronom. Bei ihm stehen Tee und ein Teller extra auf dem Tisch, und die Runde fühlt sich an wie zu Hause.",
+    "origin": "Berlin-Neukölln",
+    "personality": "Gastfreundlich, warm, lacht zuerst.",
+    "tier": "premium",
+    "portrait": "/media/spielpartner/oemer.jpg",
+    "hasVideo": false,
+    "video": ""
+  },
+  {
+    "name": "Oma Hilde",
+    "slug": "hilde",
+    "intro": "Die liebe Oma, die alle an die Wand spielt. Sie schiebt Dir den Teller hin und holt sich danach in Ruhe die Stiche.",
+    "origin": "Münsterland",
+    "personality": "Weich im Ton, wach mit den Karten. Hier geht es um die Runde, nicht um Geld.",
+    "tier": "premium",
+    "portrait": "/media/spielpartner/hilde.jpg",
+    "hasVideo": false,
+    "video": ""
+  },
+  {
+    "name": "Sepp Huber",
+    "slug": "sepp",
+    "intro": "Bayerischer Wirt mit Schürze und trockenem Humor. Er kennt jede Hausregel vom Stammtisch und zapft die Sprüche frisch.",
+    "origin": "Oberbayern",
+    "personality": "Gemütlich, bodenständig, sagt was er denkt.",
+    "tier": "premium",
+    "portrait": "/media/spielpartner/sepp.jpg",
+    "hasVideo": false,
+    "video": ""
+  },
+  {
+    "name": "Rüdiger Falk",
+    "slug": "ruediger",
+    "intro": "Pedantischer Beamter. Er kennt jede Regel und jede Fußnote und korrigiert Dich höflich, bevor die Karte liegt.",
+    "origin": "Bonn",
+    "personality": "Genau, förmlich, unbestechlich. Schummeln kommt ihm nicht in die Tasche.",
+    "tier": "premium",
+    "portrait": "/media/spielpartner/ruediger.jpg",
+    "hasVideo": false,
+    "video": ""
+  },
+  {
+    "name": "Chantal Kowalski",
+    "slug": "chantal",
+    "intro": "Ruhrpott, laut und lustig. Wenn Chantal lacht, wackelt die Musikbox, und niemand bleibt lange beleidigt.",
+    "origin": "Gelsenkirchen",
+    "personality": "Laut, herzlich, immer auf der Seite der Runde.",
+    "tier": "premium",
+    "portrait": "/media/spielpartner/chantal.jpg",
+    "hasVideo": false,
+    "video": ""
+  },
+  {
+    "name": "Urs Gerber",
+    "slug": "urs",
+    "intro": "Gemütlicher Berner. Er spielt Jass, als säße er in der Berghütte, und lässt sich von niemandem hetzen.",
+    "origin": "Bern",
+    "personality": "Ruhig, trocken, mit einem Lächeln in den Mundwinkeln.",
+    "tier": "premium",
+    "portrait": "/media/spielpartner/urs.jpg",
+    "hasVideo": false,
+    "video": ""
+  },
+  {
+    "name": "Vreni Meier",
+    "slug": "vreni",
+    "intro": "Schlagfertige Zürcherin. Beim Jass kommt der Spruch schneller als die Karte, und meistens stimmt beides.",
+    "origin": "Zürich",
+    "personality": "Witzig, wach, lässt sich nichts vormachen.",
+    "tier": "premium",
+    "portrait": "/media/spielpartner/vreni.jpg",
+    "hasVideo": false,
+    "video": ""
+  },
+  {
+    "name": "Luce Morel",
+    "slug": "luce",
+    "intro": "Französischer Winzer und Gast am Tisch. Sein Weintipp: zum Plaudern einen kühlen Beaujolais, nie den teuersten.",
+    "origin": "Beaujolais",
+    "personality": "Gastfreundlich, ruhig, erzählt lieber vom Wein als von sich.",
+    "tier": "premium",
+    "portrait": "/media/spielpartner/luce.jpg",
+    "hasVideo": false,
+    "video": ""
+  }
+]
