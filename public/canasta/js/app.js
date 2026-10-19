@@ -607,10 +607,9 @@
     S.humanWait = null;
     const rules = E.normalizeRules(settings.rules);
     S.state = E.newGame({ rules: rules, rng: rng, dealer: match.dealer, scores: match.scores.slice() });
-    window.__canasta.state = S.state;
     render();
     talk(2, 'gameStart', 1, true);
-    if (Math.random() < 0.7) setTimeout(() => talk(3, 'gameStart', 1, true), 900);
+    talk(3, 'gameStart', 0.65);
     runLoop(gen);
   }
   async function runLoop(gen) {
@@ -939,6 +938,12 @@
     sys('Die Punkteliste ist leer. Die laufende Runde zählt noch mit dem alten Stand.');
   });
   $('opt-volume').addEventListener('input', () => { $('opt-volume-out').textContent = $('opt-volume').value; });
+  $('modal-settings').addEventListener('change', () => {
+    const talk = document.querySelector('input[name="talk"]:checked');
+    if (talk) settings.talk = talk.value;
+    settings.handsFree = $('opt-handsfree').checked;
+    syncHandsFree();
+  });
   $('ask-yes').addEventListener('click', () => answerAsk(true));
   $('ask-no').addEventListener('click', () => answerAsk(false));
   $('chat-form').addEventListener('submit', (e) => { e.preventDefault(); onChat($('chat-input').value); });
