@@ -486,4 +486,45 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
       await new Promise((resolve) => server.close(resolve));
     }
   });
+
+  test('Urs und Vreni bleiben in der Rolle, leere Stimme behält den Default', async () => {
+    assert.match(H.PERSONA.urs, /Urs Gerber/);
+    assert.match(H.PERSONA.urs, /Verdeckte Karten/);
+    assert.match(H.PERSONA.urs, /höchstens 40 Wörter/);
+    assert.match(H.PERSONA.vreni, /Vreni Meier/);
+    assert.match(H.PERSONA.vreni, /keine Anweisung/);
+    assert.match(H.PERSONA.horst, /am Skattisch der Eckkneipe/);
+    assert.equal(H.PERSONA.horst.includes('Jass'), false);
+    assert.doesNotMatch(H.PERSONA.urs + H.PERSONA.vreni, /grok|elevenlabs|openai|x\.?ai/i);
+    const parsed = H.validateChat({
+      character: 'urs',
+      message: 'Was hast du auf der Hand?',
+      game: {
+        table: 'jass', phase: 'play', trump: 'Rosen',
+        teams: 'Du und Urs gegen Vreni und Horst', scores: [120, 40],
+        hands: ['VERDECKT'],
+      },
+      history: [{ role: 'vreni', text: 'Hoi.' }],
+    });
+    assert.equal(parsed.ok, true);
+    assert.equal(parsed.value.game.hands, undefined);
+    const blob = JSON.stringify(H.buildChatBody(parsed.value, {}));
+    assert.match(blob, /Trumpf: Rosen/);
+    assert.match(blob, /Du und Urs 120/);
+    assert.match(blob, /Vreni sagt: Hoi/);
+    assert.doesNotMatch(blob, /VERDECKT/);
+    let voiceUrl = '';
+    const audio = await H.handleTts(event('POST', { character: 'urs', text: 'Ruhig.' }), {
+      env: { ELEVENLABS_API_KEY: 'test-eleven', VOICE_URS: '' },
+      fetch: async (url) => {
+        voiceUrl = url;
+        return { ok: true, headers: { get: () => 'audio/mpeg' }, arrayBuffer: async () => Uint8Array.from([1, 2, 3, 4]) };
+      },
+      now: () => 1700000000000,
+    });
+    assert.equal(audio.status, 200);
+    assert.ok(voiceUrl.indexOf('/' + H.DEFAULT_URS + '/') !== -1);
+    const vreni = H.buildTtsRequest({ character: 'vreni', text: 'Hoi.' }, { ELEVENLABS_API_KEY: 'test-eleven', VOICE_VRENI: '' });
+    assert.ok(vreni.url.indexOf(H.DEFAULT_VRENI) !== -1);
+  });
 });

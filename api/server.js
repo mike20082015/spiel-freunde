@@ -72,7 +72,11 @@ function mockFetch(delayMs) {
       try { system = JSON.parse(options.body).messages[0].content; } catch (e) { system = ''; }
       const text = system.indexOf('Margarethe von Hohenfels') !== -1
         ? 'Ach Schätzchen, heute glänze ich, das spür ich schon.'
-        : 'Na endlich. Ick dachte schon, du redest gar nicht mehr.';
+        : system.indexOf('Urs Gerber') !== -1
+          ? 'Grüessech. Ruhig, mir sind no lang nid am Ziel.'
+          : system.indexOf('Vreni Meier') !== -1
+            ? 'Hoi! Die Farb hät ich auch genommen.'
+            : 'Na endlich. Ick dachte schon, du redest gar nicht mehr.';
       return {
         ok: true,
         status: 200,
