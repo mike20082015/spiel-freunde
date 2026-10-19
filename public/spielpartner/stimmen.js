@@ -34,6 +34,10 @@
     weakPlayKind: 'encourage', encourage: 'encourage',
     gameStart: 'gameStart', declare: 'gameStart', sauspiel: 'gameStart', solo: 'gameStart',
     wenz: 'gameStart', bid: 'gameStart', bidHigh: 'gameStart',
+    handWin: 'win', matchWin: 'win',
+    handLose: 'lose', matchLose: 'lose',
+    marriage: 'gameStart', close: 'gameStart', schlag: 'gameStart', bieten: 'gameStart',
+    ansage: 'gameStart', trump: 'gameStart', exchange: 'trick',
     welcome: 'welcome'
   };
 
@@ -447,7 +451,7 @@
 
   function install() {
     if (!root) return;
-    ['SkatTalk', 'CanastaTalk', 'SchafkopfTalk', 'JassTalk', 'DoppelkopfTalk', 'MauMauTalk', 'RommeTalk'].forEach(function (name) {
+    ['SkatTalk', 'CanastaTalk', 'SchafkopfTalk', 'JassTalk', 'DoppelkopfTalk', 'MauMauTalk', 'RommeTalk', 'SchnapsenTalk', 'WattenTalk'].forEach(function (name) {
       patchTalk(root[name]);
     });
   }

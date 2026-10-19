@@ -18,13 +18,15 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 | `/jass/` | Spielbarer Schieber: Du und Urs gegen Vreni und Horst |
 | `/maumau/` | Spielbares Mau-Mau: Du, Horst, Margarethe und auf Wunsch Lena |
 | `/romme/` | Spielbares Rommé: Du gegen Horst, Margarethe und Oma Hilde |
+| `/schnapsen/` | Spielbares Schnapsen: Du gegen Sepp, Bummerl bis 7 |
+| `/watten/` | Spielbares Watten: Du und Sepp gegen Horst und Oma Hilde |
 
-In der Vorschau führen die großen Buttons auf der Startseite nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. Startseite, Skat, Canasta, Schafkopf, Jass, Doppelkopf, Mau-Mau, Rommé, Spielpartner und Mein Avatar tragen ein goldenes Band „Vorschau“.
+In der Vorschau führen die großen Buttons auf der Startseite nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. Startseite, Skat, Canasta, Schafkopf, Jass, Doppelkopf, Mau-Mau, Rommé, Schnapsen, Watten, Spielpartner und Mein Avatar tragen ein goldenes Band „Vorschau“.
 
 Veröffentlicht wird nur der Ordner `public/`. Tests, Werkzeuge und die Startskripte bleiben außerhalb.
 
 ```
-public/                  Startseite, 404, /skat/, /canasta/, /schafkopf/, /jass/, /doppelkopf/, /maumau/, /romme/ und /mein-avatar/
+public/                  Startseite, 404, /skat/, /canasta/, /schafkopf/, /jass/, /doppelkopf/, /maumau/, /romme/, /schnapsen/, /watten/ und /mein-avatar/
 skat/tests, skat/tools   Regeltests und Browser-Checks, nicht öffentlich
 skat/start.sh            lokaler Server, nicht öffentlich
 tools/                   Entwurf-Helfer der Startseite, nicht öffentlich
@@ -54,6 +56,8 @@ cd ../schafkopf && node --test tests/
 cd ../doppelkopf && node --test tests/
 cd ../maumau && node --test tests/
 cd ../romme && node --test tests/
+cd ../schnapsen && node --test tests/
+cd ../watten && node --test tests/
 ```
 
 Die Spiellogik liegt in `public/skat/js/`. Details zum Skat-Prototyp stehen in `skat/README.md`.

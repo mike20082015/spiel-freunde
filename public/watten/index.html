@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watten in der Stube · Spiel-Freunde (Vorschau)</title>
+<meta name="description" content="Spielbares Watten von Spiel-Freunde: Du und Sepp gegen Horst und Oma Hilde, mit Kritischen, Schlag und Bieten.">
+<link rel="icon" href="../assets/variante-a-favicon-dunkel.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../skat/css/fonts.css">
+<link rel="stylesheet" href="css/watten.css">
+<link rel="stylesheet" href="/spielpartner/offer.css">
+<link rel="stylesheet" href="/spielpartner/paywall.css">
+<link rel="stylesheet" href="/spielpartner/runde.css">
+</head>
+<body>
+<div class="app" id="app">
+  <header class="topbar">
+    <a class="logo" href="/" aria-label="Zur Startseite von Spiel-Freunde"><img src="../assets/variante-a-lockup-dunkel-web.svg" alt="Spiel-Freunde" width="796" height="175"></a>
+    <span class="preview-badge">Vorschau</span>
+    <div class="topbar-title">Watten in der Stube</div>
+    <nav class="topbar-actions" aria-label="Spielsteuerung">
+      <button class="tbtn tlevel" id="btn-level" type="button"><span class="lbl-long">Stärke: </span><b id="level-label">Kneipe</b></button>
+      <button class="tbtn ticon" id="btn-sound" type="button" aria-pressed="true" title="Stimmen an oder aus"><span class="ico" aria-hidden="true"></span><span class="lbl-long">Ton</span></button>
+      <button class="tbtn ticon" id="btn-talk" type="button" aria-pressed="false" title="Mitreden"><span class="ico" aria-hidden="true"></span><span class="lbl-long">Mitreden</span></button>
+      <button class="tbtn" id="btn-hint" type="button" aria-pressed="false"><span class="tdot"></span><span class="lbl-long">Regeln lernen</span><span class="lbl-short">Tipps</span></button>
+      <button class="tbtn" id="btn-last" type="button"><span class="lbl-long">Letzter Stich</span><span class="lbl-short">Stich</span></button>
+      <button class="tbtn" id="btn-settings" type="button"><span class="lbl-long">Einstellungen</span><span class="lbl-short">Regeln</span></button>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <section class="table-area" aria-label="Wattentisch">
+      <div class="statusbar" id="status" role="status">
+        <span class="st-main" id="st-main">Willkommen in der Stube</span>
+        <span class="st-chips" id="st-chips"></span>
+      </div>
+      <div class="room">
+        <div class="tabletop" id="tabletop">
+          <div class="wood-grain"></div>
+          <div class="seat seat-west" id="seat-1" data-seat="1">
+            <div class="ava-wrap" id="ava-1"><span class="ini">HK</span><span class="turn-ring"></span></div>
+            <div class="seat-info"><b class="seat-name">Horst</b><span class="seat-role" id="role-1"></span><div class="opp-cards" id="backs-1"></div></div>
+            <div class="bubble" id="bubble-1"></div>
+          </div>
+          <div class="seat seat-north" id="seat-2" data-seat="2">
+            <div class="ava-wrap" id="ava-2"><span class="ini">SH</span><span class="turn-ring"></span></div>
+            <div class="seat-info"><b class="seat-name">Sepp</b><span class="seat-role" id="role-2"></span><div class="opp-cards" id="backs-2"></div></div>
+            <div class="bubble" id="bubble-2"></div>
+          </div>
+          <div class="seat seat-east" id="seat-3" data-seat="3">
+            <div class="ava-wrap" id="ava-3"><span class="ini">OH</span><span class="turn-ring"></span></div>
+            <div class="seat-info"><b class="seat-name">Oma Hilde</b><span class="seat-role" id="role-3"></span><div class="opp-cards" id="backs-3"></div></div>
+            <div class="bubble" id="bubble-3"></div>
+          </div>
+          <div class="center" id="center">
+            <div class="trump-mark" id="trump-mark" hidden><span id="trump-kicker">Schlag</span><b id="trump-name">noch offen</b></div>
+            <div class="trick" id="trick"></div>
+          </div>
+          <div class="intro" id="intro">
+            <p class="intro-kicker">Spiel-Freunde · Stube</p>
+            <h2>Platz am Wattentisch</h2>
+            <p>Kritisches Watten zu viert. Du und Sepp gegen Horst und Oma Hilde. Schlag und Trumpf, drei Stiche, und wer zuerst am Ziel ist, hat gewonnen.</p>
+            <p class="intro-partners"><a href="/spielpartner/">Deine Spielpartner</a></p>
+            <button class="btn btn-gold" id="btn-start" type="button">Platz nehmen</button>
+            <p class="intro-rounds" id="intro-rounds"></p>
+            <p class="intro-small" id="intro-small"></p>
+          </div>
+          <div class="panel" id="panel" hidden></div>
+          <div class="me" id="seat-0">
+            <div class="me-tag"><span class="ava-you" id="you-ava"><span class="ini" id="you-ini">Du</span></span><span class="seat-role" id="role-0"></span><span class="me-bubble" id="bubble-0"></span></div>
+            <div class="hint-box" id="hint-box" hidden></div>
+            <div class="actions" id="actions" hidden></div>
+            <div class="hand" id="hand" aria-label="Deine Karten"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <aside class="sidebar">
+      <section class="side-card score-card">
+        <h2>Punkteliste <span class="mode-badge" id="mode-badge">15</span></h2>
+        <div class="target-info" id="target-info"></div>
+        <div class="score-wrap"><table class="score" id="score-table"></table></div>
+        <p class="partner-foot"><a href="/spielpartner/">Deine Spielpartner</a></p>
+      </section>
+      <section class="side-card chat-card">
+        <h2><span class="live"></span> Am Tisch</h2>
+        <div class="chat-log" id="chat-log" aria-live="polite"></div>
+        <div class="hf-bar" id="hf-bar" hidden>
+          <span class="hf-state" id="hf-state" data-state="aus"><i aria-hidden="true"></i><b id="hf-label">aus</b></span>
+          <span class="hf-hint">Am besten mit Kopfhörer</span>
+          <button type="button" class="hf-mute" id="btn-hf-mute" aria-pressed="false">Stumm</button>
+        </div>
+        <form class="chat-form" id="chat-form" autocomplete="off">
+          <input id="chat-input" type="text" maxlength="160" placeholder="Schreib was in die Runde ..." aria-label="Nachricht an den Tisch">
+          <button class="mic" id="btn-mic" type="button" hidden aria-pressed="false" title="Sprechen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2z"/></svg><span class="sr">Mikrofon</span></button>
+          <button class="btn btn-gold btn-sm" type="submit">Senden</button>
+        </form>
+        <p class="mic-hint" id="mic-hint" hidden></p>
+      </section>
+    </aside>
+  </main>
+
+  <div class="modal" id="modal-summary" hidden>
+    <div class="modal-card" id="summary"></div>
+  </div>
+  <div class="modal" id="modal-last" hidden>
+    <div class="modal-card">
+      <h3>Letzter Stich</h3>
+      <div class="hand" id="last-trick" style="min-height:0;justify-content:center"></div>
+      <div class="modal-actions"><button class="btn btn-gold" type="button" data-close>Schließen</button></div>
+    </div>
+  </div>
+  <div class="modal" id="modal-settings" hidden>
+    <div class="modal-card">
+      <h3>Einstellungen</h3>
+      <div class="opt-grid">
+        <fieldset class="opt">
+          <legend>Spielstärke</legend>
+          <label class="radio"><input type="radio" name="level" value="anfaenger"> <span><b>Anfänger</b><small>Sie sagen die häufigste Karte an und halten jedes Gebot.</small></span></label>
+          <label class="radio"><input type="radio" name="level" value="kneipe"> <span><b>Kneipe</b><small>Sie bieten bei einem starken Blatt und gehen bei einem schwachen.</small></span></label>
+          <label class="radio"><input type="radio" name="level" value="turnier"> <span><b>Turnier</b><small>Sie zählen Kritische, Haube und Trumpf, ohne in fremde Blätter zu sehen.</small></span></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Spielen bis</legend>
+          <label class="radio"><input type="radio" name="target" value="15"> <span>15</span></label>
+          <label class="radio"><input type="radio" name="target" value="13"> <span>13</span></label>
+          <label class="radio"><input type="radio" name="target" value="custom"> <span>Eigenes Ziel</span></label>
+          <label class="numfield"><input type="number" id="target-custom" min="5" max="31" step="1"> <span>Punkte</span></label>
+          <p class="note">Ab zwei Punkten vor dem Ziel ist man gespannt. Das Spiel gilt dann drei, und die gespannte Partei darf gehen.</p>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Blatt</legend>
+          <label class="radio"><input type="radio" name="deck" value="33"> <span><b>33 mit Weli</b><small>Die übliche Ausgabe. Der Weli ist die Schellen-Sechs.</small></span></label>
+          <label class="radio"><input type="radio" name="deck" value="32"> <span><b>32 ohne Weli</b><small>Bayerisches Blatt. Belle bleibt die Schellen-Sieben.</small></span></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Kritische</legend>
+          <label class="radio"><input type="radio" name="critical" value="bayern"> <span><b>Bayern</b><small>Max, Belle als Schellen-Sieben, Spitz als Eichel-Sieben.</small></span></label>
+          <label class="radio"><input type="radio" name="critical" value="tirol"> <span><b>Tirol</b><small>Belle ist der Weli. Dafür braucht es das 33er Blatt.</small></span></label>
+          <label class="radio"><input type="radio" name="critical" value="none"> <span><b>Ohne Kritische</b><small>Nur Schlag und Trumpf stechen.</small></span></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Hausregeln</legend>
+          <label class="switch"><input type="checkbox" id="opt-gespannt" checked> <span><b>Gespannt</b><small>Kurz vor dem Ziel nicht mehr bieten. Gehen gibt der anderen Partei 2.</small></span></label>
+          <label class="switch"><input type="checkbox" id="opt-haube" checked> <span><b>Haube zwingt</b><small>Liegt die Haube als erste Karte, heißt es Trumpf oder Kritisch.</small></span></label>
+          <label class="switch"><input type="checkbox" id="opt-maschine" checked> <span><b>Maschine</b><small>Alle drei Kritischen auf einer Hand gewinnen sofort mit 2.</small></span></label>
+          <label class="switch"><input type="checkbox" id="opt-swap" checked> <span><b>Schlagwechsel</b><small>Die Vorhand darf dem Geber den Schlag anbieten.</small></span></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Ton</legend>
+          <label class="switch"><input type="checkbox" id="opt-sound" checked> <span><b>Stimmen</b><small>Sepp, Horst und Oma Hilde sprechen.</small></span></label>
+          <label class="radio"><span>Lautstärke</span><input type="range" id="opt-volume" min="0" max="100" step="5" value="80"></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Mitreden</legend>
+          <label class="radio"><input type="radio" name="talk" value="chat"> <span><b>Nur schreiben</b></span></label>
+          <label class="radio"><input type="radio" name="talk" value="voice"> <span><b>Mit Mikrofon</b><small>Knopf neben dem Chat, oder Freisprechen ohne Knopf.</small></span></label>
+          <div id="handsfree-block" hidden>
+            <label class="switch" id="handsfree-label"><input type="checkbox" id="opt-handsfree"> <span><b>Freisprechen</b><small>Nach einer kurzen Pause geht der Satz von allein raus.</small></span></label>
+            <p class="note" id="handsfree-phones">Am besten mit Kopfhörer</p>
+            <p class="note" id="handsfree-support" hidden></p>
+          </div>
+          <p class="note" id="talk-support" hidden></p>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Tempo</legend>
+          <label class="radio"><input type="radio" name="speed" value="slow"> <span>Gemütlich</span></label>
+          <label class="radio"><input type="radio" name="speed" value="normal"> <span>Normal</span></label>
+          <label class="radio"><input type="radio" name="speed" value="fast"> <span>Flott</span></label>
+        </fieldset>
+      </div>
+      <p class="note">Blatt und Kritische gelten ab der nächsten Runde. Drei Stiche gewinnen das Spiel.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost-dark" id="btn-reset" type="button">Punkteliste zurücksetzen</button>
+        <button class="btn btn-gold" type="button" data-close>Fertig</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="modal-session" hidden>
+    <div class="modal-card" id="session"></div>
+  </div>
+  <div class="modal" id="modal-paywall" hidden><div class="modal-card paywall" id="paywall-root"></div></div>
+  <footer class="table-legal">
+    <span>Ein Angebot der Interconsult LLC</span>
+    <span><a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/agb.html">AGB</a> · <a href="/widerruf.html">Widerruf</a> · <a href="/partnerprogramm/">Partnerprogramm</a></span>
+  </footer>
+</div>
+<script src="/spielpartner/entitlement.js"></script>
+<script src="/spielpartner/offer.js"></script>
+<script src="/spielpartner/checkout.js"></script>
+<script src="/spielpartner/paywall.js"></script>
+<script src="/spielpartner/rounds.js"></script>
+<script src="/assets/avatar-store.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/seats.js"></script>
+<script src="js/cards.js"></script>
+<script src="js/talk.js"></script>
+<script src="js/voice.js"></script>
+<script src="/spielpartner/lineup.js"></script>
+<script src="/spielpartner/stimmen.js"></script>
+<script src="/spielpartner/runde.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

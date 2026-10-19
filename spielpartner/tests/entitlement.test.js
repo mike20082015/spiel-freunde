@@ -506,7 +506,7 @@ test('jedes Spiel ruft den gemeinsamen Rundenzähler auf', () => {
   assert.match(rounds, /recordRound/);
   assert.match(rounds, /SpielpartnerRounds\.gate/);
   assert.match(rounds, /SpielpartnerRounds\.finish/);
-  ['skat', 'canasta', 'schafkopf', 'jass', 'doppelkopf', 'maumau', 'romme'].forEach((game) => {
+  ['skat', 'canasta', 'schafkopf', 'jass', 'doppelkopf', 'maumau', 'romme', 'schnapsen', 'watten'].forEach((game) => {
     const app = fs.readFileSync(path.join(__dirname, '../../public', game, 'js/app.js'), 'utf8');
     const page = fs.readFileSync(path.join(__dirname, '../../public', game, 'index.html'), 'utf8');
     assert.match(app, /SpielpartnerRounds\.gate\(/, game);
