@@ -73,7 +73,10 @@
         3: ['hilde', 'lena', 'jonas'],
         4: ['hilde', 'lena', 'jonas', 'horst']
       }
-    }
+    },
+    { id: 'schnapsen', label: 'Schnapsen', href: '/schnapsen/', opponents: 1, defaults: ['sepp'] },
+    { id: 'watten', label: 'Watten', href: '/watten/', opponents: 3, defaults: ['horst', 'sepp', 'hilde'] },
+    { id: 'bridge', label: 'Bridge', href: '/bridge/', opponents: 3, defaults: ['jonas', 'margarethe', 'ruediger'] }
   ];
 
   function gameById(id) {
@@ -142,6 +145,7 @@
     if (count === 4) return ['Links', 'Gegenüber links', 'Gegenüber rechts', 'Rechts'];
     if (count === 3) return ['Links', 'Gegenüber', 'Rechts'];
     if (count === 2) return ['Links', 'Rechts'];
+    if (count === 1) return ['Gegenüber'];
     var out = [];
     for (var i = 0; i < count; i++) out.push('Platz ' + (i + 1));
     return out;
