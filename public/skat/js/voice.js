@@ -1,8 +1,8 @@
 /*
  * Spiel-Freunde Skat: Stimmen der Figuren
  * Reihenfolge je Satz:
- *   1. Talk.speakAI(character, text)  (Produktions-Hook für serverseitiges ElevenLabs TTS, im Prototyp null)
- *   2. vorab erzeugte MP3 aus js/voice-manifest.js (ElevenLabs, assets/voice/<figur>/<id>.mp3)
+ *   1. vorab erzeugte MP3 aus js/voice-manifest.js (feste Sprüche, assets/voice/<figur>/<id>.mp3)
+ *   2. Talk.speakAI(character, text) nur ohne MP3 (serverseitiges ElevenLabs, Objekt-URL)
  *   3. Sprachausgabe des Browsers (speechSynthesis, de-DE), je Figur andere Tonhöhe und Tempo
  * Es spricht immer nur eine Figur (Warteschlange). Ton startet erst nach der ersten Nutzeraktion (Autoplay-Regeln).
  *
@@ -235,10 +235,13 @@
     emitPlay('start', item.text);
     if (item.onStart) item.onStart();
     let mode = 'none';
+    let owned = null;
     try {
-      let src = null;
-      try { src = Talk && Talk.speakAI ? await Talk.speakAI(item.character, item.text) : null; } catch (e) { src = null; }
-      src = src || srcFor(item.character, item.text);
+      let src = srcFor(item.character, item.text);
+      if (!src) {
+        try { src = Talk && Talk.speakAI ? await Talk.speakAI(item.character, item.text) : null; } catch (e) { src = null; }
+        if (typeof src === 'string' && src.indexOf('blob:') === 0) owned = src;
+      }
       if (src) {
         mode = 'mp3';
         prefetchAhead();
@@ -250,6 +253,7 @@
         if (!ok) { mode = 'synth'; await playSynth(item); }
       } else { mode = 'synth'; await playSynth(item); }
     } catch (e) { /* weiter mit dem nächsten Satz */ }
+    if (owned) { try { root.URL.revokeObjectURL(owned); } catch (e) { /* egal */ } }
     V.log.push({ character: item.character, text: item.text, mode });
     if (V.log.length > 300) V.log.shift();
     V.current = null;

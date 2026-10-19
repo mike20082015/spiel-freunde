@@ -1,7 +1,8 @@
 /*
  * Spiel-Freunde Skat: Tischgespräche
  * Kurze Sprüche je Figur und Ereignis, plus Stichwort-Antworten auf den Chat.
- * Später soll askAI() einen serverseitigen Grok-Endpunkt aufrufen. Aktuell keine Netzwerkaufrufe, kein API-Schlüssel.
+ * askAI() und speakAI() fragen /api/chat und /api/tts. Die Schlüssel bleiben auf dem Server.
+ * Fällt der Aufruf aus, gelten wieder die festen Sprüche und die Browserstimme.
  */
 (function (root) {
   'use strict';
@@ -173,30 +174,158 @@
   }
 
   /*
-   * TODO: Später serverseitigen Grok-Endpunkt aufrufen, z. B.
-   *   const res = await fetch('/api/table-talk', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-   *     body: JSON.stringify({ character, context }) });
-   *   return (await res.json()).reply;
-   * Der API-Schlüssel bleibt ausschließlich auf dem Server. Im Prototyp gibt es keinen Netzwerkaufruf,
-   * stattdessen eine passende Antwort aus dem Spruchvorrat.
-   * context: { message, game: { phase, declarer, gameLabel, scores }, history }
+   * Freies Tischgespräch. context: { message, game: { phase, declarer, game, scores }, history }
+   * Zuerst GET /api/chat. Auf App Platform liegt dieselbe Funktion unter /api/default/chat.
+   * Klappt das nicht, bleibt der feste Spruch, für den Rest des Besuchs ohne weitere Versuche.
    */
+  const PATHS = {
+    chat: ['/api/chat', '/api/default/chat'],
+    tts: ['/api/tts', '/api/default/tts'],
+  };
+  const history = [];
+  let live = null;
+  let base = 0;
+  let failures = 0;
+  let probeP = null;
+
+  function globalObj() {
+    return typeof globalThis !== 'undefined' ? globalThis : root;
+  }
+  function doFetch(url, options) {
+    const g = globalObj();
+    if (!g || typeof g.fetch !== 'function') return Promise.reject(new Error('kein fetch'));
+    return g.fetch.call(g, url, options);
+  }
+  function abortSignal(ms) {
+    try {
+      if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') return AbortSignal.timeout(ms);
+    } catch (e) { /* älterer Browser */ }
+    return undefined;
+  }
+  function endpoint(kind) {
+    return PATHS[kind][base] || PATHS[kind][0];
+  }
+  function pushHistory(role, text) {
+    const t = String(text || '').trim();
+    if (!t) return;
+    const last = history[history.length - 1];
+    if (last && last.role === role && last.text === t) return;
+    history.push({ role: role, text: t });
+    while (history.length > 12) history.shift();
+  }
+  function remember(message, character, reply) {
+    let seen = false;
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].role === 'du') { seen = history[i].text === message; break; }
+    }
+    if (!seen) pushHistory('du', message);
+    pushHistory(character, reply);
+  }
+  async function runProbe() {
+    for (let i = 0; i < PATHS.chat.length; i++) {
+      try {
+        const res = await doFetch(PATHS.chat[i], { method: 'GET', cache: 'no-store', signal: abortSignal(4000) });
+        if (!res || !res.ok) continue;
+        const data = await res.json();
+        if (data && data.ok === true) {
+          base = i;
+          live = true;
+          failures = 0;
+          return true;
+        }
+      } catch (e) { /* nächster Pfad */ }
+    }
+    live = false;
+    return false;
+  }
+  function probe() {
+    if (live === true) return Promise.resolve(true);
+    if (live === false) return Promise.resolve(false);
+    if (!probeP) probeP = runProbe().finally(() => { probeP = null; });
+    return probeP;
+  }
+  function disableLive() {
+    live = false;
+    probeP = null;
+  }
+  function resetForTests() {
+    live = null;
+    base = 0;
+    failures = 0;
+    probeP = null;
+    history.length = 0;
+  }
+
   async function askAI(character, context) {
-    return cannedReply(character, (context && context.message) || '');
+    context = context || {};
+    const message = String(context.message || '');
+    const canned = () => {
+      const text = cannedReply(character, message);
+      remember(message, character, text);
+      return text;
+    };
+    if (character !== 'horst' && character !== 'margarethe') return canned();
+    if (live === false) return canned();
+    const up = await probe();
+    if (!up) return canned();
+    try {
+      const prior = Array.isArray(context.history) ? context.history : history.slice(-6);
+      const res = await doFetch(endpoint('chat'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({
+          character: character,
+          message: message,
+          game: context.game || null,
+          history: prior,
+        }),
+        signal: abortSignal(9000),
+      });
+      if (!res || !res.ok) throw new Error('status');
+      const data = await res.json();
+      const text = data && typeof data.text === 'string' ? data.text.trim() : '';
+      if (!text) throw new Error('leer');
+      failures = 0;
+      remember(message, character, text);
+      return text;
+    } catch (e) {
+      failures += 1;
+      if (failures >= 2) live = false;
+      return canned();
+    }
   }
 
   /*
-   * TODO: Sprachausgabe in Produktion über serverseitiges ElevenLabs TTS, z. B.
-   *   const res = await fetch('/api/tts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-   *     body: JSON.stringify({ character, text }) });   // Server wählt die Stimme der Figur
-   *   return URL.createObjectURL(await res.blob());      // Audio-URL zum Abspielen
-   * Der ElevenLabs-Schlüssel liegt NUR auf dem Server: nie im Browser, nie als VITE_ oder andere Frontend-Variable.
-   * Optional später: ElevenLabs Scribe auf dem Server für Spracherkennung statt der Web Speech API.
-   * Im Prototyp: kein Netzwerkaufruf. Rückgabe null bedeutet "kein Server-Audio", dann nutzt voice.js
-   * vorab erzeugte MP3s oder die Browser-Sprachausgabe.
+   * Nur für Sätze ohne fertige MP3 (voice.js prüft das vorher).
+   * Rückgabe: Objekt-URL auf das MPEG, oder null. Dann nimmt voice.js die Browserstimme.
+   * Der Schlüssel bleibt auf dem Server.
    */
   async function speakAI(character, text) {
-    return null;
+    const line = String(text || '').trim();
+    if (!line) return null;
+    if (character !== 'horst' && character !== 'margarethe') return null;
+    if (live === false) return null;
+    const up = await probe();
+    if (!up) return null;
+    try {
+      const res = await doFetch(endpoint('tts'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({ character: character, text: line }),
+        signal: abortSignal(12000),
+      });
+      if (!res || !res.ok || typeof res.blob !== 'function') throw new Error('status');
+      const blob = await res.blob();
+      if (!blob || !blob.size) throw new Error('leer');
+      const g = globalObj();
+      const URLRef = (g && g.URL) || (typeof URL !== 'undefined' ? URL : null);
+      if (!URLRef || typeof URLRef.createObjectURL !== 'function') return null;
+      return URLRef.createObjectURL(blob);
+    } catch (e) {
+      return null;
+    }
   }
 
   // Wer antwortet auf eine Chatnachricht? Bei Themen die passende Figur, sonst eine oder beide.
@@ -209,5 +338,8 @@
     return [(rng || Math.random)() < 0.5 ? 'horst' : 'margarethe'];
   }
 
-  root.SkatTalk = { CHARACTERS, LINES, REPLIES, line, cannedReply, classify, askAI, speakAI, responders, callText, allLines, NUMBER_WORDS, GAME_CALLS };
+  root.SkatTalk = {
+    CHARACTERS, LINES, REPLIES, line, cannedReply, classify, askAI, speakAI, responders, callText, allLines, NUMBER_WORDS, GAME_CALLS,
+    probe, disableLive, resetForTests,
+  };
 })(typeof self !== 'undefined' ? self : this);

@@ -65,7 +65,7 @@ Die Spec liegt in [`.do/app.yaml`](.do/app.yaml). Komponente `web`, Typ Static S
 | Catch-all document | leer lassen |
 | HTTP routes | `/` (Standard, ganze Domain) |
 | Region | Frankfurt `fra`, steht so in der Spec. Anders wählen geht beim Anlegen. |
-| Environment variables | keine. Keine Schlüssel, nichts mit `VITE_`. |
+| Environment variables | an der Static Site keine. Schlüssel nur an der Functions-Komponente `api`, siehe unten. Nichts mit `VITE_`. |
 
 Nach dem ersten Deploy die Domain `spiel-freunde.com` in den App-Einstellungen auf die Static Site legen.
 
@@ -82,3 +82,58 @@ Falls später ein eigener Proxy davor steht, passen diese Header:
 | `*.html` | `public, max-age=60` |
 | `/skat/assets/voice/` | `public, max-age=31536000, immutable` |
 | übrige Dateien unter `assets/` und `css/` und `js/` | `public, max-age=86400` |
+
+## Freies Tischgespräch
+
+Horst und Margarethe antworten im Chat über Grok. Sätze ohne fertige MP3 spricht ElevenLabs. Beides läuft in einer **Functions-Komponente** (Gratis-Kontingent). Der Browser sieht keine Schlüssel und keine `VITE_`-Variable.
+
+Die Spiellogik bleibt in `public/skat/js/`. Die Functions liegen in `api/` (`project.yml`, Paket `default`, Funktionen `chat` und `tts`). Lokal, mit Probebetrieb ohne echte Schlüssel:
+
+```bash
+node api/server.js --mock
+```
+
+Dann [http://127.0.0.1:8000/skat/](http://127.0.0.1:8000/skat/). Ohne `--mock` liest der Prozess die Variablen aus der Umgebung. `./skat/start.sh` bleibt der stille Python-Server: dort gibt es keine API, der Chat nutzt die festen Sprüche.
+
+### Was Du in DigitalOcean einträgst
+
+App `spiel-freunde`, Region Frankfurt `fra`. Die Static Site bleibt, wie sie ist: in der Spec heißt sie `web`, Quelle `/`, Ausgabe `public`, Branch `main`, Autodeploy an. Wenn die Komponente im Dashboard `spiel-freunde-public` heißt, den Namen angleichen, bevor Du die Spec anwendest. Sonst legt App Platform eine zweite Static Site an.
+
+Neue Komponente, Typ **Function** (kein Web Service):
+
+| Feld | Wert |
+|---|---|
+| Name | `api` |
+| Source | dasselbe GitHub-Repo `mike20082015/spiel-freunde` |
+| Branch | `main`, Autodeploy an |
+| Source directory | `api` |
+| HTTP-Route | `/api` |
+| Instanzgröße | keine. Functions haben kein bezahltes Container-Abo. |
+
+Umgebungsvariablen der Komponente `api`, Scope **RUN_AND_BUILD_TIME** (Bau- und Laufzeit). `project.yml` setzt die Platzhalter `${NAME}` beim Bauen ein. Die Werte gehören ins Dashboard, nicht ins Git.
+
+| Name | Typ im Dashboard | Verschlüsselt | Wert |
+|---|---|---|---|
+| `XAI_API_KEY` | SECRET | ja | Schlüssel aus der xAI-Konsole |
+| `ELEVENLABS_API_KEY` | SECRET | ja | Schlüssel aus ElevenLabs |
+| `XAI_MODEL` | GENERAL, plain | nein | `grok-4.3` (schnell, `reasoning_effort: none`; die alten `grok-4-fast`-Namen leiten seit Mai 2026 dorthin um) |
+| `VOICE_MARGARETHE` | GENERAL, plain | nein | `28LWddKi67H2YN9L2PvK` |
+| `VOICE_HORST` | GENERAL, plain | nein | ElevenLabs-Stimmen-ID von Horst. Liegt nicht im Repo. Ohne sie spricht Horst freie Sätze mit der Browserstimme. Die festen MP3s bleiben. |
+| `ELEVEN_MODEL` | GENERAL, plain | nein | `eleven_flash_v2_5` (kurz und auf Deutsch; `eleven_turbo_v2_5` geht auch) |
+| `DAILY_LIMIT` | GENERAL, plain | nein | `400` Aufrufe je Funktion und UTC-Tag, im Speicher der Instanz |
+
+Die leeren SECRET-Zeilen in `.do/app.yaml` sind Platzhalter. Nach dem Eintragen im Dashboard nicht mit einer Spec überschreiben, in der die Schlüssel wieder leer sind. Wer per `doctl apps update --spec` arbeitet, holt vorher `doctl apps spec get` und übernimmt die verschlüsselten Werte. Diesen Export nicht committen.
+
+Die Variablen müssen stehen, bevor die Functions zum ersten Mal gebaut werden. Danach ein Redeploy. Kontrolle im Browser: `https://<deine-app>.ondigitalocean.app/api/default/chat` liefert `{"ok":true}`. Fehlt der xAI-Schlüssel, kommt 503, und der Tisch redet mit den festen Sprüchen.
+
+DigitalOcean hängt an die Route noch Paket und Funktion. Mit Route `/api`, Paket `default` und Funktion `chat` heißt der Pfad `/api/default/chat` (analog `/api/default/tts`). Der Browser probiert zuerst `/api/chat` und `/api/tts` (so der lokale Server) und danach die Pfade mit `default`.
+
+### Kosten
+
+Die Functions-Komponente kostet **0 Dollar**, solange das Gratis-Kontingent reicht: 90.000 GiB-Sekunden im Monat je Team, geteilt über alle Functions. Diese Funktionen haben 128 MB. Ein Aufruf von etwa 2 Sekunden verbraucht 0,25 GiB-Sekunden. Darüber liegen 0,0000185 Dollar je GiB-Sekunde. Es kommt kein Web-Service-Container dazu.
+
+xAI und ElevenLabs rechnen getrennt. Grok 4.3 kostet 1,25 Dollar je Million Eingabe-Token und 2,50 Dollar je Million Ausgabe-Token. Ein Tischsatz ist ein Bruchteil davon. ElevenLabs hängt an Eurem Tarif. Das Modell `eleven_flash_v2_5` ist die günstige, kurze Stimme.
+
+### Wenn die API fehlt
+
+Der Browser fragt einmal `GET /api/chat`. Kommt kein `{"ok":true}`, bleiben für diesen Besuch die festen Sprüche und die fertigen MP3s. Zwei fehlgeschlagene Chats hintereinander schalten genauso ab. Ein einzelner Aussetzer fällt nur für diese Zeile auf den Spruchvorrat zurück. Feste Spielsprüche mit MP3 gehen nie an ElevenLabs. Sätze ohne MP3, deren Stimme fehlschlägt, spricht der Browser. `?ai=0` schaltet das freie Gespräch für den Besuch aus. Während einer Antwort steht im Chat „Horst schreibt“ oder „Margarethe schreibt“. Während der Wiedergabe pausiert das Freisprechen wie bisher.
