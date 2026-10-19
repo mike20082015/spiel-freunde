@@ -1,0 +1,72 @@
+/* Deine Spielpartner: dieselbe Kneipe, nur die Runde */
+.sp-page{background:var(--cream)}
+.sp-hero{position:relative;overflow:hidden;color:var(--cream);padding:54px 0 48px;background:
+  radial-gradient(ellipse at 80% 0%,rgba(255,180,90,.18),transparent 55%),
+  radial-gradient(ellipse at 0% 100%,rgba(138,47,47,.28),transparent 50%),
+  linear-gradient(165deg,#3d2616,#2b1a0f 58%,#1f130b)}
+.sp-hero h1{font-size:clamp(2.4rem,5vw,4rem);margin:16px 0 14px}
+.sp-hero .lead{max-width:680px;font-size:1.12rem;color:rgba(247,241,227,.88)}
+.sp-hero-cta{display:flex;flex-direction:column;align-items:flex-start;gap:14px;margin-top:28px;max-width:720px}
+.sp-hero .btn{white-space:normal;text-align:center;max-width:100%}
+.sp-status{color:rgba(247,241,227,.82);font-size:.98rem;max-width:640px}
+.sp-reassure{list-style:none;display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:22px;font-size:.9rem;color:rgba(247,241,227,.78)}
+.sp-reassure li::before{content:"♦";color:var(--gold);margin-right:8px}
+.nav-links a[aria-current="page"]{color:var(--cream)}
+.nav-links a[aria-current="page"]::after{transform:scaleX(1)}
+
+.sp-filters{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:-12px 0 28px}
+.sp-filters button{font:inherit;font-size:.88rem;font-weight:700;border-radius:999px;padding:.5em 1.05em;border:1.5px solid var(--line);background:var(--paper);color:var(--felt);cursor:pointer}
+.sp-filters button[aria-pressed="true"]{background:var(--felt);border-color:var(--felt);color:var(--cream)}
+
+.sp-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.sp-card{min-width:0;display:flex;flex-direction:column;background:var(--paper);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.sp-card[hidden]{display:none}
+.sp-portrait{position:relative;aspect-ratio:4/3.3;display:grid;place-items:center;overflow:hidden;background:
+  radial-gradient(ellipse at 30% 18%,rgba(255,214,150,.55),transparent 52%),
+  linear-gradient(165deg,#a56b3c,#6b3e22 46%,#3a2416 80%,#24160c)}
+.sp-card:nth-child(3n+2) .sp-portrait{background:
+  radial-gradient(ellipse at 70% 16%,rgba(233,201,119,.45),transparent 48%),
+  linear-gradient(165deg,#8d4a3a,#5c2e24 48%,#3a2218)}
+.sp-card:nth-child(3n) .sp-portrait{background:
+  radial-gradient(ellipse at 40% 12%,rgba(255,190,120,.42),transparent 50%),
+  linear-gradient(165deg,#7a5430,#4a3018 52%,#2a1a0e)}
+.sp-initials{font-family:var(--serif);font-size:clamp(2.4rem,4vw,3.4rem);letter-spacing:.04em;color:var(--gold-2);text-shadow:0 8px 18px rgba(0,0,0,.35)}
+.sp-portrait img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 30%}
+.sp-body{display:flex;flex-direction:column;gap:8px;padding:18px 18px 20px;min-width:0;flex:1}
+.sp-origin{font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--wine)}
+.sp-name{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:1.45rem;color:var(--felt);margin:0}
+.sp-who{min-width:0}
+.sp-badge{font-family:var(--sans);font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;line-height:1;padding:5px 8px;border-radius:999px}
+.sp-badge-standard{background:var(--cream-2);color:#3a2a0c}
+.sp-badge-premium{background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#3a2a0c}
+.sp-intro{color:var(--ink-2);font-size:.96rem}
+.sp-personality{font-family:var(--hand);font-size:1.35rem;line-height:1.2;color:var(--wine);border-left:3px solid var(--gold);padding-left:12px}
+.sp-access{margin-top:auto;font-size:.75rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--felt)}
+.sp-card.is-locked .sp-access{color:var(--wine)}
+.sp-media{min-width:0}
+.sp-pending{margin:0;text-align:center;font-family:var(--hand);font-size:1.4rem;color:var(--wine);background:var(--cream-2);border-radius:12px;padding:8px 12px}
+.sp-player{min-width:0}
+.sp-video{display:block;width:100%;aspect-ratio:16/9;border-radius:12px;background:#2a180f;object-fit:cover;cursor:pointer}
+.sp-empty{text-align:center;color:var(--ink-2)}
+
+.sp-member{padding-top:20px}
+.sp-member .plans{margin-top:8px}
+.sp-fine{max-width:760px;margin:22px auto 0;text-align:center;color:var(--ink-2);font-size:.98rem}
+.sp-page .btn:disabled,.sp-page a[aria-disabled="true"]{opacity:.62;cursor:not-allowed;filter:grayscale(.2)}
+.sp-page .btn:disabled:hover,.sp-page a[aria-disabled="true"]:hover{transform:none}
+.sp-page .plan .btn,.sp-page .trial .btn{white-space:normal;max-width:100%;text-align:center}
+.sp-page .trial{min-width:0}
+.sp-page :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+@media (max-width:900px){
+  .sp-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){
+  .sp-hero{padding:36px 0 32px}
+  .sp-hero-cta,.sp-hero .btn,.sp-reassure{width:100%}
+  .sp-grid{grid-template-columns:minmax(0,1fr)}
+  .sp-name{font-size:1.3rem}
+}
+@media (prefers-reduced-motion:reduce){
+  .sp-page *{animation:none!important;transition:none!important}
+}

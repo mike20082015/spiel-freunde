@@ -451,5 +451,9 @@ img{display:block;max-width:100%}
   .tbtn .tdot{display:none}
 }
 @media (max-width:360px){ .tbtn{padding:5px 6px;font-size:.7rem} }
+.intro-partners{margin:0 0 12px!important;font-size:.92rem}
+.intro-partners a{color:var(--wine);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.partner-foot{margin-top:12px;font-size:.88rem}
+.partner-foot a{color:var(--gold-2);font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .layout > *{min-width:0}
 .st-chips{flex-wrap:wrap;min-width:0}
