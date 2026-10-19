@@ -32,7 +32,7 @@
   var seats = [
     { seat: 0, id: 'du', name: 'Du', full: 'Du', slug: null, voice: false, place: 'south' },
     { seat: 1, id: 'horst', name: 'Horst', full: 'Horst Kaluppke', slug: 'horst', voice: true, place: 'west' },
-    { seat: 2, id: 'sepp', name: 'Sepp', full: 'Sepp', slug: 'sepp', voice: false, place: 'north' },
+    { seat: 2, id: 'sepp', name: 'Sepp', full: 'Sepp', slug: 'sepp', voice: true, place: 'north' },
     { seat: 3, id: 'margarethe', name: 'Margarethe', full: 'Margarethe von Hohenfels', slug: 'margarethe', voice: true, place: 'east' },
   ];
 

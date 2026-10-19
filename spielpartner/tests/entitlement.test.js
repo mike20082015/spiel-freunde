@@ -206,6 +206,40 @@ test('Karte zeigt Abzeichen und lässt das Video weg', () => {
   assert.equal(premium.includes('Video folgt'), false);
 });
 
+test('Stimme hören gilt für die neuen Spielpartner, nicht für Luce', () => {
+  const voiced = ['horst', 'margarethe', 'lena', 'jonas', 'oemer', 'oma-hilde', 'sepp', 'ruediger', 'chantal', 'urs', 'vreni'];
+  voiced.forEach((slug) => {
+    assert.equal(typeof C.VOICE_LINES[slug], 'string', slug);
+    const card = C.cardHtml({
+      name: slug,
+      slug: slug,
+      intro: 'Kurz.',
+      origin: 'Hier',
+      personality: 'Ruhig.',
+      tier: 'premium',
+      portrait: '',
+      hasVideo: false,
+      video: ''
+    });
+    assert.match(card, new RegExp('data-voice="' + slug + '"'));
+    assert.match(card, /Stimme hören/);
+  });
+  assert.equal(C.VOICE_LINES.luce, undefined);
+  const luce = C.cardHtml({
+    name: 'Luce Morel',
+    slug: 'luce',
+    intro: 'Wein.',
+    origin: 'Beaujolais',
+    personality: 'Ruhig.',
+    tier: 'premium',
+    portrait: '',
+    hasVideo: false,
+    video: ''
+  });
+  assert.equal(luce.includes('data-voice'), false);
+  assert.doesNotMatch(JSON.stringify(C.VOICE_LINES), /grok|elevenlabs|openai|x\.?ai/i);
+});
+
 test('Katalog: Horst und Margarethe Standard, der Rest Premium', () => {
   const list = catalog();
   assert.strictEqual(list.length, 12);

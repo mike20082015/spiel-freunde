@@ -45,6 +45,9 @@
 .sp-access{margin-top:auto;font-size:.75rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--felt)}
 .sp-card.is-locked .sp-access{color:var(--wine)}
 .sp-media{min-width:0}
+.sp-voice{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.sp-voice .btn{font-size:.85rem}
+.sp-voice-line{margin:0;font-size:.92rem;color:var(--ink-2)}
 .sp-pending{margin:0;text-align:center;font-family:var(--hand);font-size:1.4rem;color:var(--wine);background:var(--cream-2);border-radius:12px;padding:8px 12px}
 .sp-player{min-width:0}
 .sp-video{display:block;width:100%;aspect-ratio:16/9;border-radius:12px;background:#2a180f;object-fit:cover;cursor:pointer}

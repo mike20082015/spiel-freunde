@@ -100,7 +100,64 @@
     });
   });
 
+  var voiceAudio = null;
+
+  function showVoiceLine(button, line) {
+    var note = button.parentNode && button.parentNode.querySelector('[data-voice-line]');
+    if (!note) return;
+    note.hidden = false;
+    note.textContent = line;
+  }
+
+  function postVoice(path, slug, line) {
+    return fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+      body: JSON.stringify({ character: slug, text: line })
+    }).then(function (res) {
+      if (!res || !res.ok || typeof res.blob !== 'function') throw new Error('still');
+      return res.blob();
+    }).then(function (blob) {
+      if (!blob || !blob.size) throw new Error('leer');
+      return blob;
+    });
+  }
+
+  function playVoice(button) {
+    var slug = button.getAttribute('data-voice');
+    var line = C.VOICE_LINES && C.VOICE_LINES[slug];
+    if (!line || typeof fetch !== 'function') {
+      if (line) showVoiceLine(button, line);
+      return;
+    }
+    button.disabled = true;
+    postVoice('/api/sf/tts', slug, line).catch(function () {
+      return postVoice('/api/tts', slug, line);
+    }).then(function (blob) {
+      if (voiceAudio) {
+        try { voiceAudio.pause(); } catch (err) { /* nächster Satz */ }
+      }
+      var url = URL.createObjectURL(blob);
+      voiceAudio = new Audio(url);
+      voiceAudio.onended = function () {
+        try { URL.revokeObjectURL(url); } catch (err) { /* egal */ }
+      };
+      return voiceAudio.play();
+    }).catch(function () {
+      showVoiceLine(button, line);
+    }).then(function () {
+      button.disabled = false;
+    });
+  }
+
   if (grid) {
+    grid.addEventListener('click', function (event) {
+      var button = event.target && event.target.closest ? event.target.closest('[data-voice]') : null;
+      if (!button || !grid.contains(button)) return;
+      event.preventDefault();
+      playVoice(button);
+    });
     grid.addEventListener('error', function (event) {
       var target = event.target;
       if (!target || !target.tagName) return;

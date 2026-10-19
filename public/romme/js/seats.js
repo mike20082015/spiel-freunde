@@ -1,7 +1,7 @@
 /*
  * Rommé-Tisch. Süden: Du. Links Horst, oben Margarethe, rechts Oma Hilde.
  * Bilder: /media/spielpartner/<slug>.jpg, sonst die Initialen.
- * Oma Hilde hat den Slug oma-hilde und noch keine Stimme.
+ * Oma Hilde hat den Slug oma-hilde und spricht über denselben Weg wie Horst.
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -33,7 +33,7 @@
     { seat: 0, id: 'du', name: 'Du', full: 'Du', slug: null, voice: false, place: 'south' },
     { seat: 1, id: 'horst', name: 'Horst', full: 'Horst Kaluppke', slug: 'horst', voice: true, place: 'west' },
     { seat: 2, id: 'margarethe', name: 'Margarethe', full: 'Margarethe von Hohenfels', slug: 'margarethe', voice: true, place: 'north' },
-    { seat: 3, id: 'oma-hilde', name: 'Oma Hilde', full: 'Oma Hilde', slug: 'oma-hilde', voice: false, place: 'east' },
+    { seat: 3, id: 'oma-hilde', name: 'Oma Hilde', full: 'Oma Hilde', slug: 'oma-hilde', voice: true, place: 'east' },
   ];
 
   seats.forEach(function (p) {

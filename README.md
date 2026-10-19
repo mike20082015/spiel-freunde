@@ -100,7 +100,9 @@ Falls später ein eigener Proxy davor steht, passen diese Header:
 
 ## Freies Tischgespräch
 
-Horst und Margarethe antworten im Chat über Grok. Sätze ohne fertige MP3 spricht ElevenLabs. Beides läuft in einer **Functions-Komponente** (Gratis-Kontingent). Der Browser sieht keine Schlüssel und keine `VITE_`-Variable.
+Horst und Margarethe antworten im Chat über Grok. Sätze ohne fertige MP3 spricht ElevenLabs. Dieselben Grenzen gelten für Lena, Jonas, Ömer, Oma Hilde (`hilde` und `oma-hilde`), Sepp, Rüdiger und Chantal, dazu Urs und Vreni. Beides läuft in einer **Functions-Komponente** (Gratis-Kontingent). Der Browser sieht keine Schlüssel und keine `VITE_`-Variable.
+
+Die neuen Stimmen haben eine feste Vorgabe im Code. `process.env.VOICE_LENA`, `VOICE_JONAS`, `VOICE_OEMER`, `VOICE_HILDE`, `VOICE_OMA_HILDE`, `VOICE_SEPP`, `VOICE_RUEDIGER` und `VOICE_CHANTAL` überschreiben sie zur Laufzeit, wenn sie gesetzt sind. Diese Namen stehen absichtlich nicht in `api/project.yml`: jeder `${...}`-Platzhalter dort muss in der App-Spec existieren.
 
 Die Spiellogik bleibt in `public/skat/js/`. Die Functions liegen in `api/` (`project.yml`, Paket `sf`, Funktionen `chat`, `tts` und `avatar`). Lokal, mit Probebetrieb ohne echte Schlüssel:
 

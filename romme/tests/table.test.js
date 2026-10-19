@@ -13,7 +13,7 @@ test('Sitze: Du, Horst, Margarethe, Oma Hilde, Bilder mit Initialen', () => {
   assert.equal(seats.seats[2].portrait, '/media/spielpartner/margarethe.jpg');
   assert.equal(seats.seats[3].slug, 'oma-hilde');
   assert.equal(seats.seats[3].portrait, '/media/spielpartner/oma-hilde.jpg');
-  assert.equal(seats.seats[3].voice, false);
+  assert.equal(seats.seats[3].voice, true);
   assert.equal(seats.seats[1].voice, true);
   assert.equal(seats.seats[2].voice, true);
   assert.equal(seats.initials('Horst Kaluppke'), 'HK');
