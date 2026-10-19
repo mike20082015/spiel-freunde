@@ -73,12 +73,14 @@ Nützliche URL-Parameter: `?fresh=1` (Punkteliste löschen), `?speed=fast|normal
 Die Sprachausgabe (MP3) funktioniert in allen aktuellen Browsern, auch offline. Die Browser-Sprachausgabe für dynamische Sätze
 hängt von den installierten deutschen Stimmen ab.
 
-### Produktion (TODO-Hooks in `js/talk.js`)
+### Produktion (`js/talk.js`, Server unter `api/`)
 
-* `askAI(character, context)`: später serverseitiger Grok-Endpunkt für echte Antworten.
-* `speakAI(character, text)`: später serverseitiges ElevenLabs TTS (z. B. `POST /api/tts`, Antwort Audio). Der ElevenLabs-Schlüssel
-  liegt nur auf dem Server, nie im Browser, nie als `VITE_` oder andere Frontend-Variable. Optional ElevenLabs Scribe auf dem Server
-  als Spracherkennung statt Web Speech API (dann auch Firefox).
+* `askAI(character, context)` ruft `POST /api/chat` (auf App Platform `/api/default/chat`). Der xAI-Schlüssel liegt nur in der Functions-Komponente.
+* `speakAI(character, text)` ruft `POST /api/tts` nur für Sätze ohne fertige MP3 und liefert eine Objekt-URL. Der ElevenLabs-Schlüssel
+  liegt nur auf dem Server, nie im Browser, nie als `VITE_` oder andere Frontend-Variable.
+* Fehlt die API oder kommt zweimal hintereinander keine Chat-Antwort, gelten für den Besuch wieder die festen Sprüche. Die MP3s der Spielereignisse bleiben.
+* Lokal mit Probebetrieb: im Repository `node api/server.js --mock`, dann http://127.0.0.1:8000/skat/. Die Schritte für DigitalOcean stehen in der README der Website.
+* Optional später: ElevenLabs Scribe auf dem Server als Spracherkennung statt Web Speech API (dann auch Firefox).
 
 ## Dateien
 
@@ -104,7 +106,7 @@ hängt von den installierten deutschen Stimmen ab.
 
 ```bash
 cd skat
-node --test tests/             # 25 Tests: Regeln, Rundenziel, Spielstärken, 2 x 200 simulierte Spiele
+node --test tests/             # 25 Regeltests plus Tests für Chat-API und Fallback
 node tests/simulate.js 200     # Statistik je Regelvariante
 node tests/ai-strength.js 500  # KI gegen Zufall und Stufenvergleich (Turnier >= Kneipe > Anfänger)
 python3 tools/verify_voice.py  # 21 Browser-Checks (headless Chrome)

@@ -1,0 +1,27 @@
+# DigitalOcean Functions. Werte kommen beim Bauen aus den Umgebungsvariablen
+# der Komponente (App Platform, Scope RUN_AND_BUILD_TIME). Keine Schlüssel hier.
+packages:
+  - name: default
+    environment:
+      XAI_API_KEY: "${XAI_API_KEY}"
+      ELEVENLABS_API_KEY: "${ELEVENLABS_API_KEY}"
+      XAI_MODEL: "${XAI_MODEL}"
+      VOICE_HORST: "${VOICE_HORST}"
+      VOICE_MARGARETHE: "${VOICE_MARGARETHE}"
+      ELEVEN_MODEL: "${ELEVEN_MODEL}"
+      DAILY_LIMIT: "${DAILY_LIMIT}"
+    functions:
+      - name: chat
+        runtime: nodejs:22
+        web: true
+        main: index.js
+        limits:
+          timeout: 12000
+          memory: 128
+      - name: tts
+        runtime: nodejs:22
+        web: true
+        main: index.js
+        limits:
+          timeout: 15000
+          memory: 128

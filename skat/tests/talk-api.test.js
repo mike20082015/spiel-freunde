@@ -1,0 +1,266 @@
+/* Server: Eingabe, Persona, Grenzen. Aufruf über `node --test tests/`. */
+const test = require('node:test');
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+const H = require('../../api/lib/handlers');
+
+const ENV = {
+  XAI_API_KEY: 'test-key',
+  ELEVENLABS_API_KEY: 'test-eleven',
+  VOICE_HORST: 'MockHorstVoice01',
+  XAI_MODEL: 'grok-4.3',
+  ELEVEN_MODEL: 'eleven_flash_v2_5',
+  DAILY_LIMIT: '50',
+};
+
+function event(method, body, extra) {
+  return Object.assign({
+    http: {
+      method,
+      headers: Object.assign({ origin: 'https://spiel-freunde.com' }, (extra && extra.headers) || {}),
+      body: body == null ? '' : JSON.stringify(body),
+    },
+  }, extra && extra.fields);
+}
+
+function chatDeps(fetchImpl, env) {
+  return { env: env || ENV, fetch: fetchImpl, now: () => 1700000000000 };
+}
+
+test.describe('Tisch-API', { concurrency: 1 }, () => {
+  test.beforeEach(() => H.resetLimits());
+
+  test('Persona bleibt in der Rolle und nennt keinen Anbieter', () => {
+    assert.match(H.PERSONA.horst, /Stinkstiefel/);
+    assert.match(H.PERSONA.horst, /Berliner Mundart/);
+    assert.match(H.PERSONA.margarethe, /Schätzchen/);
+    assert.match(H.PERSONA.margarethe, /von Hohenfels/);
+    assert.doesNotMatch(H.PERSONA.horst + H.PERSONA.margarethe, /grok|elevenlabs|openai|x\.?ai/i);
+  });
+
+  test('nur öffentlicher Spielstand landet im Prompt', () => {
+    const parsed = H.validateChat({
+      character: 'horst',
+      message: 'Was liegt im Skat?',
+      game: {
+        phase: 'play', declarer: 1, game: 'Grand', scores: [10, 20, -30],
+        hands: ['VERDECKT-PIK-ASS'], skat: ['VERDECKT-KARO'],
+      },
+      history: [
+        { role: 'du', text: 'Moin' },
+        { role: 'gast', text: 'VERDECKT-HISTORIE' },
+        { role: 'horst', text: 'Na.' },
+        { role: 'user', text: 'x'.repeat(500) },
+      ],
+    });
+    assert.equal(parsed.ok, true);
+    assert.equal(parsed.value.game.hands, undefined);
+    assert.equal(parsed.value.history.length, 3);
+    assert.equal(parsed.value.history[2].text.length, 300);
+    const body = H.buildChatBody(parsed.value, {});
+    const blob = JSON.stringify(body);
+    assert.equal(body.max_tokens, 80);
+    assert.equal(body.model, 'grok-4.3');
+    assert.equal(body.reasoning_effort, 'none');
+    assert.equal(body.search_parameters.mode, 'off');
+    assert.match(blob, /Grand/);
+    assert.match(blob, /Alleinspieler: Horst/);
+    assert.match(blob, /Horst 20/);
+    assert.match(blob, /Phase Spiel/);
+    assert.doesNotMatch(blob, /VERDECKT/);
+    assert.equal(body.messages[0].role, 'system');
+    assert.equal(body.messages[1].role, 'user');
+    assert.equal(body.messages[2].role, 'assistant');
+    const other = H.buildChatBody(Object.assign({}, parsed.value, { character: 'margarethe' }), { XAI_MODEL: 'grok-4.7' });
+    assert.equal(other.reasoning_effort, undefined);
+    assert.match(other.messages[0].content, /Schätzchen/);
+    assert.equal(other.messages[2].content, 'Horst sagt: Na.');
+  });
+
+  test('ungültige Eingabe wird 503, ohne Aufruf nach außen', async () => {
+    let calls = 0;
+    const fetchImpl = async () => { calls += 1; throw new Error('nicht rufen'); };
+    const tooLong = await H.handleChat(event('POST', { character: 'horst', message: 'a'.repeat(301) }), chatDeps(fetchImpl));
+    assert.equal(tooLong.status, 503);
+    const bad = await H.handleChat(event('POST', { character: 'fremd', message: 'hallo' }), chatDeps(fetchImpl));
+    assert.equal(bad.status, 503);
+    const empty = await H.handleChat(event('POST', { character: 'horst', message: '   ' }), chatDeps(fetchImpl));
+    assert.equal(empty.status, 503);
+    assert.equal(calls, 0);
+    assert.equal(JSON.stringify(tooLong.json).includes('x.ai'), false);
+  });
+
+  test('Gesundheit, Antwort und Fehler bleiben ohne Schlüsseldetails', async () => {
+    const missing = await H.handleChat(event('GET'), chatDeps(async () => { throw new Error('nein'); }, { XAI_API_KEY: '' }));
+    assert.equal(missing.status, 503);
+    const health = await H.handleChat(event('GET'), chatDeps(async () => { throw new Error('nein'); }));
+    assert.equal(health.status, 200);
+    assert.deepEqual(health.json, { ok: true });
+    assert.equal(health.headers['Access-Control-Allow-Origin'], 'https://spiel-freunde.com');
+
+    let sent;
+    const ok = await H.handleChat(event('POST', {
+      character: 'horst',
+      message: '  Na,   wie läuft es?  ',
+      game: { phase: 'bidding', declarer: null, scores: [0, 4, 0] },
+    }), chatDeps(async (url, options) => {
+      sent = { url, options };
+      assert.ok(options.signal);
+      return { ok: true, json: async () => ({ choices: [{ message: { content: 'Erster Satz. Zweiter Satz. Dritter Satz, der weg muss.' } }] }) };
+    }));
+    assert.equal(ok.status, 200);
+    assert.equal(ok.json.text, 'Erster Satz. Zweiter Satz.');
+    assert.equal(sent.url, H.CHAT_URL);
+    assert.equal(sent.options.headers.Authorization, 'Bearer test-key');
+    assert.equal(sent.options.body.includes('test-key'), false);
+
+    const slipped = await H.handleChat(event('POST', { character: 'margarethe', message: 'Wer bist du?' }), chatDeps(async () => ({
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: 'Ich bin ein Sprachmodell von Grok.' } }] }),
+    })));
+    assert.equal(slipped.status, 503);
+    assert.equal(JSON.stringify(slipped.json).includes('Grok'), false);
+
+    const down = await H.handleChat(event('POST', { character: 'horst', message: 'hallo' }), chatDeps(async () => ({
+      ok: false,
+      status: 401,
+      json: async () => ({ error: 'SUPERSECRET' }),
+    })));
+    assert.equal(down.status, 503);
+    assert.equal(JSON.stringify(down.json).includes('SUPERSECRET'), false);
+  });
+
+  test('langes Gerede wird auf zwei Sätze und 40 Wörter gekürzt', () => {
+    const words = [];
+    for (let i = 0; i < 50; i++) words.push('wort' + i);
+    const cut = H.clampSpeech(words.join(' ') + '.');
+    assert.ok(cut.split(/\s+/).length <= 40);
+  });
+
+  test('Tages- und Minutengrenze', async () => {
+    let calls = 0;
+    const fetchImpl = async () => {
+      calls += 1;
+      return { ok: true, json: async () => ({ choices: [{ message: { content: 'Na jut.' } }] }) };
+    };
+    const tight = chatDeps(fetchImpl, Object.assign({}, ENV, { DAILY_LIMIT: '2' }));
+    assert.equal((await H.handleChat(event('POST', { character: 'horst', message: 'eins' }), tight)).status, 200);
+    assert.equal((await H.handleChat(event('POST', { character: 'horst', message: 'zwei' }), tight)).status, 200);
+    assert.equal((await H.handleChat(event('POST', { character: 'horst', message: 'drei' }), tight)).status, 503);
+    assert.equal(calls, 2);
+
+    H.resetLimits();
+    calls = 0;
+    const fast = chatDeps(fetchImpl, Object.assign({}, ENV, { DAILY_LIMIT: '100' }));
+    for (let i = 0; i < H.PER_MINUTE; i++) {
+      assert.equal((await H.handleChat(event('POST', { character: 'horst', message: 'm' + i }), fast)).status, 200);
+    }
+    assert.equal((await H.handleChat(event('POST', { character: 'horst', message: 'zu viel' }), fast)).status, 503);
+    assert.equal(calls, H.PER_MINUTE);
+  });
+
+  test('CORS nur für die eigenen Adressen', () => {
+    assert.equal(H.allowOrigin('https://spiel-freunde.com'), 'https://spiel-freunde.com');
+    assert.equal(H.allowOrigin('https://www.spiel-freunde.com'), 'https://www.spiel-freunde.com');
+    assert.equal(H.allowOrigin('https://spiel-freunde-x.ondigitalocean.app'), 'https://spiel-freunde-x.ondigitalocean.app');
+    assert.equal(H.allowOrigin('http://127.0.0.1:8765'), 'http://127.0.0.1:8765');
+    assert.equal(H.allowOrigin('https://evil.example'), '');
+    assert.equal(H.allowOrigin('https://spiel-freunde.com.evil.com'), '');
+    assert.equal(H.allowOrigin('http://spiel-freunde.com'), '');
+    assert.equal(H.allowOrigin('https://evil.ondigitalocean.app.attacker.com'), '');
+  });
+
+  test('Stimme: Horst braucht eine ID, Margarethe hat einen Default, Audio kommt als MPEG', async () => {
+    let calls = 0;
+    const noHorst = await H.handleTts(event('POST', { character: 'horst', text: 'Na endlich.' }), {
+      env: { ELEVENLABS_API_KEY: 'test-eleven', VOICE_HORST: '' },
+      fetch: async () => { calls += 1; throw new Error('nicht rufen'); },
+      now: () => 1700000000000,
+    });
+    assert.equal(noHorst.status, 503);
+    assert.equal(calls, 0);
+
+    const longText = await H.handleTts(event('POST', { character: 'margarethe', text: 'a'.repeat(301) }), chatDeps(async () => { calls += 1; throw new Error('nicht'); }));
+    assert.equal(longText.status, 503);
+    assert.equal(calls, 0);
+
+    let sent;
+    const bytes = Uint8Array.from([0xff, 0xfb, 0x90, 0x64, 1, 2, 3, 4]);
+    const audio = await H.handleTts(event('POST', { character: 'margarethe', text: 'Aber Schätzchen.' }), {
+      env: { ELEVENLABS_API_KEY: 'test-eleven' },
+      fetch: async (url, options) => {
+        sent = { url, options };
+        return { ok: true, headers: { get: () => 'audio/mpeg' }, arrayBuffer: async () => bytes };
+      },
+      now: () => 1700000000000,
+    });
+    assert.equal(audio.status, 200);
+    assert.equal(audio.headers['Content-Type'], 'audio/mpeg');
+    assert.ok(sent.url.indexOf('/' + H.DEFAULT_MARGARETHE + '/stream') !== -1);
+    assert.equal(sent.options.headers['xi-api-key'], 'test-eleven');
+    assert.equal(JSON.parse(sent.options.body).model_id, 'eleven_flash_v2_5');
+    assert.equal(JSON.parse(sent.options.body).language_code, 'de');
+    const wrapped = H.toFunctionResponse(audio);
+    assert.equal(wrapped.headers['Content-Type'], 'audio/mpeg');
+    assert.equal(Buffer.from(wrapped.body, 'base64')[0], 0xff);
+
+    const evil = await H.handleTts(event('POST', { character: 'margarethe', text: 'Hallo' }, {
+      headers: { origin: 'https://evil.example' },
+    }), {
+      env: { ELEVENLABS_API_KEY: 'test-eleven' },
+      fetch: async () => ({ ok: true, headers: { get: () => 'audio/mpeg' }, arrayBuffer: async () => bytes }),
+      now: () => 1700000000000,
+    });
+    assert.equal(evil.headers['Access-Control-Allow-Origin'], undefined);
+  });
+
+  test('Function-Einstieg antwortet auf GET', async () => {
+    const prev = process.env.XAI_API_KEY;
+    process.env.XAI_API_KEY = 'test-key';
+    try {
+      const chat = require('../../api/packages/default/chat/index.js');
+      const out = await chat.main({ http: { method: 'GET', headers: {} } });
+      assert.equal(out.statusCode, 200);
+      assert.deepEqual(out.body, { ok: true });
+    } finally {
+      if (prev == null) delete process.env.XAI_API_KEY;
+      else process.env.XAI_API_KEY = prev;
+    }
+  });
+
+  test('lokaler Server: Seite, Chat, Ablehnung', async () => {
+    const { createServer } = require('../../api/server');
+    const server = createServer({ mock: true, delayMs: 0 });
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const port = server.address().port;
+    try {
+      const health = await fetch('http://127.0.0.1:' + port + '/api/chat');
+      assert.equal(health.status, 200);
+      assert.deepEqual(await health.json(), { ok: true });
+      const page = await fetch('http://127.0.0.1:' + port + '/skat/');
+      assert.equal(page.status, 200);
+      assert.match(await page.text(), /chat-log/);
+      const post = await fetch('http://127.0.0.1:' + port + '/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Origin: 'http://127.0.0.1:' + port },
+        body: JSON.stringify({ character: 'margarethe', message: 'Guten Abend', history: [] }),
+      });
+      assert.equal(post.status, 200);
+      assert.match((await post.json()).text, /Schätzchen/);
+      assert.equal(post.headers.get('access-control-allow-origin'), 'http://127.0.0.1:' + port);
+      const bad = await fetch('http://127.0.0.1:' + port + '/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ character: 'fremd', message: 'hallo' }),
+      });
+      assert.equal(bad.status, 503);
+      const secret = fs.readFileSync(path.join(__dirname, '../../public/skat/js/talk.js'), 'utf8');
+      assert.equal(secret.includes('VITE_'), false);
+      assert.equal(secret.includes('XAI_API_KEY'), false);
+      assert.equal(secret.includes('ELEVENLABS_API_KEY'), false);
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
+  });
+});

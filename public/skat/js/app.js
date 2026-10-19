@@ -66,6 +66,27 @@
   }
   function sys(text) { logLine(text, 'sys'); }
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function showTyping(name) {
+    const log = $('chat-log');
+    const p = document.createElement('p');
+    p.className = 'cl typing';
+    p.setAttribute('aria-label', name + ' schreibt');
+    const b = document.createElement('b');
+    b.textContent = name + ':';
+    const label = document.createElement('span');
+    label.className = 'typing-label';
+    label.textContent = ' schreibt';
+    const dots = document.createElement('span');
+    dots.className = 'dots';
+    dots.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < 3; i++) dots.appendChild(document.createElement('i'));
+    p.appendChild(b);
+    p.appendChild(label);
+    p.appendChild(dots);
+    log.appendChild(p);
+    log.scrollTop = log.scrollHeight;
+    return p;
+  }
 
   // Figur spricht. kind 'bid' = kurze Reizansage, sonst Tischgespräch (gedrosselt).
   // Mit Ton: Die Blase erscheint, wenn die Figur wirklich losredet, und bleibt bis zum Ende der Aufnahme.
@@ -924,8 +945,10 @@
     newGame();
   });
 
+  let chatBusy = false;
   $('chat-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (chatBusy) return;
     const input = $('chat-input');
     const text = input.value.trim();
     if (!text) return;
@@ -938,14 +961,27 @@
     logLine('<b>Du:</b> ' + esc(text), 'you');
     say(0, text, { force: true });
     const who = Talk.responders(text);
-    let wait = 700;
-    for (const w of who) {
-      await sleep(wait + Math.random() * 500);
-      const p = w === 'horst' ? 1 : 2;
-      const st = S.st;
-      const reply = await Talk.askAI(w, { message: text, game: st ? { phase: st.phase, declarer: st.declarer, game: st.game ? E.gameLabel(st.game) : null, scores: match.scores.slice() } : null });
-      say(p, reply, { force: true, priority: true });
-      wait = 900;
+    chatBusy = true;
+    try {
+      for (const w of who) {
+        const typing = showTyping(w === 'horst' ? 'Horst' : 'Margarethe');
+        const started = Date.now();
+        let reply = '';
+        try {
+          const st = S.st;
+          reply = await Talk.askAI(w, {
+            message: text,
+            game: st ? { phase: st.phase, declarer: st.declarer, game: st.game ? E.gameLabel(st.game) : null, scores: match.scores.slice() } : null,
+          });
+        } finally {
+          const left = 400 - (Date.now() - started);
+          if (left > 0) await sleep(left);
+          if (typing && typing.parentNode) typing.parentNode.removeChild(typing);
+        }
+        say(w === 'horst' ? 1 : 2, reply, { force: true, priority: true });
+      }
+    } finally {
+      chatBusy = false;
     }
   });
 
@@ -1405,6 +1441,8 @@
   applyTalkMode(false);
   $('intro-small').textContent = 'Spielstärke: ' + LEVEL_NAMES[settings.level] + ' · ' + (targetValue() ? 'Spielen bis ' + targetValue() : 'ohne Limit') + ' · Ton ' + (settings.sound ? 'an' : 'aus');
   sys('Willkommen in der Eckkneipe. Nimm Platz, dann wird gegeben.');
+  if (params.get('ai') === '0' && Talk.disableLive) Talk.disableLive();
+  else if (Talk.probe) Talk.probe();
 
   function start() {
     if (S.started) return;
