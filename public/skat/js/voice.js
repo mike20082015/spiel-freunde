@@ -22,7 +22,7 @@
   };
   const MALE = /(male|mann|markus|stefan|hans|yannick|conrad|klaus|jonas|florian|killian|bernd|daniel)/i;
   const FEMALE = /(female|frau|anna|petra|katja|helena|hedda|marlene|vicki|amala|seraphina|elke|google deutsch)/i;
-  const CACHE_NAME = 'sf-skat-voice-v1';
+  const CACHE_NAME = 'sf-skat-voice-v2';
   const POOL_MAX = 4;
   // Begrüßung, Spielstart, Passen/Mitgehen und die ersten Reizwerte. Nicht alle 248 Dateien.
   const PRELOAD_RE = /\/(l-welcome-\d+|l-gameStart-[01]|l-passBid-0|l-bidHigh-0|c-pass|c-hold|c-open|c-18|c-20|c-22|r-greet-0|r-default-0)\.mp3$/;

@@ -29,8 +29,8 @@ Nützliche URL-Parameter: `?fresh=1` (Punkteliste löschen), `?speed=fast|normal
 
 ## Stimmen, Mitreden, Ziel, Spielstärke
 
-* **Stimmen:** Horst (ElevenLabs-Stimme „Markus Deutsch“, rau, älter) und Margarethe („Elinor“, elegant-herb) sprechen alle festen Sprüche,
-  Chat-Antworten und Reizansagen. 248 MP3s (mono, 64 kbit/s, zusammen 5,7 MB) liegen in `assets/voice/<figur>/<id>.mp3`,
+* **Stimmen:** Horst (ElevenLabs-Stimme „Markus Deutsch“, rau, älter) und Margarethe („Lady Irene“, elegant-herb) sprechen alle festen Sprüche,
+  Chat-Antworten und Reizansagen. 248 MP3s (mono; Horst 64 kbit/s, Margarethe 128 kbit/s, zusammen 6,3 MB) liegen in `assets/voice/<figur>/<id>.mp3`,
   die Zuordnung Satz zu Datei steht in `js/voice-manifest.js`. Sätze ohne MP3 (z. B. „Kreuz Hand, Schneider angesagt!“)
   spricht die Browser-Sprachausgabe (de-DE, Horst tiefer, Margarethe höher). Es redet immer nur eine Figur (Warteschlange),
   ihr Bild leuchtet und zeigt Schallwellen, die Sprechblase bleibt bis zum Ende stehen.
