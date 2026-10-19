@@ -1,0 +1,20 @@
+# Spiel-Freunde: statische Seite auf DigitalOcean App Platform.
+# Kein Build. Die fertige Seite liegt in public/.
+# error_document und catchall_document dürfen nicht gleichzeitig gesetzt sein.
+# Eigene Cache-Control-Header unterstützt die Static-Site-Komponente nicht
+# (CDN etwa 24 Stunden, Browser etwa 10 Sekunden, geleert bei jedem Redeploy).
+# Die Skat-Stimmen cachen sich zusätzlich im Browser (Cache Storage).
+name: spiel-freunde
+region: fra
+
+static_sites:
+  - name: web
+    github:
+      repo: mike20082015/spiel-freunde
+      branch: main
+      deploy_on_push: true
+    source_dir: /
+    environment_slug: html
+    output_dir: public
+    index_document: index.html
+    error_document: 404.html
