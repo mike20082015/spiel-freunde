@@ -9,7 +9,7 @@ const Stimmen = require('../../public/spielpartner/stimmen.js');
 const E = require('../../public/spielpartner/entitlement.js');
 const H = require('../../api/lib/handlers.js');
 
-const GAMES = ['skat', 'canasta', 'schafkopf', 'jass', 'doppelkopf', 'maumau', 'romme'];
+const GAMES = ['skat', 'canasta', 'schafkopf', 'jass', 'doppelkopf', 'maumau', 'romme', 'bridge'];
 const START = Date.UTC(2026, 5, 1);
 
 function memory() {
@@ -31,6 +31,7 @@ test('jedes Spiel behält seine Standard-Besetzung', () => {
   assert.deepEqual(L.defaults('maumau', 3), ['horst', 'lena', 'margarethe']);
   assert.deepEqual(L.defaults('maumau', 4), ['horst', 'lena', 'ruediger', 'margarethe']);
   assert.deepEqual(L.defaults('romme'), ['horst', 'margarethe', 'hilde']);
+  assert.deepEqual(L.defaults('bridge'), ['jonas', 'margarethe', 'ruediger']);
   assert.equal(L.talkId('romme', 'hilde'), 'oma-hilde');
   assert.equal(L.talkId('canasta', 'oma-hilde'), 'hilde');
   assert.equal(L.canonical('oma-hilde'), 'hilde');
@@ -120,7 +121,7 @@ test('Chat und TTS kennen jede Stimme am Tisch', () => {
   assert.doesNotMatch(JSON.stringify(H.PERSONA), /grok|elevenlabs|openai|x\.?ai/i);
 });
 
-test('alle sieben Tische laden dasselbe Fenster', () => {
+test('alle Tische laden dasselbe Fenster', () => {
   const runde = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/runde.js'), 'utf8');
   assert.match(runde, /Runde wechseln/);
   assert.match(runde, /Standard-Besetzung/);
