@@ -47,7 +47,8 @@
         4: ['horst', 'lena', 'ruediger', 'margarethe']
       }
     },
-    { id: 'romme', label: 'Rommé', href: '/romme/', opponents: 3, defaults: ['horst', 'margarethe', 'hilde'] }
+    { id: 'romme', label: 'Rommé', href: '/romme/', opponents: 3, defaults: ['horst', 'margarethe', 'hilde'] },
+    { id: 'bridge', label: 'Bridge', href: '/bridge/', opponents: 3, defaults: ['jonas', 'margarethe', 'ruediger'] }
   ];
 
   function gameById(id) {
