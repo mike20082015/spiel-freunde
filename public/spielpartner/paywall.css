@@ -1,0 +1,24 @@
+/* Sperre nach drei Runden, im Spiel und mit den Plänen */
+.modal-card.paywall{width:min(760px,100%)}
+.pw{--felt:#1f4d3f;--shadow:0 18px 40px -18px rgba(20,12,4,.45)}
+.pw-kicker{font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--wine);margin-bottom:6px}
+.pw h3{font-family:var(--serif);font-size:1.7rem;color:var(--felt);margin-bottom:8px}
+.pw-lead{color:var(--ink-2);margin-bottom:14px}
+.pw .bill-toggle{width:100%;margin-bottom:14px}
+.pw-plans{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pw-plan{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px}
+.pw-plan[data-tier="premium"]{background:linear-gradient(165deg,#1f4d3f,#0f2a22);color:var(--cream);border-color:var(--gold)}
+.pw-plan h4{font-family:var(--serif);font-size:1.25rem;color:var(--felt);margin-bottom:4px}
+.pw-plan[data-tier="premium"] h4,.pw-plan[data-tier="premium"] .amt{color:var(--cream)}
+.pw-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;margin-bottom:4px}
+.pw-price .amt{font-family:var(--serif);font-size:1.6rem;font-weight:700}
+.pw-eff,.pw-who,.pw-pay,.pw-noabo{font-size:.88rem;color:var(--ink-2);margin:4px 0}
+.pw-plan[data-tier="premium"] .pw-eff,.pw-plan[data-tier="premium"] .pw-who{color:rgba(247,241,227,.8)}
+.pw-noabo{color:var(--felt);font-weight:700}
+.pw-notes{min-height:1.4em;margin:4px 0}
+.pw-plan .btn{width:100%;margin-top:8px}
+.pw-field input{width:100%}
+.pw-actions{display:flex;justify-content:flex-end;margin-top:8px}
+@media (max-width:640px){
+  .pw-plans{grid-template-columns:1fr}
+}

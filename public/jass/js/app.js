@@ -45,17 +45,8 @@
   function teamName(team) { return team === 0 ? 'Du und Urs' : 'Vreni und Horst'; }
   function delay() { return DELAY[settings.speed] || DELAY.normal; }
 
-  function gate() {
-    var Ent = window.SpielpartnerEntitlement;
-    if (!Ent || !window.localStorage) return { ok: true, note: '', fresh: false };
-    var now = Date.now();
-    var state = Ent.load(window.localStorage);
-    var view = Ent.describe(state, now);
-    if (view.phase === 'new') return { ok: true, fresh: true, note: 'Mit dem Platznehmen beginnen 14 Tage Probe. Urs und Vreni sind dabei.' };
-    var ok = Ent.isUnlocked('premium', state, now);
-    if (view.trialActive) return { ok: true, fresh: false, note: 'Probe: noch ' + view.daysLeft + (view.daysLeft === 1 ? ' Tag.' : ' Tage.') };
-    if (ok) return { ok: true, fresh: false, note: 'Premium. Urs und Vreni spielen mit.' };
-    return { ok: false, fresh: false, note: 'Urs und Vreni sind Premium. Die Probe ist vorbei.' };
+  function roundsAllow() {
+    return !window.SpielpartnerRounds || SpielpartnerRounds.gate();
   }
 
   function paintFaces() {
@@ -248,6 +239,9 @@
       if (ev.type === 'trick') lastTrick = ev.cards;
       if (ev.type === 'weis' && ev.raw) sys('Weis: ' + teamName(ev.team) + ' schreiben ' + ev.raw + '.');
       if (ev.type === 'score' && ev.reason === 'stoeck') sys('Stöck: ' + ev.points + ' für ' + teamName(ev.team) + '.');
+      if (ev.type === 'bedanken' || ev.type === 'handEnd') {
+        if (window.SpielpartnerRounds) SpielpartnerRounds.finish();
+      }
       if (ev.type === 'bedanken') showSession();
       if (ev.type === 'handEnd') showSummary();
     });
@@ -281,6 +275,7 @@
     $('summary').innerHTML = html;
     $('modal-summary').hidden = false;
     $('btn-next').addEventListener('click', function () {
+      if (!roundsAllow()) return;
       $('modal-summary').hidden = true;
       E.nextHand(table, Math.random);
       sys('Neu gegeben. Vorhand: ' + NAMES[table.forehand] + '.');
@@ -298,12 +293,14 @@
     $('modal-session').hidden = false;
     say(won ? 2 : 3, Talk.line(who, won ? 'matchWin' : 'matchLose'), { log: false });
     $('btn-again').addEventListener('click', function () {
+      if (!roundsAllow()) return;
       $('modal-session').hidden = true;
       begin();
     });
   }
 
   function begin() {
+    if (!roundsAllow()) return false;
     table = E.newTable({
       target: settings.target,
       custom: settings.targetCustom,
@@ -314,6 +311,7 @@
     sys('Geber: ' + NAMES[table.dealer] + '. Vorhand: ' + NAMES[table.forehand] + '.');
     if (table.turn !== 0) say(table.turn, Talk.line(Seats[table.turn].id, 'welcome'), { voice: true });
     poke();
+    return true;
   }
 
   function renderTop() {
@@ -643,15 +641,8 @@
   document.addEventListener('pointerdown', function () { MIC.gesture = true; Voice.unlock(); if (shouldListen()) startHandsFree(); }, true);
 
   $('btn-start').addEventListener('click', function () {
-    var Ent = window.SpielpartnerEntitlement;
-    var info = gate();
-    if (info.fresh && Ent) Ent.startTrial(window.localStorage, Date.now());
-    info = gate();
-    if (!info.ok) {
-      window.location.href = '/spielpartner/';
-      return;
-    }
     if (started) return;
+    if (!roundsAllow()) return;
     started = true;
     $('intro').hidden = true;
     Voice.unlock();
@@ -660,9 +651,8 @@
 
   Voice.setGetter(function () { return { sound: settings.sound, volume: settings.volume }; });
   paintFaces();
-  var introGate = gate();
-  $('intro-small').textContent = (LEVELS[settings.level] || 'Kneipe') + ' · bis ' + E.normalizeTarget(settings.target, settings.targetCustom) + ' · ' + introGate.note;
-  if (!introGate.ok) $('btn-start').textContent = 'Zu den Spielpartnern';
+  $('intro-small').textContent = (LEVELS[settings.level] || 'Kneipe') + ' · bis ' + E.normalizeTarget(settings.target, settings.targetCustom);
+  if (window.SpielpartnerRounds) SpielpartnerRounds.paint($('intro-rounds'));
   render();
   applyTalk(false);
   sys('Willkommen in der Berghütte. Nimm Platz, dann wird gegeben.');
