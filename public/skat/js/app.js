@@ -1561,9 +1561,8 @@
     newGame();
   }
   $('btn-start').addEventListener('click', start);
-  if (params.get('autostart')) start();
 
-  // Für automatisierte Tests (Screenshots): Zugriff auf den Zustand, keine Spiellogik-Abkürzungen
+  // Besetzung steht, bevor eine Runde (auch per autostart) losgeht.
   if (window.SpielpartnerRunde) {
     SpielpartnerRunde.mount({
       game: 'skat',
@@ -1580,6 +1579,9 @@
     });
   } else applyLineup();
 
+  if (params.get('autostart')) start();
+
+  // Für automatisierte Tests (Screenshots): Zugriff auf den Zustand, keine Spiellogik-Abkürzungen
   window.__skat = {
     get state() { return S.st; }, get match() { return match; }, settings, E, voice: Voice, start, showSession,
     handsFree: { norm: normSpeech, echo: isEcho, remember: rememberSpoken, get mic() { return MIC; } }
