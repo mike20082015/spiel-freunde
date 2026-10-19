@@ -6,6 +6,51 @@
   const NAMES = ['Du', 'Horst', 'Margarethe'];
   const WHO = [null, 'horst', 'margarethe'];
   const AVATARS = [null, 'assets/avatar-berliner-foto.jpg', 'assets/avatar-witwe-foto.jpg'];
+  const ORIGINAL_ALT = [null, 'Horst Kaluppke', 'Margarethe von Hohenfels'];
+
+  function applyLineup() {
+    const L = window.SpielpartnerLineup;
+    if (!L) return;
+    const ids = L.resolveIds(localStorage, 'skat', 2, {
+      entitlement: window.SpielpartnerEntitlement,
+      storage: localStorage,
+      now: Date.now(),
+    });
+    const base = L.defaults('skat', 2);
+    for (let i = 0; i < ids.length; i++) {
+      const person = L.avatar(ids[i]);
+      const seat = i + 1;
+      if (!person) continue;
+      WHO[seat] = L.talkId('skat', person.id);
+      NAMES[seat] = person.name;
+      const img = document.querySelector('#seat-' + seat + ' img.ava');
+      const name = document.querySelector('#seat-' + seat + ' .seat-name');
+      if (name) name.textContent = person.name;
+      if (!img) continue;
+      const wrap = img.parentNode;
+      const fallback = wrap && wrap.querySelector('.ava-fallback');
+      if (ids[i] === base[i]) {
+        img.hidden = false;
+        img.src = AVATARS[seat];
+        img.alt = ORIGINAL_ALT[seat];
+        if (fallback) fallback.remove();
+      } else {
+        img.alt = person.full;
+        img.hidden = false;
+        img.onerror = function () {
+          img.hidden = true;
+          if (!wrap || wrap.querySelector('.ava-fallback')) return;
+          const span = document.createElement('span');
+          span.className = 'ava ava-fallback';
+          span.textContent = L.initials(person.full);
+          wrap.insertBefore(span, img);
+        };
+        if (img.getAttribute('src') !== L.portrait(person)) img.src = L.portrait(person);
+        if (fallback) fallback.remove();
+      }
+    }
+    if (window.SpielpartnerStimmen) SpielpartnerStimmen.setSeated([WHO[1], WHO[2]]);
+  }
   let playerSeatCache = { name: 'Du', initial: 'Du', imageUrl: null, kind: 'none', presetId: '' };
 
   function youFaceHtml(big) {
@@ -1016,7 +1061,9 @@
     chatBusy = true;
     try {
       for (const w of who) {
-        const typing = showTyping(w === 'horst' ? 'Horst' : 'Margarethe');
+        const seat = WHO.indexOf(w);
+        if (seat < 1) continue;
+        const typing = showTyping(NAMES[seat]);
         const started = Date.now();
         let reply = '';
         try {
@@ -1030,7 +1077,7 @@
           if (left > 0) await sleep(left);
           if (typing && typing.parentNode) typing.parentNode.removeChild(typing);
         }
-        say(w === 'horst' ? 1 : 2, reply, { force: true, priority: true });
+        say(seat, reply, { force: true, priority: true });
       }
     } finally {
       chatBusy = false;
@@ -1507,8 +1554,8 @@
     S.started = true;
     unlockOnce();
     $('intro').hidden = true;
-    say(2, Talk.line('margarethe', 'welcome'), { force: true });
-    setTimeout(() => say(1, Talk.line('horst', 'welcome'), { force: true }), 250);
+    say(2, Talk.line(WHO[2], 'welcome'), { force: true });
+    setTimeout(() => say(1, Talk.line(WHO[1], 'welcome'), { force: true }), 250);
     const w = E.sessionWinner(match.scores, targetValue());
     if (w != null && match.rows.length) { S.st = null; showSession(w); return; }
     newGame();
@@ -1517,6 +1564,22 @@
   if (params.get('autostart')) start();
 
   // Für automatisierte Tests (Screenshots): Zugriff auf den Zustand, keine Spiellogik-Abkürzungen
+  if (window.SpielpartnerRunde) {
+    SpielpartnerRunde.mount({
+      game: 'skat',
+      count: function () { return 2; },
+      inHand: function () {
+        if (!S.started || !S.st || S.st.phase === 'done') return false;
+        const summary = $('modal-summary');
+        const session = $('modal-session');
+        if (summary && !summary.hidden) return false;
+        if (session && !session.hidden) return false;
+        return true;
+      },
+      apply: applyLineup,
+    });
+  } else applyLineup();
+
   window.__skat = {
     get state() { return S.st; }, get match() { return match; }, settings, E, voice: Voice, start, showSession,
     handsFree: { norm: normSpeech, echo: isEcho, remember: rememberSpoken, get mic() { return MIC; } }

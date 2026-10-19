@@ -42,31 +42,39 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
     });
   }
-  function teamName(team) { return team === 0 ? 'Du und Urs' : 'Vreni und Horst'; }
+  function teamName(team) {
+    if (team === 0) return 'Du und ' + (Seats[2] ? Seats[2].name : 'Urs');
+    return (Seats[1] ? Seats[1].name : 'Vreni') + ' und ' + (Seats[3] ? Seats[3].name : 'Horst');
+  }
   function delay() { return DELAY[settings.speed] || DELAY.normal; }
 
   function roundsAllow() {
     return !window.SpielpartnerRounds || SpielpartnerRounds.gate();
   }
 
-  function paintFaces() {
+  function refreshFaces() {
+    if (window.SpielpartnerLineup) SpielpartnerLineup.dress(Seats, 'jass', localStorage);
+    for (var i = 0; i < Seats.length; i++) NAMES[i] = Seats[i].name;
     Seats.forEach(function (p) {
       if (!p.portrait) return;
       var wrap = $('ava-' + p.seat);
       if (!wrap) return;
-      var img = document.createElement('img');
-      img.className = 'ava';
+      var img = wrap.querySelector('img.ava');
+      if (!img) {
+        img = document.createElement('img');
+        img.className = 'ava';
+        img.addEventListener('error', function () {
+          if (p.id === 'horst' && img.dataset.fallback !== '1') {
+            img.dataset.fallback = '1';
+            img.src = '../skat/assets/avatar-berliner-foto.jpg';
+            return;
+          }
+          img.remove();
+        });
+        wrap.appendChild(img);
+      }
       img.alt = p.full;
-      img.addEventListener('error', function () {
-        if (p.id === 'horst' && img.dataset.fallback !== '1') {
-          img.dataset.fallback = '1';
-          img.src = '../skat/assets/avatar-berliner-foto.jpg';
-          return;
-        }
-        img.remove();
-      });
-      img.src = p.portrait;
-      wrap.appendChild(img);
+      if (img.dataset.fallback !== '1' && img.getAttribute('src') !== p.portrait) img.src = p.portrait;
     });
   }
 
@@ -99,7 +107,7 @@
       table: 'jass',
       phase: table.phase,
       trump: E.trumpName(table.trump, settings.deck),
-      teams: 'Du und Urs gegen Vreni und Horst',
+      teams: teamName(0) + ' gegen ' + teamName(1),
       game: E.trumpName(table.trump, settings.deck),
       scores: table.scores.slice()
     };
@@ -270,7 +278,8 @@
     var gained = table.gained || [0, 0];
     var html = '<p class="intro-kicker">Runde</p><h3 class="sum-title">' + esc(E.trumpName(table.trump, settings.deck)) + '</h3>';
     html += '<p>Wir ' + gained[0] + ', sie ' + gained[1] + '. Stand: ' + table.scores[0] + ' zu ' + table.scores[1] + '.</p>';
-    html += '<p class="sum-quote">' + esc(Talk.line(gained[0] >= gained[1] ? 'urs' : 'vreni', gained[0] >= gained[1] ? 'handWin' : 'handLose') || '') + '</p>';
+    var speaker = gained[0] >= gained[1] ? Seats[2].id : Seats[1].id;
+    html += '<p class="sum-quote">' + esc(Talk.line(speaker, gained[0] >= gained[1] ? 'handWin' : 'handLose') || '') + '</p>';
     html += '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next">Nächstes Spiel</button></div>';
     $('summary').innerHTML = html;
     $('modal-summary').hidden = false;
@@ -650,7 +659,7 @@
   });
 
   Voice.setGetter(function () { return { sound: settings.sound, volume: settings.volume }; });
-  paintFaces();
+  refreshFaces();
   $('intro-small').textContent = (LEVELS[settings.level] || 'Kneipe') + ' · bis ' + E.normalizeTarget(settings.target, settings.targetCustom);
   if (window.SpielpartnerRounds) SpielpartnerRounds.paint($('intro-rounds'));
   render();
@@ -659,4 +668,18 @@
   var params = new URLSearchParams(window.location.search);
   if (params.get('ai') === '0' && Talk.disableLive) Talk.disableLive();
   else if (Talk.probe) Talk.probe();
+  if (window.SpielpartnerRunde) SpielpartnerRunde.mount({
+    game: 'jass',
+    count: function () { return 3; },
+    inHand: function () {
+      if (!started || !table) return false;
+      if (table.phase === 'handEnd' || table.phase === 'matchEnd') return false;
+      var summary = $('modal-summary');
+      var session = $('modal-session');
+      if (summary && !summary.hidden) return false;
+      if (session && !session.hidden) return false;
+      return true;
+    },
+    apply: refreshFaces
+  });
 })();

@@ -1,0 +1,157 @@
+/* Gemeinsames Fenster „Runde wechseln“. Liegt über dem Tisch, unabhängig vom Spiel. */
+#modal-runde { z-index: 80; }
+#modal-paywall { z-index: 90; }
+.ava-fallback{display:grid;place-items:center;background:#6b2d3c;color:#f7f1e3;font-weight:700;font-size:.95rem}
+#modal-runde[hidden] { display: none !important; }
+.runde-sheet {
+  width: min(920px, 100%);
+  max-height: min(92vh, 900px);
+  overflow: auto;
+}
+.runde-lead, .runde-note {
+  margin: 0 0 14px;
+  color: #5c4a3a;
+  line-height: 1.45;
+}
+.runde-seats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.runde-seat {
+  appearance: none;
+  border: 1.5px solid rgba(92, 58, 28, .25);
+  background: #fffaf2;
+  color: #3a2414;
+  border-radius: 999px;
+  padding: 8px 14px;
+  display: inline-flex;
+  gap: 8px;
+  align-items: baseline;
+  cursor: pointer;
+  font: inherit;
+}
+.runde-seat.is-on {
+  border-color: #b08532;
+  background: #fff3d4;
+}
+.runde-where { font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; color: #8a6a3b; }
+.runde-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.runde-person {
+  border: 1.5px solid rgba(92, 58, 28, .18);
+  border-radius: 16px;
+  background: #fffdf8;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.runde-person.is-on { border-color: #b08532; box-shadow: inset 0 0 0 1px #b08532; }
+.runde-person.is-locked { background: #f6f1ea; }
+.runde-pick {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 8px;
+  align-items: center;
+  position: relative;
+}
+.runde-face {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #6b2d3c;
+  color: #f7f1e3;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.runde-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: relative;
+  z-index: 1;
+}
+.runde-ini { font-weight: 700; letter-spacing: .04em; }
+.runde-copy { min-width: 0; }
+.runde-copy b { display: block; }
+.runde-copy small {
+  display: block;
+  color: #5c4a3a;
+  line-height: 1.35;
+  margin-top: 2px;
+}
+.runde-lock {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: .68rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #6b2d3c;
+  background: #f3e2c2;
+  border-radius: 999px;
+  padding: 2px 6px;
+}
+.runde-hear {
+  appearance: none;
+  border: 1px solid rgba(92, 58, 28, .3);
+  background: transparent;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: .82rem;
+  cursor: pointer;
+  color: #3a2414;
+}
+.runde-hear:hover { border-color: #b08532; }
+.runde-hear:disabled { opacity: .6; cursor: default; }
+.runde-next {
+  margin: 18px 0 8px;
+  font-family: inherit;
+  font-size: .95rem;
+  color: #6b2d3c;
+}
+.runde-games { display: flex; flex-wrap: wrap; gap: 8px; }
+.runde-game {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1.5px solid rgba(92, 58, 28, .25);
+  padding: 7px 12px;
+  text-decoration: none;
+  color: #3a2414;
+  background: #fffaf2;
+}
+.runde-game.is-here { border-color: #b08532; background: #fff3d4; }
+.runde-warn {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fff3d4;
+  color: #3a2414;
+}
+.runde-warn p { margin: 0 0 10px; }
+.runde-warn-actions, .runde-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+.runde-actions { margin-top: 16px; }
+@media (max-width: 720px) {
+  .runde-grid { grid-template-columns: 1fr; }
+  .runde-sheet { padding: 16px; }
+  .runde-actions, .runde-warn-actions { justify-content: stretch; }
+  .runde-actions .btn, .runde-warn-actions .btn { flex: 1 1 auto; }
+}

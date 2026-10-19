@@ -343,7 +343,8 @@
   function pickVoice(character) {
     const vs = germanVoices();
     if (!vs.length) return null;
-    const male = SYNTH[character] && SYNTH[character].male;
+    const extra = root.SpielpartnerStimmen && root.SpielpartnerStimmen.synth ? root.SpielpartnerStimmen.synth(character) : null;
+    const male = (SYNTH[character] && SYNTH[character].male) || (extra && extra.male);
     return vs.find((v) => (male ? MALE : FEMALE).test(v.name)) || vs[character === 'horst' ? 0 : vs.length - 1];
   }
 
@@ -352,7 +353,8 @@
       const synth = root.speechSynthesis;
       if (!synth || !root.SpeechSynthesisUtterance) { setTimeout(resolve, Math.min(4000, 900 + item.text.length * 45)); return; }
       const u = new root.SpeechSynthesisUtterance(item.text);
-      const cfg = SYNTH[item.character] || { pitch: 1, rate: 1 };
+      const extraTone = root.SpielpartnerStimmen && root.SpielpartnerStimmen.synth ? root.SpielpartnerStimmen.synth(item.character) : null;
+      const cfg = SYNTH[item.character] || extraTone || { pitch: 1, rate: 1 };
       u.lang = 'de-DE'; u.pitch = cfg.pitch; u.rate = cfg.rate; u.volume = volume();
       const v = pickVoice(item.character);
       if (v) u.voice = v;
