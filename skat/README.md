@@ -75,8 +75,8 @@ hängt von den installierten deutschen Stimmen ab.
 
 ### Produktion (`js/talk.js`, Server unter `api/`)
 
-* `askAI(character, context)` ruft `POST /api/chat` (auf App Platform `/api/sf/chat`). Der xAI-Schlüssel liegt nur in der Functions-Komponente.
-* `speakAI(character, text)` ruft `POST /api/tts` (auf App Platform `/api/sf/tts`) nur für Sätze ohne fertige MP3 und liefert eine Objekt-URL. Der ElevenLabs-Schlüssel
+* `askAI(character, context)` ruft zuerst `POST /api/sf/chat` (lokal auch `/api/chat`). Der xAI-Schlüssel liegt nur in der Functions-Komponente.
+* `speakAI(character, text)` ruft zuerst `POST /api/sf/tts` (lokal auch `/api/tts`) nur für Sätze ohne fertige MP3 und liefert eine Objekt-URL. Der ElevenLabs-Schlüssel
   liegt nur auf dem Server, nie im Browser, nie als `VITE_` oder andere Frontend-Variable.
 * Fehlt die API oder kommt zweimal hintereinander keine Chat-Antwort, gelten für den Besuch wieder die festen Sprüche. Die MP3s der Spielereignisse bleiben.
 * Lokal mit Probebetrieb: im Repository `node api/server.js --mock`, dann http://127.0.0.1:8000/skat/. Die Schritte für DigitalOcean stehen in der README der Website.

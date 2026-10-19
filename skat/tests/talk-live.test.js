@@ -52,16 +52,13 @@ test.describe('askAI und speakAI', { concurrency: 1 }, () => {
       game: { phase: 'play', declarer: 0, game: 'Grand', scores: [0, 0, 0] },
     });
     assert.equal(text, 'Det Blatt ist ein Witz, Kollege.');
-    assert.deepEqual(seen, ['/api/chat', '/api/chat']);
+    assert.deepEqual(seen, ['/api/sf/chat', '/api/sf/chat']);
   });
 
-  test('zweiter Pfad /api/sf/chat auf App Platform und Verlauf der letzten Runden', async () => {
+  test('erster Pfad /api/sf/chat und Verlauf der letzten Runden', async () => {
     const posts = [];
     global.fetch = async (url, opts) => {
-      if (!opts || opts.method !== 'POST') {
-        if (url === '/api/chat') return jsonRes({}, false);
-        return jsonRes({ ok: true });
-      }
+      if (!opts || opts.method !== 'POST') return jsonRes({ ok: true });
       posts.push(JSON.parse(opts.body));
       assert.equal(url, '/api/sf/chat');
       return jsonRes({ text: posts.length === 1 ? 'Na jut.' : 'Nu aber.' });
@@ -73,12 +70,12 @@ test.describe('askAI und speakAI', { concurrency: 1 }, () => {
     assert.ok(posts[1].history.length <= 6);
   });
 
-  test('älterer Pfad /api/default bleibt ein harmloser letzter Versuch', async () => {
+  test('lokaler Pfad und älterer default-Pfad bleiben harmlose Fallbacks', async () => {
     const seen = [];
     global.fetch = async (url, opts) => {
       seen.push(url + ' ' + ((opts && opts.method) || 'GET'));
       if (!opts || opts.method !== 'POST') {
-        if (url === '/api/chat' || url === '/api/sf/chat') return jsonRes({}, false);
+        if (url === '/api/sf/chat' || url === '/api/chat') return jsonRes({}, false);
         if (url === '/api/default/chat') return jsonRes({ ok: true });
         return jsonRes({}, false);
       }
@@ -86,8 +83,8 @@ test.describe('askAI und speakAI', { concurrency: 1 }, () => {
     };
     assert.equal(await Talk.askAI('horst', { message: 'hallo' }), 'Na jut.');
     assert.deepEqual(seen, [
-      '/api/chat GET',
       '/api/sf/chat GET',
+      '/api/chat GET',
       '/api/default/chat GET',
       '/api/default/chat POST',
     ]);
@@ -112,7 +109,7 @@ test.describe('askAI und speakAI', { concurrency: 1 }, () => {
   test('speakAI liefert eine Objekt-URL und bleibt stumm, wenn abgeschaltet', async () => {
     global.fetch = async (url, opts) => {
       if (!opts || opts.method !== 'POST') return jsonRes({ ok: true });
-      assert.equal(url, '/api/tts');
+      assert.equal(url, '/api/sf/tts');
       return { ok: true, status: 200, blob: async () => new Blob([Uint8Array.from([1, 2, 3, 4])]) };
     };
     URL.createObjectURL = () => 'blob:mock-horst';

@@ -8,6 +8,7 @@
 # Functions-Komponente api: Quelle api/, Route /api.
 # Paket sf (benannt, damit project.yml Umgebungsvariablen tragen darf).
 # Pfade danach /api/sf/chat und /api/sf/tts.
+# Jede Funktion bringt handlers.js selbst mit. main ist index.main.
 # SECRET-Werte hier leer lassen. Echte Schlüssel nur im Dashboard.
 # Vor doctl apps update die verschlüsselten Werte aus `doctl apps spec get` übernehmen.
 name: spiel-freunde

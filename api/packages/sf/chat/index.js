@@ -1,15 +1,18 @@
 'use strict';
 
-let handlers;
-try {
-  handlers = require('./handlers.js');
-} catch (e) {
-  handlers = require('../../../lib/handlers.js');
-}
+const handlers = require('./handlers.js');
 
 async function main(event) {
-  const result = await handlers.handleChat(event);
-  return handlers.toFunctionResponse(result);
+  try {
+    const result = await handlers.handleChat(event);
+    return handlers.toFunctionResponse(result);
+  } catch (e) {
+    return {
+      statusCode: 503,
+      headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
+      body: { error: 'nicht erreichbar' },
+    };
+  }
 }
 
 exports.main = main;
