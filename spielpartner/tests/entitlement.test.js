@@ -213,3 +213,106 @@ test('Katalog: Horst und Margarethe Standard, der Rest Premium', () => {
     if (avatar.hasVideo !== true) assert.equal(C.mediaHtml(avatar).includes('<video'), false);
   });
 });
+
+test('Preise stehen nur in Cent, Summen sind Monatspreis mal bezahlte Monate', () => {
+  assert.strictEqual(E.OFFER.tiers.standard.monthlyCents, 995);
+  assert.strictEqual(E.OFFER.tiers.premium.monthlyCents, 1495);
+  assert.deepStrictEqual(E.OFFER.periods.map((period) => period.label), ['Monatlich', '6 Monate', '12 Monate']);
+  E.OFFER.periods.forEach((period) => {
+    assert.ok(!Object.prototype.hasOwnProperty.call(period, 'paidMonths'));
+    assert.ok(!Object.prototype.hasOwnProperty.call(period, 'totalCents'));
+  });
+  Object.keys(E.OFFER.tiers).forEach((tier) => {
+    assert.ok(!Object.prototype.hasOwnProperty.call(E.OFFER.tiers[tier], 'totalCents'));
+  });
+
+  const expect = {
+    standard: {
+      monthly: { total: 995, effective: 995, amount: '9,95 €', effectiveText: '' },
+      '6': { total: 4975, effective: 829, amount: '49,75 €', effectiveText: 'entspricht 8,29 €/Monat' },
+      '12': { total: 8955, effective: 746, amount: '89,55 €', effectiveText: 'entspricht 7,46 €/Monat' }
+    },
+    premium: {
+      monthly: { total: 1495, effective: 1495, amount: '14,95 €', effectiveText: '' },
+      '6': { total: 7475, effective: 1246, amount: '74,75 €', effectiveText: 'entspricht 12,46 €/Monat' },
+      '12': { total: 13455, effective: 1121, amount: '134,55 €', effectiveText: 'entspricht 11,21 €/Monat' }
+    }
+  };
+
+  ['standard', 'premium'].forEach((tier) => {
+    E.OFFER.periods.forEach((period) => {
+      const item = E.quote(tier, period.id);
+      const paidMonths = period.months - period.freeMonths;
+      assert.strictEqual(item.paidMonths, paidMonths, tier + ' ' + period.id);
+      assert.strictEqual(item.totalCents, E.OFFER.tiers[tier].monthlyCents * paidMonths);
+      assert.strictEqual(item.effectiveMonthlyCents, Math.round(item.totalCents / period.months));
+      assert.strictEqual(item.totalCents, expect[tier][period.id].total);
+      assert.strictEqual(item.effectiveMonthlyCents, expect[tier][period.id].effective);
+      const view = E.presentation(tier, period.id);
+      assert.strictEqual(view.amount, expect[tier][period.id].amount);
+      assert.strictEqual(view.effective, expect[tier][period.id].effectiveText);
+      assert.strictEqual(view.period, period.months === 1 ? '/Monat' : 'für ' + period.months + ' Monate');
+    });
+  });
+
+  assert.strictEqual(E.quote('standard', '6').freeMonths, 1);
+  assert.strictEqual(E.quote('premium', '12').freeMonths, 3);
+  assert.strictEqual(E.quote('standard', '6').badge, '1 Monat gratis');
+  assert.strictEqual(E.quote('premium', '6').badge, '1 Monat gratis');
+  assert.strictEqual(E.quote('standard', '12').badge, '3 Monate gratis');
+  assert.strictEqual(E.quote('premium', '12').badge, '3 Monate gratis');
+  assert.strictEqual(E.quote('premium', 'monthly').badge, null);
+  assert.strictEqual(E.presentation('premium', '12').badge, '3 Monate gratis');
+  assert.strictEqual(E.presentation('premium', '12').showPopular, true);
+  assert.strictEqual(E.presentation('premium', '12').popularLabel, 'Beliebteste Wahl');
+  assert.strictEqual(E.presentation('standard', '12').showPopular, false);
+  assert.strictEqual(E.presentation('premium', '6').showPopular, false);
+  assert.strictEqual(E.presentation('premium', 'monthly').showPopular, false);
+  assert.strictEqual(E.formatEuro(829), '8,29 €');
+  assert.strictEqual(E.formatEuro(746), '7,46 €');
+  assert.strictEqual(E.formatEuro(1246), '12,46 €');
+  assert.strictEqual(E.formatEuro(1121), '11,21 €');
+  assert.strictEqual(
+    E.afterTrialSentence(),
+    'Danach 9,95 €/Monat oder 14,95 €/Monat. Nichts läuft von allein weiter.'
+  );
+  assert.throws(() => E.quote('gold', 'monthly'), /Angebot/);
+  assert.throws(() => E.quote('standard', '24'), /Angebot/);
+});
+
+test('Mitgliedschaft und Startleiste holen die Beträge aus der Config', () => {
+  const root = path.join(__dirname, '../../public');
+  const member = fs.readFileSync(path.join(root, 'spielpartner/index.html'), 'utf8');
+  const home = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const memberOffer = slice(member, 'id="mitgliedschaft"', '</section>');
+  const tease = slice(home, 'class="sp-tease"', '</section>');
+  const standard = E.formatEuro(E.OFFER.tiers.standard.monthlyCents);
+  const premium = E.formatEuro(E.OFFER.tiers.premium.monthlyCents);
+  [memberOffer, tease].forEach((html) => {
+    assert.match(html, /Monatlich/);
+    assert.match(html, /6 Monate/);
+    assert.match(html, /12 Monate/);
+    assert.match(html, /data-offer/);
+    assert.ok(html.includes(standard));
+    assert.ok(html.includes(premium));
+    ['49,75', '74,75', '89,55', '134,55', '8,29', '7,46', '12,46', '11,21'].forEach((hardcoded) => {
+      assert.equal(html.includes(hardcoded), false, hardcoded);
+    });
+  });
+  assert.equal((memberOffer.match(/<button[^>]*disabled[^>]*>Bald verfügbar<\/button>/g) || []).length, 2);
+  assert.match(memberOffer, /Die Knöpfe bleiben auf „Bald verfügbar“/);
+  assert.match(memberOffer, /disabled/);
+  assert.match(memberOffer, /14 Tage alle Spielpartner gratis testen/);
+  assert.match(memberOffer, /nichts automatisch abgebucht/i);
+  assert.match(member, /Es wird nichts automatisch abgebucht/);
+  assert.match(tease, /Es wird nichts automatisch abgebucht/);
+  assert.match(tease, /14 Tage alle Spielpartner gratis testen/);
+  assert.match(tease, /14 Tage Premium gratis/);
+});
+
+function slice(html, start, end) {
+  const from = html.indexOf(start);
+  const to = html.indexOf(end, from);
+  assert.ok(from >= 0 && to > from, start);
+  return html.slice(from, to);
+}
