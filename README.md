@@ -12,13 +12,15 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 | `/mein-avatar/` | Name und Gesicht für den Tisch. Das Bild bleibt auf dem Gerät |
 | `/spielpartner/` | Deine Spielpartner: Horst, Margarethe und die Premium-Runde. 14 Tage Test nur in diesem Browser, plus Link zum eigenen Avatar |
 | `/skat/` | Spielbarer Skat-Prototyp: Du gegen Horst und Margarethe |
+| `/canasta/` | Spielbares Canasta: Du mit Margarethe gegen Horst und Oma Hilde |
+| `/schafkopf/` | Spielbares Schafkopf: Du, Horst, Sepp und Margarethe |
 
 In der Vorschau führen die großen Buttons auf der Startseite nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. Startseite, Skat und Spielpartner tragen ein goldenes Band „Vorschau“.
 
 Veröffentlicht wird nur der Ordner `public/`. Tests, Werkzeuge und die Startskripte bleiben außerhalb.
 
 ```
-public/                  Startseite, 404 und /skat/
+public/                  Startseite, 404, /skat/, /canasta/, /schafkopf/ und /mein-avatar/
 skat/tests, skat/tools   Regeltests und Browser-Checks, nicht öffentlich
 skat/start.sh            lokaler Server, nicht öffentlich
 tools/                   Entwurf-Helfer der Startseite, nicht öffentlich
@@ -42,6 +44,8 @@ Oder im Ordner `skat/` das Startskript (`./start.sh`, `start.bat`, `start.comman
 cd skat
 node --test tests/
 node --test ../spielpartner/tests
+cd ../canasta && node --test tests/
+cd ../schafkopf && node --test tests/
 ```
 
 Die Spiellogik liegt in `public/skat/js/`. Details zum Skat-Prototyp stehen in `skat/README.md`.
@@ -137,7 +141,7 @@ Jede Funktion liegt vollständig in ihrem Ordner: `packages/sf/chat/`, `packages
 
 ### Mein Avatar
 
-Unter `/mein-avatar/` legt jemand den Namen fest und wählt ein echtes Foto (Zuschneiden im Browser, etwa 512 Pixel), ein gezeichnetes Gesicht oder eines der fertigen Bilder. Metadaten liegen im `localStorage`, das Bild in IndexedDB. Auf der Seite steht: „Dein Foto bleibt auf deinem Gerät.“ `window.SpielFreundeAvatar.playerSeat()` liefert Name und Bildadresse für Skat und später Jass. Der Schlüssel für das gezeichnete Gesicht bleibt an der Function. Die Seite nennt keinen Anbieter.
+Unter `/mein-avatar/` legt jemand den Namen fest und wählt ein echtes Foto (Zuschneiden im Browser, etwa 512 Pixel), ein gezeichnetes Gesicht oder eines der fertigen Bilder. Metadaten liegen im `localStorage`, das Bild in IndexedDB. Auf der Seite steht: „Dein Foto bleibt auf deinem Gerät.“ `window.SpielFreundeAvatar.playerSeat()` liefert Name und Bildadresse für Skat, Canasta und später Jass. Der Schlüssel für das gezeichnete Gesicht bleibt an der Function. Die Seite nennt keinen Anbieter.
 
 ### Kosten
 

@@ -40,6 +40,7 @@
   max-width:100%;
   margin:8px 0 2px;
 }
+.bill-notes:not(:has(.free-badge:not([hidden]), .popular-note:not([hidden]))){display:none}
 .free-badge{
   display:inline-block;
   max-width:100%;
@@ -138,7 +139,6 @@
   .sp-tease-prices{grid-template-columns:minmax(0,1fr)}
   .bill-toggle button{font-size:.78rem;padding:.5em .25em}
 }
-
 /* Checkout, Code und Dankeseite */
 .checkout-box,.code-box,.license-status{
   max-width:860px;

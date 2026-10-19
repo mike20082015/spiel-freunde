@@ -466,10 +466,50 @@ test('Verlängerung unter acht Tagen', () => {
   assert.strictEqual(later.renewSoon, false);
 });
 
-test('Skat ruft den gemeinsamen Rundenzähler auf', () => {
-  const skat = fs.readFileSync(path.join(__dirname, '../../public/skat/js/app.js'), 'utf8');
-  assert.match(skat, /recordRound/);
-  assert.match(skat, /canStartRound/);
+test('jedes Spiel ruft den gemeinsamen Rundenzähler auf', () => {
+  const rounds = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/rounds.js'), 'utf8');
+  assert.match(rounds, /canStartRound/);
+  assert.match(rounds, /recordRound/);
+  assert.match(rounds, /SpielpartnerRounds\.gate/);
+  assert.match(rounds, /SpielpartnerRounds\.finish/);
+  ['skat', 'canasta', 'schafkopf'].forEach((game) => {
+    const app = fs.readFileSync(path.join(__dirname, '../../public', game, 'js/app.js'), 'utf8');
+    const page = fs.readFileSync(path.join(__dirname, '../../public', game, 'index.html'), 'utf8');
+    assert.match(app, /SpielpartnerRounds\.gate\(/, game);
+    assert.match(app, /SpielpartnerRounds\.finish\(/, game);
+    assert.match(page, /\/spielpartner\/rounds\.js/, game);
+    assert.match(page, /id="modal-paywall"/, game);
+  });
+});
+
+test('der Helfer zählt drei Runden und öffnet dann die Sperre', () => {
+  const Rounds = require('../../public/spielpartner/rounds.js');
+  const storage = E.memoryStorage();
+  E.startTrial(storage, START);
+  const after = START + 15 * DAY;
+  let opened = 0;
+  const previous = global.window;
+  global.window = {
+    SpielpartnerEntitlement: E,
+    SpielpartnerPaywall: { open() { opened += 1; } }
+  };
+  try {
+    assert.strictEqual(Rounds.gate(storage, after), true);
+    assert.strictEqual(Rounds.finish(storage, after).count, 1);
+    Rounds.finish(storage, after);
+    assert.strictEqual(Rounds.finish(storage, after).paywall, true);
+    assert.strictEqual(opened, 1);
+    assert.strictEqual(Rounds.gate(storage, after), false);
+    assert.strictEqual(opened, 2);
+    const el = { textContent: '' };
+    Rounds.paint(el, storage, after);
+    assert.match(el.textContent, /drei freien Runden/);
+  } finally {
+    if (previous === undefined) delete global.window;
+    else global.window = previous;
+  }
+  assert.strictEqual(Rounds.gate(), true);
+  assert.strictEqual(Rounds.finish(), null);
 });
 
 test('API-Basis und Empfehlungsschlüssel stehen nur an einer Stelle', () => {

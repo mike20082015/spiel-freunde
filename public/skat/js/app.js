@@ -537,33 +537,15 @@
 
   /* ---------- Spielablauf ---------- */
   function roundGate() {
-    var Ent = window.SpielpartnerEntitlement;
-    if (!Ent || typeof Ent.canStartRound !== 'function') return true;
-    var gate;
-    try { gate = Ent.canStartRound(localStorage, Date.now()); }
-    catch (e) { return true; }
-    if (gate.ok) return true;
-    if (window.SpielpartnerPaywall && SpielpartnerPaywall.open) SpielpartnerPaywall.open();
-    return false;
+    return !window.SpielpartnerRounds || SpielpartnerRounds.gate();
   }
 
   function paintFreeRounds() {
-    var Ent = window.SpielpartnerEntitlement;
-    var el = $('intro-rounds');
-    if (!Ent || !el || typeof Ent.canStartRound !== 'function') return;
-    try {
-      var gate = Ent.canStartRound(localStorage, Date.now());
-      if (gate.unlimited || gate.remaining == null) el.textContent = '';
-      else if (gate.remaining === 0) el.textContent = 'Die drei freien Runden für heute sind gespielt.';
-      else el.textContent = 'Heute noch ' + gate.remaining + ' von ' + gate.limit + ' freien Runden mit Horst und Margarethe.';
-    } catch (e) { el.textContent = ''; }
+    if (window.SpielpartnerRounds) SpielpartnerRounds.paint($('intro-rounds'));
   }
 
   function noteFinishedRound() {
-    var Ent = window.SpielpartnerEntitlement;
-    if (!Ent || typeof Ent.recordRound !== 'function') return null;
-    try { return Ent.recordRound(localStorage, Date.now()); }
-    catch (e) { return null; }
+    return window.SpielpartnerRounds ? SpielpartnerRounds.finish() : null;
   }
 
   function newGame() {
@@ -703,7 +685,7 @@
   }
 
   async function finishGame() {
-    const finished = noteFinishedRound();
+    noteFinishedRound();
     const st = S.st;
     const r = st.result;
     await delay(350);
@@ -720,7 +702,6 @@
     if (rec.bockAdded) sys('Verlorener Grand: Jetzt kommen 3 Bockspiele und danach 3 Ramschspiele.');
     render();
     showSummary(r, quote, E.sessionWinner(match.scores, targetValue()));
-    if (finished && finished.paywall && window.SpielpartnerPaywall) SpielpartnerPaywall.open();
   }
 
   function endTalk(r) {
