@@ -13,13 +13,14 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 | `/spielpartner/` | Deine Spielpartner: Horst, Margarethe und die Premium-Runde. 14 Tage Test nur in diesem Browser, plus Link zum eigenen Avatar |
 | `/skat/` | Spielbarer Skat-Prototyp: Du gegen Horst und Margarethe |
 | `/canasta/` | Spielbares Canasta: Du mit Margarethe gegen Horst und Oma Hilde |
+| `/schafkopf/` | Spielbares Schafkopf: Du, Horst, Sepp und Margarethe |
 
 In der Vorschau führen die großen Buttons auf der Startseite nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. Startseite, Skat und Spielpartner tragen ein goldenes Band „Vorschau“.
 
 Veröffentlicht wird nur der Ordner `public/`. Tests, Werkzeuge und die Startskripte bleiben außerhalb.
 
 ```
-public/                  Startseite, 404, /skat/, /canasta/ und /mein-avatar/
+public/                  Startseite, 404, /skat/, /canasta/, /schafkopf/ und /mein-avatar/
 skat/tests, skat/tools   Regeltests und Browser-Checks, nicht öffentlich
 skat/start.sh            lokaler Server, nicht öffentlich
 tools/                   Entwurf-Helfer der Startseite, nicht öffentlich
@@ -44,6 +45,7 @@ cd skat
 node --test tests/
 node --test ../spielpartner/tests
 cd ../canasta && node --test tests/
+cd ../schafkopf && node --test tests/
 ```
 
 Die Spiellogik liegt in `public/skat/js/`. Details zum Skat-Prototyp stehen in `skat/README.md`.
