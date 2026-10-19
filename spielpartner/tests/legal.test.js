@@ -27,6 +27,8 @@ test('jede Seite nennt die Firma und verlinkt die Rechtstexte', () => {
     assert.match(html, /href="\/datenschutz\.html"/, file);
     assert.match(html, /href="\/agb\.html"/, file);
     assert.match(html, /href="\/widerruf\.html"/, file);
+    assert.match(html, /href="\/partnerprogramm\/"/, file);
+    assert.match(html, /Partnerprogramm/, file);
     assert.match(html, /entitlement\.js/, file);
     assert.equal(html.includes('Michael Manns'), false, file);
     assert.equal(html.includes('Chiang Mai'), false, file);
@@ -87,6 +89,27 @@ test('Rechtstexte sind als Entwurf markiert und enthalten die Pflichtangaben', (
   assert.match(withdrawal, /§ 356 Abs\. 5 BGB/);
   assert.match(withdrawal, /Muster-Widerrufsformular/);
   assert.match(withdrawal, /vierzehn Tagen/);
+});
+
+test('Partnerprogramm nennt 20 Prozent und verspricht kein Einkommen', () => {
+  const html = fs.readFileSync(path.join(root, 'partnerprogramm/index.html'), 'utf8');
+  const lower = html.toLowerCase();
+  assert.match(html, /20 Prozent/);
+  assert.match(html, /tatsächlich bezahlt/);
+  assert.match(html, /Standard/);
+  assert.match(html, /Premium/);
+  assert.match(html, /Verlängerung/);
+  assert.match(html, /90 Tage/);
+  assert.match(html, /erste Link/);
+  assert.match(html, /normalen Preis/);
+  assert.match(html, /normalen Auszahlung im Partnerprogramm von LeadMonster/);
+  assert.match(html, /href="https:\/\/lead-monster\.net\/partner"/);
+  assert.match(html, /target="_blank"/);
+  assert.match(html, /Kostenlos anmelden/);
+  assert.match(html, /Deinen Link teilen/);
+  assert.equal(lower.includes('passiv'), false);
+  assert.equal(lower.includes('garantiert'), false);
+  assert.equal(/\d[\d.]*\s*€/.test(html), false);
 });
 
 test('Dankeseite liest die Bestellung und merkt sich eine bezahlte Lizenz', () => {
