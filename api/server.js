@@ -7,6 +7,7 @@
  *   node api/server.js              Seite und API, Schlüssel aus der Umgebung
  *   node api/server.js --mock       feste Antworten, ohne echte Schlüssel
  *   node api/server.js --port 8765
+ *   node api/server.js --mock --delay 8000   längere Wartezeit, nur fürs Ansehen
  */
 
 const http = require('http');
@@ -240,7 +241,9 @@ function listen(options) {
 if (require.main === module) {
   const mock = process.argv.indexOf('--mock') !== -1;
   const port = Number(argValue('--port') || process.env.PORT || 8000);
-  const server = listen({ mock, port, delayMs: mock ? 1600 : 0 });
+  const delayArg = argValue('--delay');
+  const delayMs = delayArg ? Number(delayArg) : (mock ? 1600 : 0);
+  const server = listen({ mock, port, delayMs });
   server.on('listening', () => {
     const shown = server.address().port;
     console.log('Spiel-Freunde auf http://127.0.0.1:' + shown + '/  und  http://127.0.0.1:' + shown + '/skat/');
