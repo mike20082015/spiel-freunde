@@ -47,6 +47,7 @@
         var on = buttons[i].getAttribute('data-period') === id;
         buttons[i].setAttribute('aria-pressed', on ? 'true' : 'false');
       }
+      block.setAttribute('data-period-selected', id);
       paint(block, id, entitlement);
     }
     for (var j = 0; j < buttons.length; j++) {

@@ -138,3 +138,54 @@
   .sp-tease-prices{grid-template-columns:minmax(0,1fr)}
   .bill-toggle button{font-size:.78rem;padding:.5em .25em}
 }
+
+/* Checkout, Code und Dankeseite */
+.checkout-box,.code-box,.license-status{
+  max-width:860px;
+  margin:22px auto 0;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:22px 24px;
+  box-shadow:var(--shadow);
+}
+.checkout-pay,.checkout-noabo,.code-box p,.license-status p{margin:0 0 10px;color:var(--ink-2)}
+.checkout-noabo{color:var(--felt);font-weight:700}
+.checkout-field,.code-box label,.pw-field{display:flex;flex-direction:column;gap:6px;font-weight:700;color:var(--felt);margin:12px 0}
+.checkout-field span,.code-box span,.pw-field span{font-weight:500;color:var(--ink-2)}
+.checkout-field input,.code-box input,.pw-field input{
+  font:inherit;
+  font-weight:500;
+  color:var(--ink);
+  background:var(--cream);
+  border:1.5px solid var(--line);
+  border-radius:12px;
+  padding:.65em .8em;
+}
+.consent,.pw-consent{display:flex;gap:12px;align-items:flex-start;margin:14px 0;font-weight:500;color:var(--ink);line-height:1.45}
+.consent input,.pw-consent input{width:1.15rem;height:1.15rem;margin-top:.2em;flex:none;accent-color:var(--felt)}
+.consent a,.pw-consent a,.legal a{color:var(--wine);text-decoration:underline}
+.checkout-status,.code-status,.pw-status{min-height:1.4em;color:var(--wine);font-weight:600}
+.pay-cancelled{
+  max-width:860px;
+  margin:0 auto 18px;
+  background:#fff6e8;
+  border:1px solid var(--gold);
+  border-radius:14px;
+  padding:14px 16px;
+  color:var(--felt);
+}
+.license-status{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.license-status[hidden],.pay-cancelled[hidden],.code-card[hidden]{display:none}
+.code-box h3{font-size:1.45rem;color:var(--felt);margin-bottom:6px}
+.code-box .btn{margin-top:8px}
+
+.thanks{padding:42px 0 28px}
+.thanks h1{font-size:clamp(2.2rem,5vw,3.4rem);color:var(--felt);margin:10px 0 12px}
+.thanks-lead{max-width:640px;color:var(--ink-2);font-size:1.05rem}
+.code-card{max-width:640px;margin-top:22px;background:var(--paper);border:2px dashed var(--gold);border-radius:18px;padding:22px 18px;text-align:center;box-shadow:var(--shadow)}
+.code-card p{margin:0}
+.code-kicker{font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--wine);font-size:.78rem}
+.code-big{font-family:var(--serif);font-size:clamp(2rem,6vw,3.2rem);letter-spacing:.04em;color:var(--felt);margin:8px 0;word-break:break-all}
+.code-hint{color:var(--ink);font-weight:700}
+.code-meta{color:var(--ink-2);margin-top:8px}

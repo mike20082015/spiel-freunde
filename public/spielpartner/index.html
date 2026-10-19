@@ -80,8 +80,10 @@
       <div class="sec-head">
         <p class="eyebrow">Mitgliedschaft</p>
         <h2>Erst testen, dann entscheiden</h2>
-        <p class="sub">Jede neue Runde in diesem Browser beginnt mit 14 Tagen Premium: alle Spielpartner sind frei. Ein Konto gibt es noch nicht. Nach den 14 Tagen wählst Du Standard oder Premium, monatlich oder für 6 und 12 Monate. Es wird nichts automatisch abgebucht. Wenn Du nichts wählst, bleiben Horst und Margarethe.</p>
+        <p class="sub">Jede neue Runde in diesem Browser beginnt mit 14 Tagen Premium: alle Spielpartner sind frei. Ein Konto gibt es nicht. Danach, ohne bezahlte Lizenz, bleiben drei Runden am Tag mit Horst und Margarethe. Standard öffnet die beiden ohne Limit, Premium die ganze Runde. Es wird nichts automatisch abgebucht.</p>
       </div>
+      <p class="pay-cancelled" id="payment-cancelled" hidden>Die Zahlung wurde abgebrochen. Es wurde nichts abgebucht. Du kannst es jederzeit noch einmal versuchen.</p>
+      <div class="license-status" id="license-status" hidden></div>
       <div class="trial">
         <span class="trial-big">14 Tage</span>
         <span class="trial-txt"><b>alle Spielpartner gratis</b> <span data-after-trial>Danach 9,95 €/Monat oder 14,95 €/Monat. Nichts läuft von allein weiter.</span></span>
@@ -93,41 +95,67 @@
           <button type="button" data-period="6" aria-pressed="false">6 Monate</button>
           <button type="button" data-period="12" aria-pressed="false">12 Monate</button>
         </div>
-        <div class="plans">
-          <article class="plan" data-tier="standard">
-            <h3>Standard</h3>
-            <div class="bill-notes">
-              <span class="free-badge" data-badge hidden></span>
-              <span class="popular-note" data-popular hidden></span>
-            </div>
-            <p class="price"><span class="amt" data-amt>9,95 €</span><span class="per" data-per>/Monat</span></p>
-            <p class="bill-eff" data-eff hidden></p>
-            <ul>
-              <li>Horst und Margarethe</li>
-              <li>Auch nach dem Test dabei</li>
-              <li>Keine automatische Abbuchung</li>
-            </ul>
-            <button type="button" class="btn btn-outline" disabled>Bald verfügbar</button>
-          </article>
-          <article class="plan plan-hot" data-tier="premium">
-            <span class="ribbon">Alle</span>
-            <h3>Premium</h3>
-            <div class="bill-notes">
-              <span class="free-badge" data-badge hidden></span>
-              <span class="popular-note" data-popular hidden></span>
-            </div>
-            <p class="price"><span class="amt" data-amt>14,95 €</span><span class="per" data-per>/Monat</span></p>
-            <p class="bill-eff" data-eff hidden></p>
-            <ul>
-              <li>Alle Spielpartner</li>
-              <li>Die ersten 14 Tage gratis</li>
-              <li>Keine automatische Abbuchung</li>
-            </ul>
-            <button type="button" class="btn btn-gold" disabled>Bald verfügbar</button>
-          </article>
-        </div>
+        <form id="checkout-form" data-checkout>
+          <div class="plans">
+            <article class="plan" data-tier="standard">
+              <h3>Standard</h3>
+              <div class="bill-notes">
+                <span class="free-badge" data-badge hidden></span>
+                <span class="popular-note" data-popular hidden></span>
+              </div>
+              <p class="price"><span class="amt" data-amt>9,95 €</span><span class="per" data-per>/Monat</span></p>
+              <p class="bill-eff" data-eff hidden></p>
+              <ul>
+                <li>Horst und Margarethe, ohne Rundenlimit</li>
+                <li>1, 6 oder 12 Monate im Voraus</li>
+                <li>Keine automatische Verlängerung</li>
+              </ul>
+              <button type="button" class="btn btn-outline" data-buy="standard" disabled>Weiter zur Zahlung</button>
+            </article>
+            <article class="plan plan-hot" data-tier="premium">
+              <span class="ribbon">Alle</span>
+              <h3>Premium</h3>
+              <div class="bill-notes">
+                <span class="free-badge" data-badge hidden></span>
+                <span class="popular-note" data-popular hidden></span>
+              </div>
+              <p class="price"><span class="amt" data-amt>14,95 €</span><span class="per" data-per>/Monat</span></p>
+              <p class="bill-eff" data-eff hidden></p>
+              <ul>
+                <li>Alle Spielpartner, ohne Rundenlimit</li>
+                <li>Die ersten 14 Tage gratis</li>
+                <li>Keine automatische Verlängerung</li>
+              </ul>
+              <button type="button" class="btn btn-gold" data-buy="premium" disabled>Weiter zur Zahlung</button>
+            </article>
+          </div>
+          <div class="checkout-box">
+            <p class="checkout-pay">Zahlung per Karte, SEPA, Apple Pay, Google Pay oder Krypto über unseren Zahlungsdienstleister.</p>
+            <p class="checkout-noabo">Kein Abo, keine automatische Verlängerung.</p>
+            <label class="checkout-field">E-Mail
+              <span>für Code und Erinnerung vor Ablauf. Kannst Du leer lassen.</span>
+              <input id="checkout-email" data-email type="email" autocomplete="email" inputmode="email" maxlength="200" placeholder="du@example.com">
+            </label>
+            <label class="consent">
+              <input id="checkout-consent" data-consent type="checkbox">
+              <span>Ich willige ein, dass vor Ablauf der Widerrufsfrist mit der Bereitstellung der digitalen Inhalte begonnen wird, und mir ist bekannt, dass ich dadurch mein Widerrufsrecht verliere (§ 356 Abs. 5 BGB). Es gelten die <a href="/agb.html">AGB</a> und die <a href="/widerruf.html">Widerrufsbelehrung</a>.</span>
+            </label>
+            <p class="checkout-status" data-status role="status"></p>
+            <p data-renew-note hidden>Verlängerung ist ausgewählt. Beim Bezahlen wird Dein bisheriger Code mitgeschickt.</p>
+            <input data-renew type="hidden" value="">
+          </div>
+        </form>
       </div>
-      <p class="sp-fine">Bezahlen kannst Du hier noch nicht. Die Knöpfe bleiben auf „Bald verfügbar“, bis es soweit ist. Bis dahin kostet Dich der Test nichts, und es wird nichts automatisch abgebucht.</p>
+      <form class="code-box" id="code-form">
+        <h3>Code eingeben</h3>
+        <p>Für ein anderes Gerät. Den Code bekommst Du nach der Zahlung, zum Notieren.</p>
+        <label>Code
+          <input id="license-code-input" name="code" autocomplete="off" spellcheck="false" maxlength="80" placeholder="Dein Code">
+        </label>
+        <button type="submit" class="btn btn-outline">Code prüfen</button>
+        <p class="code-status" id="code-status" role="status"></p>
+      </form>
+      <p class="sp-fine">6 Monate sind ein Monat gratis, 12 Monate sind drei Monate gratis. Der Test kostet nichts. Kein Abo, keine automatische Verlängerung. Es wird nichts automatisch abgebucht.</p>
     </div>
   </section>
 </main>
@@ -140,9 +168,11 @@
     </div>
     <div class="foot-col"><b>Spielen</b><a href="/skat/">Skat ausprobieren</a><a href="/spielpartner/">Spielpartner</a><a href="/mein-avatar/">Mein Avatar</a><a href="/#spiele">Alle Spiele</a></div>
     <div class="foot-col"><b>Runde</b><a href="#runde">Gesichter</a><a href="#mitgliedschaft">Mitgliedschaft</a><a href="/">Startseite</a></div>
+    <div class="foot-col"><b>Rechtliches</b><a href="/impressum.html">Impressum</a><a href="/datenschutz.html">Datenschutz</a><a href="/agb.html">AGB</a><a href="/widerruf.html">Widerruf</a></div>
   </div>
   <div class="wrap foot-bottom">
-    <span>© 2026 Spiel-Freunde</span>
+    <span>Ein Angebot der Interconsult LLC</span>
+    <span><a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/agb.html">AGB</a> · <a href="/widerruf.html">Widerruf</a></span>
     <span>Kein Glücksspiel. Nur Spaß.</span>
     <a class="powered" href="https://lead-monster.net" target="_blank" rel="noopener">powered by lead-monster.net</a>
   </div>
@@ -151,6 +181,7 @@
 <script src="entitlement.js"></script>
 <script src="cards.js"></script>
 <script src="offer.js"></script>
+<script src="checkout.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

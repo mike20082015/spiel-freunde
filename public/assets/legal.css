@@ -1,0 +1,12 @@
+.legal{padding:42px 0 64px}
+.legal h1{font-size:clamp(2rem,4vw,3.1rem);color:var(--felt);margin:12px 0 16px}
+.legal h2{font-size:1.4rem;color:var(--felt);margin:28px 0 8px}
+.legal p,.legal li{color:var(--ink-2)}
+.legal p{margin-bottom:10px}
+.legal ul,.legal ol{margin:0 0 12px 1.2em}
+.legal li{margin-bottom:6px}
+.legal a{color:var(--wine);text-decoration:underline}
+.legal .box{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;margin:14px 0 18px}
+.legal address{font-style:normal}
+.foot-bottom a{color:var(--gold-2)}
+.foot-bottom a:hover{text-decoration:underline}

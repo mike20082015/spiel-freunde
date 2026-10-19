@@ -54,11 +54,17 @@ test('während des Tests sind alle Stufen frei', () => {
   });
 });
 
-test('vor dem Test nur Standard', () => {
-  const view = E.describe({ trialEndsAt: null, tier: null }, START);
+test('ohne Lizenz ist Standard nicht pauschal offen', () => {
+  const view = E.describe({ trialEndsAt: null, tier: null, license: null }, START);
   assert.strictEqual(view.phase, 'new');
-  assert.strictEqual(E.isUnlocked('standard', view, START), true);
+  assert.strictEqual(view.unlimited, false);
+  assert.strictEqual(E.isUnlocked('standard', view, START), false);
   assert.strictEqual(E.isUnlocked('premium', view, START), false);
+  assert.strictEqual(E.isUnlocked('standard', { trialEndsAt: null, tier: 'standard', license: null }, START), false);
+  assert.strictEqual(E.isUnlocked('standard', view, START, 0), true);
+  assert.strictEqual(E.isUnlocked('standard', view, START, 2), true);
+  assert.strictEqual(E.isUnlocked('standard', view, START, 3), false);
+  assert.strictEqual(E.isUnlocked('premium', view, START, 0), false);
 });
 
 test('genau am Ende ist der Test vorbei', () => {
@@ -67,59 +73,71 @@ test('genau am Ende ist der Test vorbei', () => {
   const end = view.trialEndsAt;
   assert.strictEqual(E.isTrialActive(view, end), false);
   assert.strictEqual(E.isUnlocked('premium', view, end), false);
-  assert.strictEqual(E.isUnlocked('standard', view, end), true);
+  assert.strictEqual(E.isUnlocked('standard', view, end), false);
+  assert.strictEqual(E.isUnlocked('standard', view, end, 0), true);
 });
 
-test('danach nur die gewählte Stufe', () => {
+test('danach zählt nur eine gültige Lizenz', () => {
   const storage = E.memoryStorage();
   E.startTrial(storage, START);
   const after = START + 14 * DAY;
   let view = E.describe(E.load(storage), after);
   assert.strictEqual(view.trialActive, false);
   assert.strictEqual(view.tier, null);
-  assert.strictEqual(E.isUnlocked('premium', view, after), false);
-  assert.strictEqual(E.isUnlocked('standard', view, after), true);
+  assert.strictEqual(view.unlimited, false);
+  assert.strictEqual(E.isUnlocked('premium', view, after, 0), false);
+  assert.strictEqual(E.isUnlocked('standard', view, after, 0), true);
 
-  view = E.chooseTier(storage, 'standard', after);
+  view = E.applyLicense(storage, { code: 'STD01', tier: 'standard', expiresAt: after + 30 * DAY }, after);
   assert.strictEqual(view.phase, 'standard');
   assert.strictEqual(view.tier, 'standard');
   assert.strictEqual(view.allUnlocked, false);
-  assert.strictEqual(E.isUnlocked('premium', view, after + DAY), false);
-  assert.strictEqual(E.isUnlocked('standard', view, after + DAY), true);
+  assert.strictEqual(view.unlimited, true);
+  assert.strictEqual(E.isUnlocked('premium', view, after + DAY, 9), false);
+  assert.strictEqual(E.isUnlocked('standard', view, after + DAY, 9), true);
 
-  view = E.chooseTier(storage, 'premium', after + DAY);
+  view = E.applyLicense(storage, { code: 'PRE01', tier: 'premium', expiresAt: after + 30 * DAY }, after + DAY);
   assert.strictEqual(view.phase, 'premium');
   assert.strictEqual(view.allUnlocked, true);
   assert.strictEqual(E.isUnlocked('premium', view, after + 2 * DAY), true);
   assert.strictEqual(E.isUnlocked('standard', view, after + 2 * DAY), true);
+
+  const expired = E.describe(E.load(storage), after + 40 * DAY);
+  assert.strictEqual(expired.phase, 'ended');
+  assert.strictEqual(expired.tier, null);
+  assert.strictEqual(E.isUnlocked('premium', expired, after + 40 * DAY, 0), false);
+  assert.strictEqual(E.isUnlocked('standard', expired, after + 40 * DAY), false);
 });
 
-test('Wahl während des Tests bleibt gespeichert, der Test öffnet weiter alle', () => {
+test('eine Stufe ohne Lizenz schaltet nichts frei', () => {
   const storage = E.memoryStorage();
   E.startTrial(storage, START);
   const during = E.chooseTier(storage, 'standard', START + DAY);
-  assert.strictEqual(during.tier, 'standard');
   assert.strictEqual(during.trialActive, true);
   assert.strictEqual(E.isUnlocked('premium', during, START + DAY), true);
   const after = START + 14 * DAY;
-  assert.strictEqual(E.isUnlocked('premium', E.load(storage), after), false);
-  assert.strictEqual(E.isUnlocked('standard', E.load(storage), after), true);
+  const state = E.load(storage);
+  assert.strictEqual(state.tier, 'standard');
+  assert.strictEqual(state.license, null);
+  assert.strictEqual(E.isUnlocked('premium', state, after, 0), false);
+  assert.strictEqual(E.isUnlocked('standard', state, after), false);
+  assert.strictEqual(E.isUnlocked('standard', state, after, 0), true);
 });
 
 test('chooseTier lehnt eine unbekannte Stufe ab', () => {
   const storage = E.memoryStorage();
   assert.throws(() => E.chooseTier(storage, 'gold', START), /Stufe/);
-  assert.deepStrictEqual(E.load(storage), { trialEndsAt: null, tier: null });
+  assert.deepStrictEqual(E.load(storage), { trialEndsAt: null, tier: null, license: null, licenseCheckedOn: null });
 });
 
 test('kaputtes localStorage fällt auf leer zurück', () => {
   const storage = E.memoryStorage();
   storage.setItem(E.STORAGE_KEY, '{nein');
-  assert.deepStrictEqual(E.load(storage), { trialEndsAt: null, tier: null });
+  assert.deepStrictEqual(E.load(storage), { trialEndsAt: null, tier: null, license: null, licenseCheckedOn: null });
   storage.setItem(E.STORAGE_KEY, JSON.stringify({ trialEndsAt: 50, tier: 'vip' }));
-  assert.deepStrictEqual(E.load(storage), { trialEndsAt: 50, tier: null });
+  assert.deepStrictEqual(E.load(storage), { trialEndsAt: 50, tier: null, license: null, licenseCheckedOn: null });
   storage.setItem(E.STORAGE_KEY, JSON.stringify({ trialEndsAt: 'morgen', tier: 'premium' }));
-  assert.deepStrictEqual(E.load(storage), { trialEndsAt: null, tier: 'premium' });
+  assert.deepStrictEqual(E.load(storage), { trialEndsAt: null, tier: 'premium', license: null, licenseCheckedOn: null });
 });
 
 test('Video folgt ohne video-Element, sonst stummer Player mit Poster', () => {
@@ -299,15 +317,186 @@ test('Mitgliedschaft und Startleiste holen die Beträge aus der Config', () => {
       assert.equal(html.includes(hardcoded), false, hardcoded);
     });
   });
-  assert.equal((memberOffer.match(/<button[^>]*disabled[^>]*>Bald verfügbar<\/button>/g) || []).length, 2);
-  assert.match(memberOffer, /Die Knöpfe bleiben auf „Bald verfügbar“/);
-  assert.match(memberOffer, /disabled/);
+  assert.equal((memberOffer.match(/data-buy="standard"/g) || []).length, 1);
+  assert.equal((memberOffer.match(/data-buy="premium"/g) || []).length, 1);
+  assert.match(memberOffer, /Weiter zur Zahlung/);
+  assert.match(memberOffer, /data-consent/);
+  assert.match(memberOffer, /§ 356 Abs\. 5 BGB/);
+  assert.match(memberOffer, /für Code und Erinnerung vor Ablauf/);
+  assert.match(memberOffer, /Kein Abo, keine automatische Verlängerung/);
+  assert.match(memberOffer, /Zahlung per Karte, SEPA, Apple Pay, Google Pay oder Krypto/);
   assert.match(memberOffer, /14 Tage alle Spielpartner gratis testen/);
   assert.match(memberOffer, /nichts automatisch abgebucht/i);
   assert.match(member, /Es wird nichts automatisch abgebucht/);
   assert.match(tease, /Es wird nichts automatisch abgebucht/);
   assert.match(tease, /14 Tage alle Spielpartner gratis testen/);
   assert.match(tease, /14 Tage Premium gratis/);
+});
+
+test('drei freie Runden am lokalen Kalendertag, dann die Sperre', () => {
+  const storage = E.memoryStorage();
+  E.startTrial(storage, START);
+  const after = START + 15 * DAY;
+  assert.strictEqual(E.canStartRound(storage, after).remaining, 3);
+  assert.strictEqual(E.recordRound(storage, after).paywall, false);
+  assert.strictEqual(E.recordRound(storage, after).count, 2);
+  const third = E.recordRound(storage, after);
+  assert.strictEqual(third.paywall, true);
+  assert.strictEqual(third.count, 3);
+  assert.strictEqual(E.canStartRound(storage, after).ok, false);
+  assert.strictEqual(E.isUnlocked('standard', E.load(storage), after, E.roundsUsed(storage, after)), false);
+  const nextMorning = new Date(new Date(after).getFullYear(), new Date(after).getMonth(), new Date(after).getDate() + 1, 0, 30).getTime();
+  assert.notStrictEqual(E.localDateKey(after), E.localDateKey(nextMorning));
+  assert.strictEqual(E.canStartRound(storage, nextMorning).ok, true);
+  assert.strictEqual(E.canStartRound(storage, nextMorning).remaining, 3);
+});
+
+test('Test und Lizenz zählen keine Runden', () => {
+  const storage = E.memoryStorage();
+  const trial = E.startTrial(storage, START);
+  assert.strictEqual(trial.unlimited, true);
+  assert.strictEqual(E.recordRound(storage, START + DAY).counted, false);
+  assert.strictEqual(E.roundsUsed(storage, START + DAY), 0);
+  const after = START + 20 * DAY;
+  E.applyLicense(storage, { code: 'STD99', tier: 'standard', expiresAt: after + 10 * DAY }, after);
+  E.recordRound(storage, after);
+  assert.strictEqual(E.canStartRound(storage, after).unlimited, true);
+  assert.strictEqual(E.roundsUsed(storage, after), 0);
+});
+
+test('Empfehlungscode: erster gilt, 90 Tage, nicht überschrieben', () => {
+  const storage = E.memoryStorage();
+  assert.strictEqual(E.captureRef(storage, START, '?ref=partner1'), 'partner1');
+  assert.strictEqual(E.captureRef(storage, START + DAY, '?ref=anderer'), 'partner1');
+  assert.strictEqual(E.captureRef(storage, START + 2 * DAY, ''), 'partner1');
+  assert.strictEqual(E.readRef(storage, START + 89 * DAY), 'partner1');
+  assert.strictEqual(E.readRef(storage, START + 90 * DAY), null);
+  assert.strictEqual(E.captureRef(storage, START + 90 * DAY, 'ref=neu'), 'neu');
+  assert.strictEqual(E.captureRef(storage, START + 91 * DAY, '?ref='), 'neu');
+  assert.strictEqual(E.captureRef(storage, START + 91 * DAY, '?ref=***'), 'neu');
+});
+
+test('Checkout-Körper schickt Stufe, Monate, Mail, Code und ref nur wenn vorhanden', () => {
+  const full = E.checkoutBody({
+    tier: 'premium',
+    months: 12,
+    email: '  a@b.de ',
+    renewCode: 'ABC',
+    ref: 'partner1'
+  });
+  assert.deepStrictEqual(full, {
+    tier: 'premium',
+    months: 12,
+    email: 'a@b.de',
+    renewCode: 'ABC',
+    ref: 'partner1'
+  });
+  assert.deepStrictEqual(E.checkoutBody({ tier: 'standard', months: '6' }), { tier: 'standard', months: 6 });
+  assert.strictEqual(E.quote('standard', '6').months, 6);
+  assert.strictEqual(E.quote('premium', '12').months, 12);
+  assert.strictEqual(E.quote('standard', 'monthly').months, 1);
+  assert.throws(() => E.checkoutBody({ tier: 'premium', months: 5 }), /Monate/);
+});
+
+test('Checkout hängt den gespeicherten ref an und lässt ihn aus der Antwort', async () => {
+  const storage = E.memoryStorage();
+  E.captureRef(storage, START, '?ref=tisch42');
+  let sent = null;
+  const result = await E.startCheckout(storage, {
+    tier: 'standard',
+    months: 1,
+    email: '',
+    renewCode: ''
+  }, START, async (url, opts) => {
+    sent = { url, body: JSON.parse(opts.body) };
+    return { ok: true, json: async () => ({ orderId: 'ord_1', invoiceUrl: 'https://pay.example/rech/1' }) };
+  });
+  assert.strictEqual(sent.url, E.BILLING_API_BASE + '/checkout');
+  assert.deepStrictEqual(sent.body, { tier: 'standard', months: 1, ref: 'tisch42' });
+  assert.deepStrictEqual(result, { orderId: 'ord_1', invoiceUrl: 'https://pay.example/rech/1' });
+  assert.equal(JSON.stringify(result).includes('tisch42'), false);
+});
+
+test('Lizenz wird höchstens einmal am Tag erneut geprüft', async () => {
+  const storage = E.memoryStorage();
+  const now = new Date(2026, 9, 19, 12).getTime();
+  storage.setItem(E.STORAGE_KEY, JSON.stringify({
+    trialEndsAt: null,
+    tier: 'premium',
+    license: { code: 'ABC123', tier: 'premium', expiresAt: now + 20 * DAY },
+    licenseCheckedOn: null
+  }));
+  let calls = 0;
+  const fetcher = async (url, opts) => {
+    calls += 1;
+    assert.strictEqual(url, E.BILLING_API_BASE + '/license/verify');
+    assert.deepStrictEqual(JSON.parse(opts.body), { code: 'ABC123' });
+    return {
+      ok: true,
+      json: async () => ({ valid: true, tier: 'premium', expiresAt: new Date(now + 20 * DAY).toISOString() })
+    };
+  };
+  await E.maybeVerify(storage, now, fetcher);
+  await E.maybeVerify(storage, now + 1000, fetcher);
+  assert.strictEqual(calls, 1);
+  const next = new Date(2026, 9, 20, 8).getTime();
+  await E.maybeVerify(storage, next, fetcher);
+  assert.strictEqual(calls, 2);
+  assert.strictEqual(E.describe(E.load(storage), next).phase, 'premium');
+});
+
+test('ungültiger Code löscht die gespeicherte Lizenz, ein Tippfehler nicht', async () => {
+  const storage = E.memoryStorage();
+  E.applyLicense(storage, { code: 'ALT1', tier: 'standard', expiresAt: START + 10 * DAY }, START);
+  storage.setItem(E.STORAGE_KEY, JSON.stringify(Object.assign(E.load(storage), { licenseCheckedOn: null })));
+  await E.maybeVerify(storage, START, async () => ({ ok: true, json: async () => ({ valid: false }) }));
+  assert.strictEqual(E.load(storage).license, null);
+  E.applyLicense(storage, { code: 'BLEIBT', tier: 'premium', expiresAt: START + 10 * DAY }, START);
+  const typed = await E.verifyCode(storage, 'FALSCH', START, async () => ({ ok: true, json: async () => ({ valid: false }) }));
+  assert.strictEqual(typed.valid, false);
+  assert.strictEqual(E.load(storage).license.code, 'BLEIBT');
+});
+
+test('Verlängerung unter acht Tagen', () => {
+  const storage = E.memoryStorage();
+  const soon = E.applyLicense(storage, { code: 'REN1', tier: 'premium', expiresAt: START + 7 * DAY }, START);
+  assert.strictEqual(soon.renewSoon, true);
+  assert.strictEqual(soon.licenseDaysLeft <= 7, true);
+  const later = E.applyLicense(storage, { code: 'REN1', tier: 'premium', expiresAt: START + 8 * DAY }, START);
+  assert.strictEqual(later.renewSoon, false);
+});
+
+test('Skat ruft den gemeinsamen Rundenzähler auf', () => {
+  const skat = fs.readFileSync(path.join(__dirname, '../../public/skat/js/app.js'), 'utf8');
+  assert.match(skat, /recordRound/);
+  assert.match(skat, /canStartRound/);
+});
+
+test('API-Basis und Empfehlungsschlüssel stehen nur an einer Stelle', () => {
+  const root = path.join(__dirname, '../../public');
+  const files = [];
+  (function walk(dir) {
+    fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.(html|js|css)$/.test(entry.name)) files.push(full);
+    });
+  })(root);
+  let apiHits = 0;
+  let refHits = 0;
+  files.forEach((file) => {
+    const text = fs.readFileSync(file, 'utf8');
+    const api = text.match(/lead-monster\.net\/api\/public\/spiel-freunde/g) || [];
+    const ref = text.match(/sf-ref/g) || [];
+    if (api.length || ref.length) {
+      assert.strictEqual(path.basename(file), 'entitlement.js', file);
+    }
+    apiHits += api.length;
+    refHits += ref.length;
+  });
+  assert.strictEqual(apiHits, 1);
+  assert.strictEqual(refHits, 1);
+  assert.strictEqual(E.BILLING_API_BASE, 'https://lead-monster.net/api/public/spiel-freunde');
 });
 
 function slice(html, start, end) {

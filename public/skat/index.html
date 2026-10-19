@@ -9,6 +9,8 @@
 <link rel="icon" href="assets/variante-a-favicon-dunkel-32.png" sizes="32x32" type="image/png">
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/skat.css">
+<link rel="stylesheet" href="/spielpartner/offer.css">
+<link rel="stylesheet" href="/spielpartner/paywall.css">
 </head>
 <body>
 <div class="app" id="app">
@@ -73,6 +75,7 @@
             <p class="intro-partners"><a href="/spielpartner/">Deine Spielpartner</a></p>
             <button class="btn btn-gold" id="btn-start">Platz nehmen</button>
             <p class="intro-small" id="intro-small"></p>
+            <p class="intro-rounds" id="intro-rounds"></p>
           </div>
 
           <!-- Aktionen (Reizen, Skat, Ansage) -->
@@ -197,8 +200,17 @@
   </div>
 
   <div class="modal" id="modal-session" hidden><div class="modal-card session" id="session"></div></div>
+  <div class="modal" id="modal-paywall" hidden><div class="modal-card paywall" id="paywall-root"></div></div>
+  <footer class="table-legal">
+    <span>Ein Angebot der Interconsult LLC</span>
+    <span><a href="/impressum.html">Impressum</a> · <a href="/datenschutz.html">Datenschutz</a> · <a href="/agb.html">AGB</a> · <a href="/widerruf.html">Widerruf</a></span>
+  </footer>
 </div>
 
+<script src="/spielpartner/entitlement.js"></script>
+<script src="/spielpartner/offer.js"></script>
+<script src="/spielpartner/checkout.js"></script>
+<script src="/spielpartner/paywall.js"></script>
 <script src="/assets/avatar-store.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/ai.js"></script>
