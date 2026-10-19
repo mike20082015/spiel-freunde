@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Canasta am Küchentisch · Spiel-Freunde (Vorschau)</title>
+<meta name="description" content="Spielbares Canasta von Spiel-Freunde: Du und Margarethe gegen Horst und Oma Hilde, klassisches Partnerspiel für gemütliche Abende.">
+<link rel="icon" href="../assets/variante-a-favicon-dunkel.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../skat/css/fonts.css">
+<link rel="stylesheet" href="css/canasta.css">
+</head>
+<body>
+<div class="app" id="app">
+  <header class="topbar">
+    <a class="logo" href="/" aria-label="Zur Startseite von Spiel-Freunde"><img src="../assets/variante-a-lockup-dunkel-web.svg" alt="Spiel-Freunde" width="796" height="175"></a>
+    <span class="preview-badge">Vorschau</span>
+    <div class="topbar-title"><span class="suits"><span>♣</span><span class="r">♥</span><span>♠</span><span class="r">♦</span></span> Canasta am Küchentisch</div>
+    <nav class="topbar-actions" aria-label="Spielsteuerung">
+      <button class="tbtn tlevel" id="btn-level" type="button" title="Spielstärke"><span class="lbl-long">Stärke: </span><b id="level-label">Kneipe</b></button>
+      <button class="tbtn ticon" id="btn-sound" type="button" aria-pressed="true" title="Stimmen an oder aus"><span class="ico" aria-hidden="true"></span><span class="lbl-long">Ton</span></button>
+      <button class="tbtn ticon" id="btn-talk" type="button" aria-pressed="false" title="Mitreden"><span class="ico" aria-hidden="true"></span><span class="lbl-long">Mitreden</span></button>
+      <button class="tbtn" id="btn-hint" type="button" aria-pressed="false" title="Regeln lernen"><span class="tdot"></span><span class="lbl-long">Regeln lernen</span><span class="lbl-short">Tipps</span></button>
+      <button class="tbtn" id="btn-settings" type="button" title="Einstellungen"><span class="lbl-long">Einstellungen</span><span class="lbl-short">Regeln</span></button>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <section class="table-area" aria-label="Spieltisch">
+      <div class="statusbar" id="status" role="status" aria-live="polite">
+        <span class="st-main" id="st-main">Willkommen am Küchentisch</span>
+        <span class="st-chips" id="st-chips"></span>
+      </div>
+      <div class="room">
+        <div class="tabletop" id="tabletop">
+          <div class="wood-grain"></div>
+
+          <div class="seat seat-west" id="seat-1" data-seat="1">
+            <div class="ava-wrap" id="ava-1"><span class="ini">HK</span><span class="turn-ring"></span><span class="talk-ring" aria-hidden="true"><i></i><i></i><i></i></span><span class="talk-wave" aria-hidden="true"><i></i><i></i><i></i></span></div>
+            <div class="seat-info"><b class="seat-name" id="name-1">Horst</b><span class="seat-role" id="role-1"></span><div class="opp-cards" id="backs-1"></div></div>
+            <div class="bubble" id="bubble-1"></div>
+          </div>
+          <div class="seat seat-north" id="seat-2" data-seat="2">
+            <div class="ava-wrap" id="ava-2"><span class="ini">MH</span><span class="turn-ring"></span><span class="talk-ring" aria-hidden="true"><i></i><i></i><i></i></span><span class="talk-wave" aria-hidden="true"><i></i><i></i><i></i></span></div>
+            <div class="seat-info"><b class="seat-name" id="name-2">Margarethe</b><span class="seat-role" id="role-2"></span><div class="opp-cards" id="backs-2"></div></div>
+            <div class="bubble" id="bubble-2"></div>
+          </div>
+          <div class="seat seat-east" id="seat-3" data-seat="3">
+            <div class="ava-wrap" id="ava-3"><span class="ini">OH</span><span class="turn-ring"></span><span class="talk-ring" aria-hidden="true"><i></i><i></i><i></i></span><span class="talk-wave" aria-hidden="true"><i></i><i></i><i></i></span></div>
+            <div class="seat-info"><b class="seat-name" id="name-3">Oma Hilde</b><span class="seat-role" id="role-3"></span><div class="opp-cards" id="backs-3"></div></div>
+            <div class="bubble" id="bubble-3"></div>
+          </div>
+
+          <div class="board" id="board">
+            <div class="meld-col" id="melds-0" aria-label="Unsere Meldungen"></div>
+            <div class="piles">
+              <button class="pile stock" id="stock" type="button" title="Vom Talon ziehen"></button>
+              <div class="pile discard" id="discard" aria-label="Ablage"></div>
+            </div>
+            <div class="meld-col" id="melds-1" aria-label="Meldungen der Gegner"></div>
+          </div>
+
+          <div class="actions" id="actions">
+            <button type="button" data-act="draw" id="act-draw">Talon</button>
+            <button type="button" data-act="take" id="act-take">Ablage nehmen</button>
+            <button type="button" data-act="meld" id="act-meld">Melden</button>
+            <button type="button" data-act="lay" id="act-lay">Anlegen</button>
+            <button type="button" data-act="discard" id="act-discard">Abwerfen</button>
+            <button type="button" data-act="out" id="act-out" class="primary">Ausmachen</button>
+            <button type="button" data-act="ask" id="act-ask">Darf ich?</button>
+            <button type="button" data-act="end" id="act-end">Runde beenden</button>
+          </div>
+
+          <div class="intro" id="intro">
+            <p class="intro-kicker">Spiel-Freunde · Küchentisch</p>
+            <h2>Platz am Familientisch</h2>
+            <p>Canasta ist das klassische Familienspiel für gemütliche Abende zu Hause. Margarethe ist Deine Partnerin, Horst und Oma Hilde sitzen gegenüber.</p>
+            <p class="intro-partners"><a href="/spielpartner/">Deine Spielpartner</a></p>
+            <button class="btn btn-gold" id="btn-start" type="button">Platz nehmen</button>
+            <p class="intro-small" id="intro-small"></p>
+          </div>
+
+          <div class="me" id="seat-0" data-seat="0">
+            <div class="me-tag">
+              <span class="ava-you" id="you-ava"><span class="ini" id="you-ini">Du</span></span>
+              <span class="seat-role" id="role-0"></span>
+              <span class="me-bubble" id="bubble-0"></span>
+            </div>
+            <div class="hint-box" id="hint-box" hidden></div>
+            <div class="hand" id="hand" aria-label="Deine Karten"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <section class="side-card score-card">
+        <h2>Punkteliste <span class="mode-badge" id="mode-badge">5000</span></h2>
+        <div class="target-info" id="target-info"></div>
+        <div class="score-wrap"><table class="score" id="score-table"></table></div>
+        <p class="partner-foot"><a href="/spielpartner/">Deine Spielpartner</a></p>
+      </section>
+      <section class="side-card chat-card">
+        <h2><span class="live"></span> Am Tisch</h2>
+        <div class="chat-log" id="chat-log" aria-live="polite"></div>
+        <div class="hf-bar" id="hf-bar" hidden>
+          <span class="hf-state" id="hf-state" data-state="aus"><i aria-hidden="true"></i><b id="hf-label">aus</b></span>
+          <span class="hf-hint">Am besten mit Kopfhörer</span>
+          <button type="button" class="hf-mute" id="btn-hf-mute" aria-pressed="false">Stumm</button>
+        </div>
+        <form class="chat-form" id="chat-form" autocomplete="off">
+          <input id="chat-input" type="text" maxlength="160" placeholder="Schreib was in die Runde ..." aria-label="Nachricht an den Tisch">
+          <button class="mic" id="btn-mic" type="button" hidden aria-pressed="false" title="Sprechen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2z"/></svg><span class="sr">Mikrofon</span></button>
+          <button class="btn btn-gold btn-sm" type="submit">Senden</button>
+        </form>
+        <p class="mic-hint" id="mic-hint" hidden></p>
+      </section>
+    </aside>
+  </main>
+
+  <div class="modal" id="modal-summary" hidden>
+    <div class="modal-card" id="summary"></div>
+  </div>
+  <div class="modal" id="modal-ask" hidden>
+    <div class="modal-card small">
+      <h3 id="ask-title">Darf ich ausmachen?</h3>
+      <p id="ask-text">Die Antwort gilt für diesen Zug.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost-dark" id="ask-no" type="button">Nein, liegen lassen</button>
+        <button class="btn btn-gold" id="ask-yes" type="button">Ja, mach zu</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="modal-settings" hidden>
+    <div class="modal-card settings">
+      <h3>Einstellungen</h3>
+      <div class="opt-grid">
+        <fieldset class="opt">
+          <legend>Spielstärke</legend>
+          <label class="radio"><input type="radio" name="level" value="anfaenger"> <span><b>Anfänger</b><small>Sie melden früh, nehmen die Ablage gern und sind nachsichtig.</small></span></label>
+          <label class="radio"><input type="radio" name="level" value="kneipe"> <span><b>Kneipe</b><small>Solide Hausregeln: einfrieren, blocken, Paare behalten.</small></span></label>
+          <label class="radio"><input type="radio" name="level" value="turnier"> <span><b>Turnier</b><small>Sie merken sich Abwürfe und rechnen, ohne in fremde Karten zu sehen.</small></span></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Spielen bis</legend>
+          <label class="radio inline"><input type="radio" name="target" value="3000"> <span>3000</span></label>
+          <label class="radio inline"><input type="radio" name="target" value="5000"> <span>5000</span></label>
+          <label class="radio inline"><input type="radio" name="target" value="custom"> <span>Eigenes Ziel</span></label>
+          <label class="numfield"><input type="number" id="target-custom" min="1000" max="20000" step="100"> <span>Punkte</span></label>
+          <p class="note">Nach einer Runde gewinnt, wer das Ziel erreicht hat und vorn liegt. Gleichstand spielt weiter.</p>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Ablage nehmen</legend>
+          <label class="radio"><input type="radio" name="pileTake" value="frozen"> <span><b>Klassisch</b><small>Offener Stapel: oberste Karte plus zwei aus der Hand, oder an eine eigene Meldung. Eingefroren oder noch ohne Meldung: nur mit zwei natürlichen Karten.</small></span></label>
+          <label class="radio"><input type="radio" name="pileTake" value="always"> <span><b>Immer eingefroren</b><small>Der Stapel will immer zwei natürliche Karten aus der Hand.</small></span></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Erste Meldung</legend>
+          <label class="radio"><input type="radio" name="minMeld" value="byScore"> <span><b>Nach Spielstand</b><small>Unter 0: 15. Bis 1495: 50. Bis 2995: 90. Ab 3000: 120.</small></span></label>
+          <label class="radio"><input type="radio" name="minMeld" value="fixed50"> <span><b>Immer 50</b><small>Der erste Auslagewert bleibt bei 50, egal wie der Stand ist.</small></span></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Ausmachen</legend>
+          <label class="radio"><input type="radio" name="canastas" value="1"> <span><b>Ein Canasta</b></span></label>
+          <label class="radio"><input type="radio" name="canastas" value="2"> <span><b>Zwei Canastas</b></span></label>
+          <label class="radio"><input type="radio" name="concealed" value="200"> <span><b>Verdeckt 200</b><small>Wer ausmacht, ohne vorher selbst gemeldet zu haben, und in diesem Zug einen Canasta schließt.</small></span></label>
+          <label class="radio"><input type="radio" name="concealed" value="300"> <span><b>Verdeckt 300</b></span></label>
+          <label class="switch"><input type="checkbox" id="opt-ask"> <span><b>„Darf ich?“</b><small>Einmal fragen, direkt nach dem Ziehen. Die Antwort bindet.</small></span></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Rote Dreien und Joker</legend>
+          <label class="radio"><input type="radio" name="redThrees" value="classic"> <span><b>Klassisch</b><small>100 je rote Drei, alle vier 800. Plus, sobald die Partei irgendetwas gemeldet hat, sonst Minus.</small></span></label>
+          <label class="radio"><input type="radio" name="redThrees" value="vienna"> <span><b>Wien</b><small>Die roten Dreien zählen erst plus, wenn ein Canasta da ist.</small></span></label>
+          <label class="switch"><input type="checkbox" id="opt-wild"> <span><b>Nicht mehr Wilde als natürliche Karten</b><small>Wiener Grenze in jeder Meldung.</small></span></label>
+          <label class="switch"><input type="checkbox" id="opt-nocanasta"> <span><b>Fertigen Canasta nicht mit dem Stapel verlängern</b></span></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Ton</legend>
+          <label class="switch"><input type="checkbox" id="opt-sound"> <span><b>Stimmen</b><small>Horst und Margarethe sprechen. Oma Hilde bleibt bei der Sprechblase.</small></span></label>
+          <label class="range"><span>Lautstärke</span><input type="range" id="opt-volume" min="0" max="100" step="5"><output id="opt-volume-out"></output></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Mitreden</legend>
+          <label class="radio"><input type="radio" name="talk" value="chat"> <span><b>Nur schreiben</b></span></label>
+          <label class="radio"><input type="radio" name="talk" value="voice"> <span><b>Mit Mikrofon</b><small>Knopf neben dem Chat, oder Freisprechen ohne Knopf.</small></span></label>
+          <div id="handsfree-block" hidden>
+            <label class="switch" id="handsfree-label"><input type="checkbox" id="opt-handsfree"> <span><b>Freisprechen</b><small>Nach einer kurzen Pause geht der Satz von allein raus.</small></span></label>
+            <p class="note" id="handsfree-phones">Am besten mit Kopfhörer</p>
+            <p class="note warn-note" id="handsfree-support" hidden></p>
+          </div>
+          <p class="note warn-note" id="talk-support" hidden></p>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Kartenbild und Tempo</legend>
+          <label class="radio"><input type="radio" name="deck" value="four"> <span><b>Vierfarbig</b></span></label>
+          <label class="radio"><input type="radio" name="deck" value="two"> <span><b>Zweifarbig</b></span></label>
+          <div>
+            <label class="radio inline"><input type="radio" name="speed" value="slow"> <span>Gemütlich</span></label>
+            <label class="radio inline"><input type="radio" name="speed" value="normal"> <span>Normal</span></label>
+            <label class="radio inline"><input type="radio" name="speed" value="fast"> <span>Flott</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <p class="note">Regeln und Spielstärke gelten ab der nächsten Runde. Zwei französische Blätter, vier Joker, elf Karten. Schwarze Dreien nur beim Ausmachen, ohne Joker.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost-dark" id="btn-reset" type="button">Punkteliste zurücksetzen</button>
+        <button class="btn btn-gold" type="button" data-close>Fertig</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="modal-session" hidden>
+    <div class="modal-card session" id="session"></div>
+  </div>
+</div>
+<script src="js/engine.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/seats.js"></script>
+<script src="js/talk.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/cards.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
