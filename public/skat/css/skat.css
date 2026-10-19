@@ -159,7 +159,16 @@ img{display:block;max-width:100%}
 .me{position:absolute;left:0;right:0;bottom:0;z-index:6;display:flex;flex-direction:column;align-items:center;padding:0 20px 24px}
 .me-tag{display:flex;align-items:center;gap:8px;margin-bottom:10px;position:relative}
 .ava-you{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.9rem;color:#3a2a0c;background:linear-gradient(145deg,var(--gold-2),var(--gold-3));box-shadow:0 4px 12px rgba(0,0,0,.5);transition:box-shadow .3s}
+.ava-you.has-photo{padding:0;overflow:hidden;background:#2a2118}
+.ava-you.has-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 20%;border-radius:50%;display:block}
+.me .ava-you.has-photo{width:72px;height:72px}
+.me-name{font-family:var(--serif);font-size:1.05rem;color:var(--cream);text-shadow:0 2px 6px rgba(0,0,0,.6);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .me.active .ava-you{box-shadow:0 0 0 3px #7be08f,0 0 18px rgba(123,224,143,.6)}
+.avatar-setting{display:flex;gap:12px;align-items:center;padding:8px 10px}
+.avatar-setting .ava-you{width:56px;height:56px;flex:none}
+.avatar-setting > span:not(.ava-you){display:flex;flex-direction:column;gap:2px}
+.avatar-setting small{color:var(--ink-2);font-size:.84rem;font-weight:500}
+.avatar-setting a{color:var(--wine);font-weight:800}
 .me-bubble{position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:rgba(30,18,10,.85);border:1px solid rgba(212,168,75,.5);padding:5px 12px;border-radius:999px;font-size:.86rem;white-space:nowrap;opacity:0;transition:opacity .3s;max-width:360px;overflow:hidden;text-overflow:ellipsis}
 .me-bubble.show{opacity:1}
 .hand{display:flex;justify-content:center;align-items:flex-end;min-height:calc(var(--cw) * 1.45 + 24px);padding-top:22px}

@@ -8,6 +8,8 @@ packages:
       XAI_API_KEY: "${XAI_API_KEY}"
       ELEVENLABS_API_KEY: "${ELEVENLABS_API_KEY}"
       XAI_MODEL: "${XAI_MODEL}"
+      XAI_IMAGE_MODEL: "${XAI_IMAGE_MODEL}"
+      AVATAR_DAILY_LIMIT: "${AVATAR_DAILY_LIMIT}"
       VOICE_HORST: "${VOICE_HORST}"
       VOICE_MARGARETHE: "${VOICE_MARGARETHE}"
       VOICE_URS: "${VOICE_URS}"
@@ -28,4 +30,11 @@ packages:
         main: index.main
         limits:
           timeout: 15000
+          memory: 128
+      - name: avatar
+        runtime: nodejs:22
+        web: true
+        main: index.main
+        limits:
+          timeout: 30000
           memory: 128

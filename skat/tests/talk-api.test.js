@@ -274,16 +274,121 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     assert.equal(JSON.stringify(logs[0]).includes('xi-api-key'), false);
   });
 
+  test('Avatar: nur erfundene Erwachsene, kleines Bild, kein Schlüssel nach außen', async () => {
+    const good = H.validateAvatar({
+      typ: 'frau',
+      alter: '30-44',
+      haare: 'lockig',
+      brille: 'nein',
+      stimmung: 'froh',
+      text: '  Sommersprossen und ein Schal  ',
+      name: 'Angela Merkel',
+    });
+    assert.equal(good.ok, true);
+    assert.equal(good.value.text, 'Sommersprossen und ein Schal');
+    assert.equal(good.value.name, undefined);
+    const body = H.buildAvatarBody(good.value, {});
+    assert.equal(body.model, H.DEFAULT_IMAGE_MODEL);
+    assert.equal(body.model, 'grok-imagine-image-2.0');
+    assert.equal(body.n, 1);
+    assert.equal(body.aspect_ratio, '1:1');
+    assert.equal(body.resolution, '1k');
+    assert.equal(body.quality, 'low');
+    assert.equal(body.response_format, 'b64_json');
+    assert.match(body.prompt, /adult/i);
+    assert.match(body.prompt, /pub/i);
+    assert.match(body.prompt, /Sommersprossen/);
+    assert.doesNotMatch(body.prompt, /Merkel|grok|openai|elevenlabs|x\.ai/i);
+    const pinned = H.buildAvatarBody(good.value, { XAI_IMAGE_MODEL: 'grok-imagine-image-test' });
+    assert.equal(pinned.model, 'grok-imagine-image-test');
+    const placeholder = H.buildAvatarBody(good.value, { XAI_IMAGE_MODEL: '${XAI_IMAGE_MODEL}' });
+    assert.equal(placeholder.model, H.DEFAULT_IMAGE_MODEL);
+
+    let calls = 0;
+    const fetchImpl = async () => { calls += 1; throw new Error('nicht rufen'); };
+    const minor = await H.handleAvatar(event('POST', { alter: '30-44', text: 'ein Kind mit 8 Jahren' }), chatDeps(fetchImpl));
+    assert.equal(minor.status, 503);
+    assert.equal(minor.json.error, 'nicht erreichbar');
+    assert.equal(minor.json.reason, 'refused');
+    assert.equal(JSON.stringify(minor.json).toLowerCase().includes('kind'), false);
+    const nude = await H.handleAvatar(event('POST', { alter: '18-29', text: 'bitte nackt' }), chatDeps(fetchImpl));
+    assert.equal(nude.json.reason, 'refused');
+    const famous = await H.handleAvatar(event('POST', { alter: '60-74', text: 'Sieht aus wie Angela Merkel' }), chatDeps(fetchImpl));
+    assert.equal(famous.json.reason, 'refused');
+    assert.equal(JSON.stringify(famous.json).includes('Merkel'), false);
+    const young = await H.handleAvatar(event('POST', { alter: '12', text: 'freundlich' }), chatDeps(fetchImpl));
+    assert.equal(young.json.reason, 'invalid_input');
+    const huge = await H.handleAvatar(event('POST', { alter: '30-44', text: 'a'.repeat(H.MAX_AVATAR_TEXT + 1) }), chatDeps(fetchImpl));
+    assert.equal(huge.json.reason, 'invalid_input');
+    assert.equal(calls, 0);
+
+    const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xd9]);
+    let sent;
+    const ok = await H.handleAvatar(event('POST', { alter: '75+', haare: 'grau', text: 'ruhiger Blick' }), chatDeps(async (url, options) => {
+      sent = { url, options };
+      return { ok: true, json: async () => ({ data: [{ b64_json: jpeg.toString('base64') }] }) };
+    }));
+    assert.equal(ok.status, 200);
+    assert.equal(ok.json.mime, 'image/jpeg');
+    assert.equal(Buffer.from(ok.json.image, 'base64').equals(jpeg), true);
+    assert.equal(sent.url, H.IMAGE_URL);
+    assert.equal(sent.options.headers.Authorization, 'Bearer test-key');
+    assert.equal(sent.options.body.includes('test-key'), false);
+    assert.equal(JSON.stringify(ok.json).includes('test-key'), false);
+    assert.equal(JSON.stringify(ok.json).toLowerCase().includes('grok'), false);
+    const posted = JSON.parse(sent.options.body);
+    assert.equal(posted.model, 'grok-imagine-image-2.0');
+
+    const logs = [];
+    const prevErr = console.error;
+    console.error = function () { logs.push(Array.prototype.slice.call(arguments)); };
+    let down;
+    try {
+      down = await H.handleAvatar(event('POST', { alter: '30-44', text: 'Bart' }), chatDeps(async () => ({
+        ok: false,
+        status: 429,
+        json: async () => ({ error: 'SUPERSECRET test-key' }),
+      })));
+    } finally {
+      console.error = prevErr;
+    }
+    assert.equal(down.status, 503);
+    assert.equal(down.json.reason, 'upstream_429');
+    assert.equal(JSON.stringify(down.json).includes('test-key'), false);
+    assert.equal(String(logs[0][2]).includes('test-key'), false);
+
+    H.resetLimits();
+    let drawn = 0;
+    const limitedFetch = async () => {
+      drawn += 1;
+      return { ok: true, json: async () => ({ data: [{ b64_json: jpeg.toString('base64') }] }) };
+    };
+    const ip = { headers: { 'x-forwarded-for': '203.0.113.10' } };
+    for (let i = 0; i < H.AVATAR_PER_HOUR; i++) {
+      assert.equal((await H.handleAvatar(event('POST', { alter: '30-44', text: 'Bild ' + i }, ip), chatDeps(limitedFetch))).status, 200);
+    }
+    const blocked = await H.handleAvatar(event('POST', { alter: '30-44', text: 'noch eins' }, ip), chatDeps(limitedFetch));
+    assert.equal(blocked.status, 503);
+    assert.equal(blocked.json.reason, 'rate_limited');
+    const other = await H.handleAvatar(event('POST', { alter: '30-44', text: 'andere Leitung' }, { headers: { 'x-forwarded-for': '203.0.113.11' } }), chatDeps(limitedFetch));
+    assert.equal(other.status, 200);
+    assert.equal(drawn, H.AVATAR_PER_HOUR + 1);
+  });
+
   test('Function-Einstieg antwortet auf GET', async () => {
     const prev = process.env.XAI_API_KEY;
     process.env.XAI_API_KEY = 'test-key';
     try {
       const chat = require('../../api/packages/sf/chat/index.js');
       const tts = require('../../api/packages/sf/tts/index.js');
+      const avatar = require('../../api/packages/sf/avatar/index.js');
       const out = await chat.main({ http: { method: 'GET', headers: {} } });
       assert.equal(out.statusCode, 200);
       assert.deepEqual(out.body, { ok: true });
       assert.equal(typeof tts.main, 'function');
+      const face = await avatar.main({ http: { method: 'GET', headers: {} } });
+      assert.equal(face.statusCode, 200);
+      assert.deepEqual(face.body, { ok: true });
       delete process.env.XAI_API_KEY;
       const missing = await chat.main({ http: { method: 'GET', headers: {} } });
       assert.equal(missing.statusCode, 503);
@@ -299,8 +404,8 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     const lib = fs.readFileSync(path.join(root, 'lib/handlers.js'));
     const project = fs.readFileSync(path.join(root, 'project.yml'), 'utf8');
     assert.equal(project.includes('main: index.js'), false);
-    assert.equal(project.split('main: index.main').length - 1, 2);
-    for (const name of ['chat', 'tts']) {
+    assert.equal(project.split('main: index.main').length - 1, 3);
+    for (const name of ['chat', 'tts', 'avatar']) {
       const dir = path.join(root, 'packages/sf', name);
       assert.equal(fs.existsSync(path.join(dir, '.include')), false);
       const copy = fs.readFileSync(path.join(dir, 'handlers.js'));
@@ -357,6 +462,26 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
       assert.equal(secret.includes('VITE_'), false);
       assert.equal(secret.includes('XAI_API_KEY'), false);
       assert.equal(secret.includes('ELEVENLABS_API_KEY'), false);
+      const avatarHealth = await fetch('http://127.0.0.1:' + port + '/api/sf/avatar');
+      assert.equal(avatarHealth.status, 200);
+      assert.deepEqual(await avatarHealth.json(), { ok: true });
+      const avatarBad = await fetch('http://127.0.0.1:' + port + '/api/sf/avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alter: '30-44', text: 'Sieht aus wie Angela Merkel' }),
+      });
+      assert.equal(avatarBad.status, 503);
+      assert.equal((await avatarBad.json()).reason, 'refused');
+      const avatarOk = await fetch('http://127.0.0.1:' + port + '/api/avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Origin: 'http://127.0.0.1:' + port },
+        body: JSON.stringify({ alter: '45-59', haare: 'grau', brille: 'ja', stimmung: 'gemuetlich', text: 'Sommersprossen' }),
+      });
+      assert.equal(avatarOk.status, 200);
+      const avatarBody = await avatarOk.json();
+      assert.equal(avatarBody.mime, 'image/jpeg');
+      assert.equal(Buffer.from(avatarBody.image, 'base64')[0], 0xff);
+      assert.equal(avatarOk.headers.get('access-control-allow-origin'), 'http://127.0.0.1:' + port);
     } finally {
       await new Promise((resolve) => server.close(resolve));
     }

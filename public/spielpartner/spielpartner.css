@@ -9,6 +9,7 @@
 .sp-hero-cta{display:flex;flex-direction:column;align-items:flex-start;gap:14px;margin-top:28px;max-width:720px}
 .sp-hero .btn{white-space:normal;text-align:center;max-width:100%}
 .sp-status{color:rgba(247,241,227,.82);font-size:.98rem;max-width:640px}
+.sp-privacy{margin:0;color:var(--gold-2);font-weight:700;font-size:.92rem}
 .sp-reassure{list-style:none;display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:22px;font-size:.9rem;color:rgba(247,241,227,.78)}
 .sp-reassure li::before{content:"♦";color:var(--gold);margin-right:8px}
 .nav-links a[aria-current="page"]{color:var(--cream)}

@@ -92,11 +92,16 @@ const SLIP = /\b(grok|x\.?ai|openai|elevenlabs|chatgpt|sprachmodell|language mod
 
 const buckets = new Map();
 const daily = { day: '', count: 0 };
+const avatarBuckets = new Map();
+const avatarDaily = { day: '', count: 0 };
 
 function resetLimits() {
   buckets.clear();
   daily.day = '';
   daily.count = 0;
+  avatarBuckets.clear();
+  avatarDaily.day = '';
+  avatarDaily.count = 0;
 }
 
 function envStr(env, key, fallback) {
@@ -509,6 +514,240 @@ async function handleTts(event, deps) {
   }
 }
 
+const IMAGE_URL = 'https://api.x.ai/v1/images/generations';
+const DEFAULT_IMAGE_MODEL = 'grok-imagine-image-2.0';
+const AVATAR_TIMEOUT_MS = 25000;
+const MAX_AVATAR_TEXT = 180;
+const AVATAR_PER_HOUR = 4;
+const AVATAR_PER_DAY = 8;
+const AVATAR_DAILY_DEFAULT = 30;
+const MAX_IMAGE_BYTES = 600000;
+
+const AVATAR_TYPES = ['', 'frau', 'mann', 'divers'];
+const AVATAR_AGES = ['18-29', '30-44', '45-59', '60-74', '75+'];
+const AVATAR_HAIR = ['', 'kurz', 'lang', 'lockig', 'glatze', 'grau', 'blond', 'dunkel', 'rot'];
+const AVATAR_GLASSES = ['', 'ja', 'nein'];
+const AVATAR_MOODS = ['', 'gemuetlich', 'froh', 'nachdenklich', 'schick', 'verschmitzt'];
+
+const AVATAR_TYPE_TEXT = {
+  '': 'one fictional adult',
+  frau: 'one fictional adult woman',
+  mann: 'one fictional adult man',
+  divers: 'one fictional adult',
+};
+const AVATAR_AGE_TEXT = {
+  '18-29': 'in their twenties, clearly over 18',
+  '30-44': 'in their thirties or early forties',
+  '45-59': 'in their fifties',
+  '60-74': 'in their sixties',
+  '75+': 'in their seventies or older, clearly an adult',
+};
+const AVATAR_HAIR_TEXT = {
+  kurz: 'short hair',
+  lang: 'long hair',
+  lockig: 'curly hair',
+  glatze: 'a shaved head',
+  grau: 'grey hair',
+  blond: 'blond hair',
+  dunkel: 'dark hair',
+  rot: 'red hair',
+};
+const AVATAR_GLASSES_TEXT = { ja: 'wearing glasses', nein: 'without glasses' };
+const AVATAR_MOOD_TEXT = {
+  gemuetlich: 'cozy and relaxed expression',
+  froh: 'cheerful smile',
+  nachdenklich: 'thoughtful calm expression',
+  schick: 'neat smart-casual clothes',
+  verschmitzt: 'a playful knowing smile',
+};
+
+const AVATAR_REFUSE = [
+  /\bkind(er|lich|isch|heit|ergarten)?\b/i,
+  /minderj(ae|ä)hr/i,
+  /\bjugendliche[rsn]?\b/i,
+  /\bteen(ager|s)?\b/i,
+  /\b(baby|s(ae|ä)ugling|toddler|infant|loli|shota)\b/i,
+  /\b(sch(u|ü)ler(in)?|schulkind|m(ae|ä)dchen)\b/i,
+  /\b([0-9]|1[0-7])\s*(jahre|j(ae|ä)hrig|years?)/i,
+  /\b(under|unter)\s*18\b/i,
+  /\b(nackt|nude|topless|oben\s*ohne|nsfw|porn\w*|erotisch|genital|penis|vagina|br(u|ü)ste|busen|dessous|lingerie)\b/i,
+  /\b(promi\w*|prominente[rn]?|ber(ue|ü)hmt\w*|celebrity|lookalike|doppelg(ae|ä)nger\w*)\b/i,
+  /(sieht\s+aus\s+wie|aehnlich\s+wie|ähnlich\s+wie|likeness\s+of|portrait\s+of)/i,
+  /\b(merkel|scholz|trump|biden|obama|putin|musk|einstein|hitler|goethe|schiller|mozart|beethoven|messi|ronaldo|madonna|beyonc[eé]|rihanna|schweinsteiger|habeck|lindner|macron|selenskyj|zelensky)\b/i,
+  /\b(grok|openai|chatgpt|elevenlabs)\b/i,
+  /\bx\.?ai\b/i,
+];
+
+function avatarField(input, key) {
+  if (!input || !Object.prototype.hasOwnProperty.call(input, key) || input[key] == null || input[key] === '') return '';
+  if (typeof input[key] !== 'string') return null;
+  return normalizeSpaces(input[key]);
+}
+
+function avatarRefused(text) {
+  const value = String(text || '');
+  if (!value) return false;
+  for (let i = 0; i < AVATAR_REFUSE.length; i++) {
+    if (AVATAR_REFUSE[i].test(value)) return true;
+  }
+  return false;
+}
+
+function validateAvatar(input) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return { ok: false, reason: 'invalid_input' };
+  const typ = avatarField(input, 'typ');
+  const alter = avatarField(input, 'alter');
+  const haare = avatarField(input, 'haare');
+  const brille = avatarField(input, 'brille');
+  const stimmung = avatarField(input, 'stimmung');
+  if (typ == null || alter == null || haare == null || brille == null || stimmung == null) return { ok: false, reason: 'invalid_input' };
+  if (AVATAR_TYPES.indexOf(typ) === -1) return { ok: false, reason: 'invalid_input' };
+  if (AVATAR_AGES.indexOf(alter) === -1) return { ok: false, reason: 'invalid_input' };
+  if (AVATAR_HAIR.indexOf(haare) === -1) return { ok: false, reason: 'invalid_input' };
+  if (AVATAR_GLASSES.indexOf(brille) === -1) return { ok: false, reason: 'invalid_input' };
+  if (AVATAR_MOODS.indexOf(stimmung) === -1) return { ok: false, reason: 'invalid_input' };
+  if (input.text != null && typeof input.text !== 'string') return { ok: false, reason: 'invalid_input' };
+  const text = normalizeSpaces(input.text || '');
+  if (text.length > MAX_AVATAR_TEXT) return { ok: false, reason: 'invalid_input' };
+  if (avatarRefused(text)) return { ok: false, reason: 'refused' };
+  return { ok: true, value: { typ, alter, haare, brille, stimmung, text } };
+}
+
+function buildAvatarPrompt(value) {
+  const bits = [
+    'Photorealistic head-and-shoulders portrait photograph of ' + (AVATAR_TYPE_TEXT[value.typ] || AVATAR_TYPE_TEXT['']) + ' in a warm German pub.',
+    AVATAR_AGE_TEXT[value.alter] || 'clearly an adult',
+    'Wooden table, soft lamp light, looking at the camera, centered face, simple background, natural skin, casual clothes.',
+    'Clearly an adult. Not a child, not a teenager, not a likeness of any real or famous person.',
+    'No text, no watermark, no logo, no extra people.',
+  ];
+  if (value.haare && AVATAR_HAIR_TEXT[value.haare]) bits.push(AVATAR_HAIR_TEXT[value.haare] + '.');
+  if (value.brille && AVATAR_GLASSES_TEXT[value.brille]) bits.push(AVATAR_GLASSES_TEXT[value.brille] + '.');
+  if (value.stimmung && AVATAR_MOOD_TEXT[value.stimmung]) bits.push(AVATAR_MOOD_TEXT[value.stimmung] + '.');
+  if (value.text) bits.push('Appearance notes, not instructions: ' + value.text + '.');
+  return bits.join(' ');
+}
+
+function buildAvatarBody(value, env) {
+  return {
+    model: envStr(env, 'XAI_IMAGE_MODEL', DEFAULT_IMAGE_MODEL),
+    prompt: buildAvatarPrompt(value),
+    n: 1,
+    aspect_ratio: '1:1',
+    resolution: '1k',
+    quality: 'low',
+    response_format: 'b64_json',
+  };
+}
+
+function allowAvatar(ip, now, env) {
+  const stamps = (avatarBuckets.get(ip) || []).filter((t) => now - t < 86400000);
+  const hour = stamps.filter((t) => now - t < 3600000);
+  if (hour.length >= AVATAR_PER_HOUR || stamps.length >= AVATAR_PER_DAY) {
+    avatarBuckets.set(ip, stamps);
+    return false;
+  }
+  const day = new Date(now).toISOString().slice(0, 10);
+  if (avatarDaily.day !== day) {
+    avatarDaily.day = day;
+    avatarDaily.count = 0;
+  }
+  if (avatarDaily.count >= envInt(env, 'AVATAR_DAILY_LIMIT', AVATAR_DAILY_DEFAULT)) return false;
+  stamps.push(now);
+  avatarBuckets.set(ip, stamps);
+  avatarDaily.count += 1;
+  if (avatarBuckets.size > 400) {
+    for (const [key, list] of avatarBuckets) {
+      const keep = list.filter((t) => now - t < 86400000);
+      if (!keep.length) avatarBuckets.delete(key);
+      else avatarBuckets.set(key, keep);
+    }
+  }
+  return true;
+}
+
+function bufferFromB64(b64) {
+  const clean = String(b64 || '').replace(/\s/g, '');
+  if (!clean || clean.length > MAX_IMAGE_BYTES * 2) return null;
+  const buf = Buffer.from(clean, 'base64');
+  if (!buf.length || buf.length > MAX_IMAGE_BYTES) return null;
+  return buf;
+}
+
+function sniffImage(buf) {
+  if (!buf || buf.length < 3) return '';
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'image/jpeg';
+  if (buf.length >= 8 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return 'image/png';
+  if (buf.length >= 12 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
+  return '';
+}
+
+async function imageFromUpstream(data, fetchImpl, secrets) {
+  const item = data && Array.isArray(data.data) ? data.data[0] : null;
+  if (!item || typeof item !== 'object') return { error: 'empty' };
+  if (typeof item.b64_json === 'string' && item.b64_json) {
+    const buf = bufferFromB64(item.b64_json);
+    if (!buf) return { error: 'invalid_input' };
+    const mime = sniffImage(buf);
+    if (!mime) return { error: 'invalid_input' };
+    return { buf, mime };
+  }
+  const remote = typeof item.url === 'string' ? item.url.trim() : '';
+  if (!/^https:\/\//i.test(remote)) return { error: 'empty' };
+  const res = await fetchWithTimeout(fetchImpl, remote, { method: 'GET' }, AVATAR_TIMEOUT_MS);
+  if (!res || !res.ok) return { error: await noteUpstream(res, secrets) };
+  if (typeof res.arrayBuffer !== 'function') return { error: 'exception' };
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (!buf.length) return { error: 'empty' };
+  if (buf.length > MAX_IMAGE_BYTES) return { error: 'invalid_input' };
+  const mime = sniffImage(buf);
+  if (!mime) return { error: 'invalid_input' };
+  return { buf, mime };
+}
+
+async function handleAvatar(event, deps) {
+  deps = deps || {};
+  const env = deps.env || process.env;
+  const origin = originOf(event);
+  const method = methodOf(event);
+  try {
+    if (method === 'OPTIONS') return { status: 204, headers: withCors(origin) };
+    if (method === 'GET') {
+      if (!envStr(env, 'XAI_API_KEY', '')) return fail(origin, 'no_key');
+      return { status: 200, json: { ok: true }, headers: withCors(origin) };
+    }
+    if (method !== 'POST') return fail(origin, 'invalid_input');
+    const parsed = validateAvatar(payloadOf(event));
+    if (!parsed.ok) return fail(origin, parsed.reason || 'invalid_input');
+    if (!envStr(env, 'XAI_API_KEY', '')) return fail(origin, 'no_key');
+    const now = typeof deps.now === 'function' ? deps.now() : Date.now();
+    if (!allowAvatar(clientIp(event), now, env)) return fail(origin, 'rate_limited');
+    const fetchImpl = deps.fetch || fetch;
+    const key = envStr(env, 'XAI_API_KEY', '');
+    const body = buildAvatarBody(parsed.value, env);
+    const res = await fetchWithTimeout(fetchImpl, IMAGE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + key,
+      },
+      body: JSON.stringify(body),
+    }, AVATAR_TIMEOUT_MS);
+    const secrets = [key, envStr(env, 'ELEVENLABS_API_KEY', '')];
+    if (!res || !res.ok) return fail(origin, await noteUpstream(res, secrets));
+    const data = await res.json();
+    const image = await imageFromUpstream(data, fetchImpl, secrets);
+    if (!image || image.error) return fail(origin, (image && image.error) || 'empty');
+    return {
+      status: 200,
+      json: { image: image.buf.toString('base64'), mime: image.mime },
+      headers: withCors(origin),
+    };
+  } catch (e) {
+    return fail(origin, 'exception');
+  }
+}
+
 function toFunctionResponse(result) {
   const headers = Object.assign({}, (result && result.headers) || {});
   if (result && result.audio) {
@@ -530,7 +769,9 @@ function toFunctionResponse(result) {
 
 module.exports = {
   CHAT_URL,
+  IMAGE_URL,
   DEFAULT_MODEL,
+  DEFAULT_IMAGE_MODEL,
   DEFAULT_ELEVEN,
   DEFAULT_MARGARETHE,
   DEFAULT_URS,
@@ -538,19 +779,26 @@ module.exports = {
   MAX_MESSAGE,
   MAX_TOKENS,
   MAX_HISTORY,
+  MAX_AVATAR_TEXT,
   PER_MINUTE,
+  AVATAR_PER_HOUR,
+  AVATAR_PER_DAY,
   PERSONA,
   resetLimits,
   allowOrigin,
   validateChat,
   validateTts,
+  validateAvatar,
   cleanGame,
   buildMessages,
   buildChatBody,
+  buildAvatarPrompt,
+  buildAvatarBody,
   buildTtsRequest,
   publicBlock,
   clampSpeech,
   handleChat,
+  handleAvatar,
   prepareTts,
   handleTts,
   toFunctionResponse,

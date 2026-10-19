@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="spielpartner/offer.css">
 </head>
 <body>
 
@@ -25,6 +26,7 @@
       <a href="/skat/">Skat spielen</a>
       <a href="/spielpartner/">Spielpartner</a>
       <a href="#mitspieler">Mitspieler</a>
+      <a href="/mein-avatar/">Mein Avatar</a>
       <a href="#spiele">Spiele</a>
       <a href="#orte">Orte</a>
       <a href="#preise">Preise</a>
@@ -97,11 +99,38 @@
   </div>
 </section>
 
-<section class="sp-tease" aria-label="Spielpartner testen">
+<section class="sp-tease" aria-label="Spielpartner testen" data-offer>
   <div class="wrap sp-tease-in">
-    <div>
+    <div class="sp-tease-copy">
       <p class="sp-tease-kicker">Deine Spielpartner</p>
-      <p>Horst, Margarethe und die ganze Runde. 14 Tage Premium gratis, danach Standard für 9,95 €/Monat oder Premium für 14,95 €/Monat. Es wird nichts automatisch abgebucht.</p>
+      <p>Horst, Margarethe und die ganze Runde. 14 Tage Premium gratis, danach Standard oder Premium. Es wird nichts automatisch abgebucht.</p>
+      <div class="bill-toggle" role="group" aria-label="Abrechnungszeitraum">
+        <button type="button" data-period="monthly" aria-pressed="true">Monatlich</button>
+        <button type="button" data-period="6" aria-pressed="false">6 Monate</button>
+        <button type="button" data-period="12" aria-pressed="false">12 Monate</button>
+      </div>
+      <div class="sp-tease-prices">
+        <article class="sp-tease-tier" data-tier="standard">
+          <div class="bill-notes">
+            <span class="free-badge" data-badge hidden></span>
+            <span class="popular-note" data-popular hidden></span>
+          </div>
+          <h3>Standard</h3>
+          <div class="sp-tease-price"><span class="amt" data-amt>9,95 €</span><span class="per" data-per>/Monat</span></div>
+          <div class="bill-eff" data-eff hidden></div>
+          <div class="sp-tease-who">Horst und Margarethe</div>
+        </article>
+        <article class="sp-tease-tier" data-tier="premium">
+          <div class="bill-notes">
+            <span class="free-badge" data-badge hidden></span>
+            <span class="popular-note" data-popular hidden></span>
+          </div>
+          <h3>Premium</h3>
+          <div class="sp-tease-price"><span class="amt" data-amt>14,95 €</span><span class="per" data-per>/Monat</span></div>
+          <div class="bill-eff" data-eff hidden></div>
+          <div class="sp-tease-who">alle Spielpartner</div>
+        </article>
+      </div>
     </div>
     <a class="btn btn-gold" href="/spielpartner/">14 Tage alle Spielpartner gratis testen</a>
   </div>
@@ -114,6 +143,7 @@
       <p class="eyebrow">Deine Mitspieler</p>
       <h2>Drei Charaktere. Eine Runde, die sich echt anfühlt.</h2>
       <p class="sub">Sie spielen nicht nur, sie leben am Tisch. Sie loben, sticheln, erzählen aus ihrem Leben und reagieren auf jeden Spruch von Dir. Wie viel Frotzelei Du verträgst, stellst Du selbst ein: gemütlich, ehrlich oder Stammtisch.</p>
+      <p class="avatar-cta"><a class="btn btn-outline" href="/mein-avatar/">Mein Avatar anlegen</a></p>
     </div>
     <div class="chars">
       <article class="char">
@@ -192,12 +222,16 @@
         <h3>Rommé</h3><p>Sätze und Reihen auslegen, der Familienklassiker schlechthin.</p><p class="game-meta">2 bis 6 Spieler · Klassiker</p>
       </article>
       <article class="game">
-        <div class="game-top"><span class="flags"><i class="fl de"></i></span></div>
-        <h3>Canasta</h3><p>Gemütlich Karten sammeln und mit Deinem Partner groß auslegen.</p><p class="game-meta">meist 4 Spieler · Klassiker</p>
+        <div class="game-top"><span class="flags"><i class="fl de"></i></span><span class="badge">Neu</span></div>
+        <h3>Canasta</h3><p>Gemütlich Karten sammeln und mit Deinem Partner groß auslegen.</p>
+        <a class="btn btn-gold game-cta" href="/canasta/">Canasta spielen</a>
+        <p class="game-meta">meist 4 Spieler · Klassiker</p>
       </article>
       <article class="game">
-        <div class="game-top"><span class="flags"><i class="fl by" title="Bayern"></i><i class="fl at"></i></span></div>
-        <h3>Schafkopf</h3><p>Der bayerische Stammtischklassiker. Sauspiel, Wenz und Solo.</p><p class="game-meta">4 Spieler · Regional</p>
+        <div class="game-top"><span class="flags"><i class="fl by" title="Bayern"></i><i class="fl at"></i></span><span class="badge">Neu</span></div>
+        <h3>Schafkopf</h3><p>Der bayerische Stammtischklassiker. Sauspiel, Wenz und Solo.</p>
+        <a class="btn btn-gold game-cta" href="/schafkopf/">Schafkopf spielen</a>
+        <p class="game-meta">4 Spieler · Regional</p>
       </article>
       <article class="game">
         <div class="game-top"><span class="flags"><i class="fl at"></i></span></div>
@@ -271,7 +305,7 @@
       <h2>In drei Schritten an Deinem Tisch</h2>
     </div>
     <ol class="steps">
-      <li class="step"><span class="step-n">1</span><h3>Avatar erstellen</h3><p>Lade ein Foto hoch und setz Dich mit Deinem eigenen Gesicht an den Tisch.</p></li>
+      <li class="step"><span class="step-n">1</span><h3>Avatar erstellen</h3><p>Lade ein Foto hoch und setz Dich mit Deinem eigenen Gesicht an den Tisch. <a href="/mein-avatar/">Avatar anlegen</a></p></li>
       <li class="step"><span class="step-n">2</span><h3>Spiel und Ort wählen</h3><p>Skat in der Kneipe oder Jass in den Anden? Regeln und Spielstärke bestimmst Du.</p></li>
       <li class="step"><span class="step-n">3</span><h3>Losspielen und lachen</h3><p>Deine Mitspieler sind schon da. Die KI erklärt Dir die Regeln und spielt immer fair.</p></li>
     </ol>
@@ -390,19 +424,21 @@
   <div class="wrap foot-in">
     <div class="foot-brand">
       <a class="logo logo-foot" href="#top"><img src="assets/variante-a-lockup-dunkel-web.svg" alt="Spiel-Freunde" width="796" height="175"></a>
-      <p>Die besten Kartenspiele aus Deutschland, Österreich und der Schweiz. Mit Liebe gemacht in Chiang Mai, Thailand.</p>
+      <p>Die besten Kartenspiele aus Deutschland, Österreich und der Schweiz.</p>
     </div>
-    <div class="foot-col"><b>Spiele</b><a href="/skat/">Skat ausprobieren</a><a href="/jass/">Jass</a><a href="#spiele">Doppelkopf</a><a href="#spiele">Schafkopf</a></div>
-    <div class="foot-col"><b>Portal</b><a href="/spielpartner/">Spielpartner</a><a href="#mitspieler">Mitspieler</a><a href="#orte">Orte</a><a href="#preise">Preise</a><a href="#faq">Fragen</a></div>
+    <div class="foot-col"><b>Spiele</b><a href="/skat/">Skat ausprobieren</a><a href="/canasta/">Canasta</a><a href="/schafkopf/">Schafkopf</a><a href="/jass/">Jass</a><a href="#spiele">Doppelkopf</a></div>
+    <div class="foot-col"><b>Portal</b><a href="/spielpartner/">Spielpartner</a><a href="/mein-avatar/">Mein Avatar</a><a href="#mitspieler">Mitspieler</a><a href="#orte">Orte</a><a href="#preise">Preise</a><a href="#faq">Fragen</a></div>
     <div class="foot-col"><b>Rechtliches</b><a href="#">Impressum</a><a href="#">Datenschutz</a><a href="#">AGB</a></div>
   </div>
   <div class="wrap foot-bottom">
-    <span>© 2026 Spiel-Freunde.com · Chiang Mai</span>
+    <span>© 2026 Spiel-Freunde</span>
     <span>Kein Glücksspiel. Nur Spaß.</span>
     <a class="powered" href="https://lead-monster.net" target="_blank" rel="noopener">powered by lead-monster.net</a>
   </div>
 </footer>
 
+<script src="spielpartner/entitlement.js"></script>
+<script src="spielpartner/offer.js"></script>
 <script src="assets/app.js"></script>
 </body>
 </html>

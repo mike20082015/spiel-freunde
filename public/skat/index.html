@@ -80,7 +80,7 @@
 
           <!-- Du -->
           <div class="me" id="seat-0" data-seat="0">
-            <div class="me-tag"><span class="ava-you">Du</span><span class="seat-role" id="role-0"></span><span class="me-bubble" id="bubble-0"></span></div>
+            <div class="me-tag"><span class="ava-you" id="ava-you">Du</span><span class="me-name" id="me-name">Du</span><span class="seat-role" id="role-0"></span><span class="me-bubble" id="bubble-0"></span></div>
             <div class="hint-box" id="hint-box" hidden></div>
             <div class="hand" id="hand" aria-label="Deine Karten"></div>
           </div>
@@ -129,6 +129,17 @@
     <div class="modal-card settings">
       <h3>Einstellungen</h3>
       <div class="opt-grid">
+      <fieldset class="opt">
+        <legend>Dein Avatar</legend>
+        <div class="avatar-setting">
+          <span class="ava-you" id="settings-ava">Du</span>
+          <span>
+            <b id="settings-ava-name">Du</b>
+            <small>Dein Foto bleibt auf deinem Gerät.</small>
+            <a href="/mein-avatar/">Avatar festlegen</a>
+          </span>
+        </div>
+      </fieldset>
       <fieldset class="opt">
         <legend>Spielstärke</legend>
         <label class="radio"><input type="radio" name="level" value="anfaenger"> <span><b>Anfänger</b><small>Horst und Margarethe reizen vorsichtig, machen auch mal Fehler und sind netter zu Dir.</small></span></label>
@@ -188,6 +199,7 @@
   <div class="modal" id="modal-session" hidden><div class="modal-card session" id="session"></div></div>
 </div>
 
+<script src="/assets/avatar-store.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/ai.js"></script>
 <script src="js/talk.js"></script>
