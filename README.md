@@ -14,15 +14,16 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 | `/skat/` | Spielbarer Skat-Prototyp: Du gegen Horst und Margarethe |
 | `/canasta/` | Spielbares Canasta: Du mit Margarethe gegen Horst und Oma Hilde |
 | `/schafkopf/` | Spielbares Schafkopf: Du, Horst, Sepp und Margarethe |
+| `/doppelkopf/` | Spielbares Doppelkopf: Du, Horst, Rüdiger und Margarethe |
 | `/jass/` | Spielbarer Schieber: Du und Urs gegen Vreni und Horst |
 | `/romme/` | Spielbares Rommé: Du gegen Horst, Margarethe und Oma Hilde |
 
-In der Vorschau führen die großen Buttons auf der Startseite nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. Startseite, Skat, Canasta, Schafkopf, Jass, Rommé, Spielpartner und Mein Avatar tragen ein goldenes Band „Vorschau“.
+In der Vorschau führen die großen Buttons auf der Startseite nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. Startseite, Skat, Canasta, Schafkopf, Jass, Doppelkopf, Rommé, Spielpartner und Mein Avatar tragen ein goldenes Band „Vorschau“.
 
 Veröffentlicht wird nur der Ordner `public/`. Tests, Werkzeuge und die Startskripte bleiben außerhalb.
 
 ```
-public/                  Startseite, 404, /skat/, /canasta/, /schafkopf/, /jass/, /romme/ und /mein-avatar/
+public/                  Startseite, 404, /skat/, /canasta/, /schafkopf/, /jass/, /doppelkopf/, /romme/ und /mein-avatar/
 skat/tests, skat/tools   Regeltests und Browser-Checks, nicht öffentlich
 skat/start.sh            lokaler Server, nicht öffentlich
 tools/                   Entwurf-Helfer der Startseite, nicht öffentlich
@@ -49,6 +50,7 @@ node --test ../jass/tests
 node --test ../spielpartner/tests
 cd ../canasta && node --test tests/
 cd ../schafkopf && node --test tests/
+cd ../doppelkopf && node --test tests/
 cd ../romme && node --test tests/
 ```
 
