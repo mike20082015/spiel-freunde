@@ -47,7 +47,33 @@
         4: ['horst', 'lena', 'ruediger', 'margarethe']
       }
     },
-    { id: 'romme', label: 'Rommé', href: '/romme/', opponents: 3, defaults: ['horst', 'margarethe', 'hilde'] }
+    { id: 'romme', label: 'Rommé', href: '/romme/', opponents: 3, defaults: ['horst', 'margarethe', 'hilde'] },
+    {
+      id: 'schwimmen',
+      label: 'Schwimmen',
+      href: '/schwimmen/',
+      opponents: 3,
+      defaults: ['horst', 'lena', 'chantal'],
+      byCount: {
+        1: ['horst'],
+        2: ['horst', 'chantal'],
+        3: ['horst', 'lena', 'chantal'],
+        4: ['horst', 'lena', 'jonas', 'chantal']
+      }
+    },
+    {
+      id: 'elfer-raus',
+      label: 'Elfer raus',
+      href: '/elfer-raus/',
+      opponents: 3,
+      defaults: ['hilde', 'lena', 'jonas'],
+      byCount: {
+        1: ['hilde'],
+        2: ['hilde', 'lena'],
+        3: ['hilde', 'lena', 'jonas'],
+        4: ['hilde', 'lena', 'jonas', 'horst']
+      }
+    }
   ];
 
   function gameById(id) {
@@ -95,8 +121,9 @@
     var g = gameById(game);
     if (!g) return 0;
     if (g.byCount) {
-      var n = count === 2 || count === 3 || count === 4 ? count : g.opponents;
-      return n;
+      var n = count === 1 || count === 2 || count === 3 || count === 4 ? count : g.opponents;
+      if (g.byCount[n]) return n;
+      return g.opponents;
     }
     return g.defaults.length;
   }

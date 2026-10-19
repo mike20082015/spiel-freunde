@@ -9,7 +9,7 @@ const Stimmen = require('../../public/spielpartner/stimmen.js');
 const E = require('../../public/spielpartner/entitlement.js');
 const H = require('../../api/lib/handlers.js');
 
-const GAMES = ['skat', 'canasta', 'schafkopf', 'jass', 'doppelkopf', 'maumau', 'romme'];
+const GAMES = ['skat', 'canasta', 'schafkopf', 'jass', 'doppelkopf', 'maumau', 'romme', 'schwimmen', 'elfer-raus'];
 const START = Date.UTC(2026, 5, 1);
 
 function memory() {
@@ -30,7 +30,18 @@ test('jedes Spiel behält seine Standard-Besetzung', () => {
   assert.deepEqual(L.defaults('maumau', 2), ['horst', 'margarethe']);
   assert.deepEqual(L.defaults('maumau', 3), ['horst', 'lena', 'margarethe']);
   assert.deepEqual(L.defaults('maumau', 4), ['horst', 'lena', 'ruediger', 'margarethe']);
+  assert.deepEqual(L.defaults('maumau', 1), ['horst', 'margarethe']);
   assert.deepEqual(L.defaults('romme'), ['horst', 'margarethe', 'hilde']);
+  assert.deepEqual(L.defaults('schwimmen'), ['horst', 'lena', 'chantal']);
+  assert.deepEqual(L.defaults('schwimmen', 1), ['horst']);
+  assert.deepEqual(L.defaults('schwimmen', 2), ['horst', 'chantal']);
+  assert.deepEqual(L.defaults('schwimmen', 4), ['horst', 'lena', 'jonas', 'chantal']);
+  assert.deepEqual(L.defaults('elfer-raus'), ['hilde', 'lena', 'jonas']);
+  assert.deepEqual(L.defaults('elfer-raus', 1), ['hilde']);
+  assert.deepEqual(L.defaults('elfer-raus', 2), ['hilde', 'lena']);
+  assert.deepEqual(L.defaults('elfer-raus', 4), ['hilde', 'lena', 'jonas', 'horst']);
+  assert.equal(L.talkId('schwimmen', 'hilde'), 'hilde');
+  assert.equal(L.talkId('elfer-raus', 'hilde'), 'hilde');
   assert.equal(L.talkId('romme', 'hilde'), 'oma-hilde');
   assert.equal(L.talkId('canasta', 'oma-hilde'), 'hilde');
   assert.equal(L.canonical('oma-hilde'), 'hilde');
@@ -120,7 +131,7 @@ test('Chat und TTS kennen jede Stimme am Tisch', () => {
   assert.doesNotMatch(JSON.stringify(H.PERSONA), /grok|elevenlabs|openai|x\.?ai/i);
 });
 
-test('alle sieben Tische laden dasselbe Fenster', () => {
+test('alle Tische laden dasselbe Fenster', () => {
   const runde = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/runde.js'), 'utf8');
   assert.match(runde, /Runde wechseln/);
   assert.match(runde, /Standard-Besetzung/);
