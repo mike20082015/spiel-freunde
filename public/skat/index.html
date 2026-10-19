@@ -97,6 +97,11 @@
       <section class="side-card chat-card">
         <h2><span class="live"></span> Am Tisch</h2>
         <div class="chat-log" id="chat-log" aria-live="polite"></div>
+        <div class="hf-bar" id="hf-bar" hidden>
+          <span class="hf-state" id="hf-state" data-state="aus" aria-live="polite"><i aria-hidden="true"></i><b id="hf-label">aus</b></span>
+          <span class="hf-hint">Am besten mit Kopfhörer</span>
+          <button type="button" class="hf-mute" id="btn-hf-mute" aria-pressed="false">Stumm</button>
+        </div>
         <form class="chat-form" id="chat-form" autocomplete="off">
           <input id="chat-input" type="text" maxlength="160" placeholder="Schreib was in die Runde ..." aria-label="Nachricht an den Tisch">
           <button class="mic" id="btn-mic" type="button" hidden aria-pressed="false" title="Klicken oder gedrückt halten und sprechen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2z"/></svg><span class="sr">Mikrofon</span></button>
@@ -145,7 +150,12 @@
       <fieldset class="opt">
         <legend>Mitreden</legend>
         <label class="radio"><input type="radio" name="talk" value="chat"> <span><b>Nur Chat (schreiben)</b><small>Du tippst Deine Sprüche ins Chatfeld.</small></span></label>
-        <label class="radio"><input type="radio" name="talk" value="voice"> <span><b>Mit Stimme (Mikrofon)</b><small>Mikrofon-Knopf neben dem Chat: klicken oder gedrückt halten und sprechen.</small></span></label>
+        <label class="radio"><input type="radio" name="talk" value="voice"> <span><b>Mit Stimme (Mikrofon)</b><small>Mikrofon-Knopf neben dem Chat: klicken oder gedrückt halten und sprechen. Mit Freisprechen geht es auch ohne Knopf.</small></span></label>
+        <div id="handsfree-block" hidden>
+          <label class="switch" id="handsfree-label"><input type="checkbox" id="opt-handsfree"> <span><b>Freisprechen (ohne Senden-Knopf)</b><small>Du sprichst einfach los. Nach einer kurzen Pause geht der Satz von allein raus.</small></span></label>
+          <p class="note" id="handsfree-phones">Am besten mit Kopfhörer</p>
+          <p class="note warn-note" id="handsfree-support" hidden></p>
+        </div>
         <p class="note warn-note" id="talk-support" hidden></p>
       </fieldset>
       <fieldset class="opt">

@@ -232,6 +232,7 @@
     if (!item) return;
     V.current = item;
     prefetchAhead();
+    emitPlay('start', item.text);
     if (item.onStart) item.onStart();
     let mode = 'none';
     try {
@@ -253,8 +254,14 @@
     if (V.log.length > 300) V.log.shift();
     V.current = null;
     if (item.onEnd) item.onEnd(false);
+    if (!V.queue.length) emitPlay('idle');
     // Kein künstliches Loch: der nächste Satz startet, sobald dieser endet. Liegt er schon dekodiert, ist der Übergang direkt.
     pump();
+  }
+
+  function emitPlay(phase, text) {
+    if (typeof V.onPlayback !== 'function') return;
+    try { V.onPlayback(phase, text || ''); } catch (e) { /* Zuhörer darf die Warteschlange nicht stoppen */ }
   }
 
   function playBuffer(src, item) {
@@ -372,6 +379,7 @@
   root.SkatVoice = {
     init(opts) { if (opts && opts.getSettings) V.getSettings = opts.getSettings; preloadLikely(); },
     unlock, speak, stopAll, setVolume, busy, srcFor, preload: preloadLikely,
+    onPlayback(fn) { V.onPlayback = fn; },
     get unlocked() { return V.unlocked; },
     get log() { return V.log; },
   };

@@ -368,6 +368,18 @@ img{display:block;max-width:100%}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .chat-form input.interim{font-style:italic;color:var(--gold-2)}
 .mic-hint{margin-top:8px;font-size:.78rem;color:var(--gold-2);line-height:1.35}
+.hf-bar{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.hf-state{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:800;letter-spacing:.02em;color:var(--cream)}
+.hf-state i{width:9px;height:9px;border-radius:50%;background:#8a8078;flex:none}
+.hf-state[data-state="hoert"] i{background:#7be08f;box-shadow:0 0 8px #7be08f;animation:micpulse 1.2s infinite}
+.hf-state[data-state="pausiert"] i{background:var(--gold-2)}
+.hf-state[data-state="aus"]{color:rgba(247,241,227,.55)}
+.hf-hint{font-size:.75rem;color:var(--gold-2)}
+.hf-mute{margin-left:auto;border:1px solid rgba(233,201,119,.5);color:var(--cream);background:rgba(247,241,227,.06);border-radius:999px;padding:4px 12px;font-size:.75rem;font-weight:700}
+.hf-mute:hover{background:rgba(233,201,119,.16)}
+.hf-mute[aria-pressed="true"]{background:var(--wine);border-color:var(--wine);color:var(--cream)}
+.switch input:disabled + span{opacity:.55}
+.switch:has(input:disabled){cursor:not-allowed}
 
 /* ---------- Ziel in der Punkteliste ---------- */
 .target-info{margin-bottom:10px;padding:8px 10px;border-radius:12px;background:rgba(247,241,227,.06);border:1px solid rgba(212,168,75,.25)}

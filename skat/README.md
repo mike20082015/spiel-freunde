@@ -42,6 +42,12 @@ Nützliche URL-Parameter: `?fresh=1` (Punkteliste löschen), `?speed=fast|normal
 * **Mitreden:** „Nur Chat (schreiben)“ (Standard) oder „Mit Stimme (Mikrofon)“. Im Stimm-Modus erscheint neben dem Chatfeld ein
   Mikrofon-Knopf: klicken zum Starten und Stoppen oder gedrückt halten. Zwischenergebnisse stehen kursiv im Eingabefeld, der erkannte
   Satz geht als normale Chatnachricht raus, Horst und Margarethe antworten (gesprochen). Das Mikrofon startet nur auf Knopfdruck.
+  Zusätzlich gibt es **Freisprechen (ohne Senden-Knopf)**, nur sichtbar wenn die Stimmeingabe an ist. Die Einstellung liegt in
+  `localStorage` (`sf-skat-settings`, Feld `handsFree`). Ist sie an, hört Chrome oder Edge dauerhaft zu (de-DE), der laufende Text
+  steht im Chatfeld, und nach etwa einer Sekunde Stille geht der Satz von allein raus. Während Horst oder Margarethe sprechen, pausiert
+  das Mikrofon und startet kurz nach der letzten Stimme wieder. Sätze, die einer gerade gesprochenen Zeile zu ähnlich sind, werden verworfen.
+  Neben dem Chat siehst Du den Zustand (hört zu, pausiert, aus), den Hinweis „Am besten mit Kopfhörer“ und einen Stumm-Knopf.
+  Firefox kann das nicht: der Schalter ist dann aus und erklärt das auf Deutsch.
 * **Spielen bis:** ohne Limit (Standard), 301, 501 oder eigenes Ziel (51 bis 2001). Fortschrittsbalken in der Punkteliste.
   Wer nach einem Spiel das Ziel erreicht und allein vorn liegt, gewinnt (bei Gleichstand an der Spitze wird weitergespielt).
   Dann folgt eine Siegerehrung mit Platzierung und Sprüchen beider Figuren, „Neue Runde“ leert die Punkteliste.

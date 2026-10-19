@@ -7,7 +7,7 @@
   const WHO = [null, 'horst', 'margarethe'];
   const AVATARS = [null, 'assets/avatar-berliner-foto.jpg', 'assets/avatar-witwe-foto.jpg'];
   const SPEEDS = { slow: 1.6, normal: 1, fast: 0.45 };
-  const DEFAULTS = { mode: 'official', deck: 'four', speed: 'normal', hints: false, sound: true, volume: 80, talk: 'chat', target: 'none', targetCustom: 1001, level: 'kneipe' };
+  const DEFAULTS = { mode: 'official', deck: 'four', speed: 'normal', hints: false, sound: true, volume: 80, talk: 'chat', handsFree: false, target: 'none', targetCustom: 1001, level: 'kneipe' };
   const LEVEL_NAMES = { anfaenger: 'Anfänger', kneipe: 'Kneipe', turnier: 'Turnier' };
   const CANCEL = { cancelled: true };
   const $ = (id) => document.getElementById(id);
@@ -884,6 +884,7 @@
     const note = $('talk-support');
     note.hidden = sup.ok;
     note.textContent = sup.ok ? '' : sup.text;
+    syncHandsFreeControls();
   }
   function openSettings() { syncSettingsUI(); showModal('modal-settings'); }
   $('btn-settings').addEventListener('click', openSettings);
@@ -930,6 +931,10 @@
     if (!text) return;
     input.value = '';
     input.classList.remove('interim');
+    MIC.userEdit = false;
+    MIC.finalText = '';
+    MIC.interim = '';
+    clearTimeout(MIC.silence);
     logLine('<b>Du:</b> ' + esc(text), 'you');
     say(0, text, { force: true });
     const who = Talk.responders(text);
@@ -973,29 +978,342 @@
   });
 
   /* ---------- Spracheingabe (Web Speech API) ----------
-   * Nur auf Knopfdruck. Chrome und Edge können das, Safari teilweise, Firefox nicht.
+   * Drücken zum Sprechen, oder Freisprechen ohne Senden-Knopf.
+   * Chrome und Edge können das, Safari teilweise, Firefox nicht.
    * Braucht http(s) oder localhost, von file:// aus klappt es meist nicht (siehe README).
    * TODO Produktion: optional ElevenLabs Scribe auf dem Server (Audio hochladen, Text zurück), Schlüssel nur serverseitig.
    */
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const MIC = { rec: null, on: false, downAt: 0, finalText: '' };
+  const SILENCE_MS = 1100;
+  const MIC = { rec: null, on: false, mode: '', downAt: 0, finalText: '', interim: '', want: false, muted: false, pausedForVoice: false, gesture: false, userEdit: false, writing: false, spoken: [], silence: 0, restart: 0 };
   function micSupport() {
     if (!SR) return { ok: false, text: 'Dein Browser kann leider keine Spracheingabe (das klappt in Chrome oder Edge). Du kannst einfach weiter schreiben.' };
     if (!window.isSecureContext) return { ok: false, text: 'Die Spracheingabe braucht eine Adresse mit http://localhost. Starte den Prototyp mit start.command bzw. start.bat (siehe README). Bis dahin: einfach schreiben.' };
     return { ok: true };
   }
+  function normSpeech(s) {
+    return String(s || '').toLowerCase()
+      .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+      .replace(/[^a-z0-9 ]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  function speechDist(a, b) {
+    const m = a.length, n = b.length;
+    if (!m) return n;
+    if (!n) return m;
+    if (Math.abs(m - n) > Math.max(m, n) * 0.45) return Math.max(m, n);
+    let prev = new Array(n + 1);
+    for (let j = 0; j <= n; j++) prev[j] = j;
+    for (let i = 1; i <= m; i++) {
+      const cur = [i];
+      for (let j = 1; j <= n; j++) {
+        const cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
+        cur[j] = Math.min(cur[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+      }
+      prev = cur;
+    }
+    return prev[n];
+  }
+  function rememberSpoken(text) {
+    const norm = normSpeech(text);
+    if (!norm) return;
+    MIC.spoken.push({ norm, at: Date.now() });
+    const now = Date.now();
+    MIC.spoken = MIC.spoken.filter((l) => now - l.at < 15000).slice(-8);
+  }
+  function isEcho(text) {
+    const a = normSpeech(text);
+    if (!a) return false;
+    const now = Date.now();
+    for (const line of MIC.spoken) {
+      if (now - line.at > 15000) continue;
+      const b = line.norm;
+      if (!b) continue;
+      if (a === b) return true;
+      const shorter = a.length <= b.length ? a : b;
+      const longer = a.length <= b.length ? b : a;
+      if (shorter.length >= 10 && longer.indexOf(shorter) !== -1) return true;
+      if (shorter.length < 8) continue;
+      if (1 - speechDist(a, b) / Math.max(a.length, b.length) >= 0.78) return true;
+    }
+    return false;
+  }
+  function setMicStatus(state) {
+    const el = $('hf-state');
+    const map = { 'hört zu': 'hoert', pausiert: 'pausiert', aus: 'aus' };
+    if (el) { el.dataset.state = map[state] || 'aus'; }
+    const label = $('hf-label');
+    if (label) label.textContent = state;
+    const input = $('chat-input');
+    if (!input || MIC.userEdit) return;
+    if (!(settings.handsFree && settings.talk === 'voice' && micSupport().ok)) return;
+    if (state === 'hört zu') input.placeholder = 'Sprich einfach los ...';
+    else if (state === 'pausiert') input.placeholder = 'Kurz pausiert, die anderen reden ...';
+    else input.placeholder = 'Mikrofon ist stumm';
+  }
+  function updateMuteButton() {
+    const btn = $('btn-hf-mute');
+    if (!btn) return;
+    btn.textContent = MIC.muted ? 'Wieder an' : 'Stumm';
+    btn.setAttribute('aria-pressed', String(!!MIC.muted));
+    btn.title = MIC.muted ? 'Mikrofon wieder einschalten' : 'Mikrofon kurz stummschalten';
+  }
+  function writeComposer(text, interim) {
+    const input = $('chat-input');
+    if (!input || MIC.userEdit) return;
+    MIC.writing = true;
+    input.value = text;
+    input.classList.toggle('interim', !!interim);
+    MIC.writing = false;
+  }
+  function clearComposer() {
+    clearTimeout(MIC.silence);
+    MIC.finalText = '';
+    MIC.interim = '';
+    if (!MIC.userEdit) writeComposer('', false);
+  }
+  function syncHandsFreeControls() {
+    const voice = settings.talk === 'voice';
+    const sup = micSupport();
+    const block = $('handsfree-block');
+    if (block) block.hidden = !voice;
+    const box = $('opt-handsfree');
+    if (box) {
+      box.disabled = !sup.ok;
+      box.checked = !!(sup.ok && settings.handsFree);
+    }
+    const unsupported = $('handsfree-support');
+    if (unsupported) {
+      unsupported.hidden = !voice || sup.ok;
+      unsupported.textContent = sup.ok ? '' : 'Freisprechen geht in diesem Browser nicht. Chrome und Edge können Dich hören, Firefox noch nicht. Du kannst weiter schreiben.';
+    }
+    const phones = $('handsfree-phones');
+    if (phones) phones.hidden = !voice || !sup.ok;
+    const on = voice && sup.ok && !!settings.handsFree;
+    $('hf-bar').hidden = !on;
+    updateMuteButton();
+    $('btn-mic').title = on
+      ? 'Freisprechen ist an. Klick schaltet das Mikrofon stumm oder wieder an.'
+      : 'Klicken oder gedrückt halten und sprechen';
+    if (!on) setMicStatus('aus');
+  }
+  function handsFreeWanted() {
+    return settings.talk === 'voice' && !!settings.handsFree && micSupport().ok;
+  }
+  function shouldListen() {
+    return settings.talk === 'voice' && settings.handsFree && micSupport().ok && !MIC.muted && !MIC.pausedForVoice && MIC.gesture;
+  }
+  function abortRec() {
+    const rec = MIC.rec;
+    MIC.rec = null;
+    MIC.on = false;
+    if (!rec) return;
+    rec.onend = null;
+    rec.onerror = null;
+    rec.onresult = null;
+    try { rec.abort(); } catch (e) { try { rec.stop(); } catch (e2) { /* egal */ } }
+  }
+  function stopAllMic() {
+    MIC.want = false;
+    clearTimeout(MIC.silence);
+    clearTimeout(MIC.restart);
+    abortRec();
+    $('btn-mic').classList.remove('rec');
+    $('btn-mic').setAttribute('aria-pressed', 'false');
+    if (!settings.handsFree || settings.talk !== 'voice') {
+      $('chat-input').placeholder = settings.talk === 'voice' && micSupport().ok ? 'Schreib was oder drück das Mikrofon ...' : 'Schreib was in die Runde ...';
+    }
+  }
+  function flushUtterance() {
+    if (!settings.handsFree || MIC.pausedForVoice || MIC.muted || MIC.userEdit) return;
+    const text = (MIC.finalText + (MIC.interim || '')).trim();
+    MIC.finalText = '';
+    MIC.interim = '';
+    if (!text || normSpeech(text).length < 2) { clearComposer(); return; }
+    if (isEcho(text)) { clearComposer(); return; }
+    writeComposer(text, false);
+    $('chat-form').requestSubmit();
+  }
+  function armSilence() {
+    clearTimeout(MIC.silence);
+    MIC.silence = setTimeout(flushUtterance, SILENCE_MS);
+  }
+  function bindHandsFree(rec) {
+    const input = $('chat-input');
+    rec.onresult = (ev) => {
+      if (MIC.rec !== rec || MIC.pausedForVoice) return;
+      let interim = '';
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const t = ev.results[i][0].transcript;
+        if (ev.results[i].isFinal) MIC.finalText += t;
+        else interim += t;
+      }
+      MIC.interim = interim;
+      const shown = (MIC.finalText + interim).trim();
+      if (shown && isEcho(shown)) {
+        MIC.finalText = '';
+        MIC.interim = '';
+        clearTimeout(MIC.silence);
+        if (!MIC.userEdit) writeComposer('', false);
+        return;
+      }
+      writeComposer(shown, !!interim);
+      if (shown) armSilence();
+    };
+    rec.onerror = (ev) => {
+      if (!ev || ev.error === 'no-speech' || ev.error === 'aborted') return;
+      const msg = { 'not-allowed': 'Das Mikrofon ist nicht freigegeben. Erlaube es in der Adressleiste oder schreib einfach.', 'service-not-allowed': 'Die Spracheingabe ist in diesem Browser gesperrt. Schreib einfach.', 'audio-capture': 'Kein Mikrofon gefunden.', network: 'Die Spracheingabe braucht eine Internetverbindung (Chrome schickt das Audio an Google).' }[ev.error];
+      if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed' || ev.error === 'audio-capture') {
+        MIC.want = false;
+        setMicStatus('aus');
+      }
+      if (msg) sys(msg);
+    };
+    rec.onend = () => {
+      if (MIC.rec !== rec) return;
+      MIC.rec = null;
+      MIC.on = false;
+      $('btn-mic').classList.remove('rec');
+      $('btn-mic').setAttribute('aria-pressed', 'false');
+      if (MIC.want && !MIC.pausedForVoice && !MIC.muted && settings.handsFree && settings.talk === 'voice') {
+        setTimeout(() => { if (shouldListen() && !MIC.on) startHandsFree(); }, 250);
+      }
+    };
+    input.placeholder = 'Sprich einfach los ...';
+  }
+  function startHandsFree() {
+    if (!shouldListen() || !SR) return;
+    if (MIC.on && MIC.mode === 'handsfree') return;
+    abortRec();
+    const rec = new SR();
+    rec.lang = 'de-DE';
+    rec.interimResults = true;
+    rec.continuous = true;
+    rec.maxAlternatives = 1;
+    MIC.rec = rec;
+    MIC.on = true;
+    MIC.mode = 'handsfree';
+    MIC.want = true;
+    bindHandsFree(rec);
+    try { rec.start(); }
+    catch (e) { MIC.on = false; MIC.rec = null; setMicStatus('aus'); return; }
+    $('btn-mic').classList.add('rec');
+    $('btn-mic').setAttribute('aria-pressed', 'true');
+    $('btn-mic').title = 'Freisprechen läuft. Klick schaltet das Mikrofon stumm.';
+    setMicStatus('hört zu');
+  }
+  function ensureHandsFree() {
+    if (!shouldListen()) return;
+    if (MIC.on && MIC.mode === 'handsfree') { setMicStatus('hört zu'); return; }
+    startHandsFree();
+  }
+  function applyHandsFree(announce) {
+    syncHandsFreeControls();
+    const on = settings.talk === 'voice' && settings.handsFree && micSupport().ok;
+    if (!on) {
+      stopAllMic();
+      setMicStatus('aus');
+    } else if (MIC.muted) {
+      stopAllMic();
+      setMicStatus('aus');
+    } else if (MIC.pausedForVoice) {
+      setMicStatus('pausiert');
+    } else {
+      ensureHandsFree();
+    }
+    if (announce) sys(on && !MIC.muted ? 'Freisprechen ist an. Sprich einfach los, der Satz geht nach einer kurzen Pause raus. Am besten mit Kopfhörer.' : 'Freisprechen ist aus. Das Mikrofon startet nur, wenn Du auf den Knopf drückst.');
+  }
+  function toggleMute() {
+    MIC.muted = !MIC.muted;
+    MIC.gesture = true;
+    if (MIC.muted) {
+      clearTimeout(MIC.restart);
+      clearTimeout(MIC.silence);
+      MIC.want = false;
+      abortRec();
+      $('btn-mic').classList.remove('rec');
+      $('btn-mic').setAttribute('aria-pressed', 'false');
+      setMicStatus('aus');
+    } else if (Voice && Voice.busy && Voice.busy()) {
+      MIC.pausedForVoice = true;
+      setMicStatus('pausiert');
+    } else {
+      MIC.pausedForVoice = false;
+      ensureHandsFree();
+    }
+    updateMuteButton();
+  }
+  if (Voice && Voice.onPlayback) {
+    Voice.onPlayback((phase, text) => {
+      if (phase === 'start' && text) rememberSpoken(text);
+      if (!(settings.handsFree && settings.talk === 'voice' && micSupport().ok)) return;
+      if (phase === 'start') {
+        clearTimeout(MIC.restart);
+        MIC.pausedForVoice = true;
+        clearTimeout(MIC.silence);
+        MIC.finalText = '';
+        MIC.interim = '';
+        if (!MIC.userEdit) writeComposer('', false);
+        MIC.want = false;
+        abortRec();
+        $('btn-mic').classList.remove('rec');
+        $('btn-mic').setAttribute('aria-pressed', 'false');
+        if (!MIC.muted) setMicStatus('pausiert');
+      } else if (phase === 'idle') {
+        if (MIC.muted) { setMicStatus('aus'); return; }
+        clearTimeout(MIC.restart);
+        MIC.restart = setTimeout(() => {
+          MIC.pausedForVoice = false;
+          if (MIC.muted || !settings.handsFree) { setMicStatus('aus'); return; }
+          ensureHandsFree();
+        }, 300);
+      }
+    });
+  }
+  $('chat-input').addEventListener('input', () => {
+    if (MIC.writing) return;
+    MIC.userEdit = $('chat-input').value.length > 0;
+  });
+  $('chat-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.ctrlKey || e.metaKey || e.altKey) return;
+    MIC.userEdit = true;
+  });
+  $('btn-hf-mute').addEventListener('click', () => { if (settings.handsFree && settings.talk === 'voice') toggleMute(); });
+  $('opt-handsfree').addEventListener('change', () => {
+    if ($('opt-handsfree').disabled) return;
+    settings.handsFree = $('opt-handsfree').checked;
+    MIC.muted = false;
+    MIC.gesture = true;
+    saveSettings();
+    applyHandsFree(true);
+    renderTopbar();
+  });
   function applyTalkMode(announce) {
     const voice = settings.talk === 'voice';
     const sup = micSupport();
     $('btn-mic').hidden = !(voice && sup.ok);
     $('mic-hint').hidden = !(voice && !sup.ok);
     $('mic-hint').textContent = voice && !sup.ok ? sup.text : '';
-    $('chat-input').placeholder = voice && sup.ok ? 'Schreib was oder drück das Mikrofon ...' : 'Schreib was in die Runde ...';
-    if (!voice) stopMic();
-    if (announce) sys(voice ? (sup.ok ? 'Mitreden mit Stimme: Klick aufs Mikrofon (oder halt es gedrückt) und sprich.' : 'Mitreden mit Stimme geht in diesem Browser nicht, Du kannst weiter schreiben.') : 'Mitreden: Nur Chat.');
+    if (!voice || !settings.handsFree) {
+      $('chat-input').placeholder = voice && sup.ok ? 'Schreib was oder drück das Mikrofon ...' : 'Schreib was in die Runde ...';
+    }
+    if (!voice) { MIC.muted = false; stopAllMic(); }
+    syncHandsFreeControls();
+    if (voice && settings.handsFree && sup.ok) applyHandsFree(false);
+    if (announce) {
+      if (!voice) sys('Mitreden: Nur Chat.');
+      else if (!sup.ok) sys('Mitreden mit Stimme geht in diesem Browser nicht, Du kannst weiter schreiben.');
+      else if (settings.handsFree) sys('Freisprechen ist an. Sprich einfach los, der Satz geht nach einer kurzen Pause raus. Am besten mit Kopfhörer.');
+      else sys('Mitreden mit Stimme: Klick aufs Mikrofon (oder halt es gedrückt) und sprich.');
+    }
   }
   function startMic() {
-    if (MIC.on || !SR) return;
+    if (handsFreeWanted() || MIC.on || !SR) return;
+    MIC.want = false;
+    MIC.mode = 'ptt';
+    clearTimeout(MIC.silence);
+    clearTimeout(MIC.restart);
     if (Voice) { Voice.unlock(); Voice.stopAll(); }
     const rec = new SR();
     rec.lang = 'de-DE';
@@ -1019,12 +1337,15 @@
       if (msg) sys(msg);
     };
     rec.onend = () => {
+      if (MIC.rec !== rec || MIC.mode !== 'ptt') return;
       MIC.on = false; MIC.rec = null;
       $('btn-mic').classList.remove('rec');
       $('btn-mic').setAttribute('aria-pressed', 'false');
       input.classList.remove('interim');
       const text = MIC.finalText.trim() || input.value.trim();
-      if (text) { input.value = text; $('chat-form').requestSubmit(); }
+      MIC.finalText = '';
+      if (text && !isEcho(text)) { input.value = text; $('chat-form').requestSubmit(); }
+      else if (!MIC.userEdit) input.value = '';
     };
     try { rec.start(); } catch (e) { MIC.on = false; return; }
     $('btn-mic').classList.add('rec');
@@ -1033,27 +1354,49 @@
     input.placeholder = 'Ich höre zu ...';
   }
   function stopMic() {
+    if (handsFreeWanted() || MIC.mode === 'handsfree') return;
     if (MIC.rec) { try { MIC.rec.stop(); } catch (e) { /* egal */ } }
     $('chat-input').placeholder = settings.talk === 'voice' && micSupport().ok ? 'Schreib was oder drück das Mikrofon ...' : 'Schreib was in die Runde ...';
   }
-  // Klicken = an/aus, gedrückt halten = sprechen solange gehalten
+  function onMicButton(e) {
+    if (!handsFreeWanted()) return false;
+    if (e) e.preventDefault();
+    MIC.gesture = true;
+    if (MIC.muted || (MIC.on && MIC.mode === 'handsfree')) toggleMute();
+    else ensureHandsFree();
+    return true;
+  }
+  // Klicken = an/aus, gedrückt halten = sprechen solange gehalten. Bei Freisprechen: stumm oder wieder an.
   $('btn-mic').addEventListener('pointerdown', (e) => {
+    if (onMicButton(e)) return;
     e.preventDefault();
     MIC.downAt = Date.now();
     MIC.wasOn = MIC.on;
     if (!MIC.on) startMic();
   });
   $('btn-mic').addEventListener('pointerup', () => {
+    if (handsFreeWanted()) return;
     const held = Date.now() - MIC.downAt > 450;
     if (MIC.wasOn || held) stopMic();
   });
-  $('btn-mic').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (MIC.on) stopMic(); else startMic(); } });
+  $('btn-mic').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    if (onMicButton(e)) return;
+    if (MIC.on) stopMic(); else startMic();
+  });
 
   /* ---------- Start ---------- */
   // Browser erlauben Ton erst nach einer Nutzeraktion: der erste Klick irgendwo entsperrt die Stimmen.
   const unlockOnce = () => { if (Voice) Voice.unlock(); };
   document.addEventListener('pointerdown', unlockOnce, { once: true, capture: true });
   document.addEventListener('keydown', unlockOnce, { once: true, capture: true });
+  document.addEventListener('pointerdown', (e) => {
+    MIC.gesture = true;
+    const t = e.target;
+    if (t && t.closest && (t.closest('#btn-mic') || t.closest('#btn-hf-mute') || t.closest('#handsfree-label'))) return;
+    ensureHandsFree();
+  }, true);
 
   $('btn-hint').setAttribute('aria-pressed', String(settings.hints));
   document.body.classList.toggle('deck-two', settings.deck === 'two');
@@ -1078,5 +1421,8 @@
   if (params.get('autostart')) start();
 
   // Für automatisierte Tests (Screenshots): Zugriff auf den Zustand, keine Spiellogik-Abkürzungen
-  window.__skat = { get state() { return S.st; }, get match() { return match; }, settings, E, voice: Voice, start, showSession };
+  window.__skat = {
+    get state() { return S.st; }, get match() { return match; }, settings, E, voice: Voice, start, showSession,
+    handsFree: { norm: normSpeech, echo: isEcho, remember: rememberSpoken, get mic() { return MIC; } }
+  };
 })();
