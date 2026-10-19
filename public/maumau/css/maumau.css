@@ -304,19 +304,30 @@ button.card{padding:0;text-align:left}
   .sidebar{grid-template-columns:1fr}
   .ava-wrap,.ava{width:52px;height:52px}
   .ini{font-size:1rem}
-  .seat-name{font-size:.92rem}
+  .seat-name{font-size:.92rem;max-width:5.4rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .seat-west,.seat-east,.seat-north,.seat-north2{flex-direction:column;align-items:center;gap:2px;top:8px}
+  .seat-west{left:14%;right:auto;transform:translateX(-50%)}
+  .seat-north{left:38%}
+  .seat-north.alone{left:50%}
+  .seat-north2{left:62%}
+  .seat-east{left:86%;right:auto;transform:translateX(-50%)}
+  .seat-west .seat-info,.seat-east .seat-info,.seat-north .seat-info,.seat-north2 .seat-info{text-align:center}
+  .seat-west .seat-role,.seat-east .seat-role,.seat-north .seat-role,.seat-north2 .seat-role{justify-content:center}
   .seat-west .opp-cards,.seat-east .opp-cards{top:58px}
   .opp-cards{--cw:20px}
   .opp-cards{display:none}
-  .board{top:108px;bottom:210px;gap:18px}
+  .board{top:156px;bottom:188px;gap:18px}
   .pile-note{font-size:.86rem;max-width:120px}
   .discard-stack{--cw:52px}
   .actions button{padding:6px 8px;font-size:.75rem}
   .hand{--cw:42px;min-height:86px}
   .hand .card{margin-left:-24px}
-  .bubble{max-width:150px;font-size:.75rem;top:58px}
-  .seat-west .bubble{left:58px}
-  .seat-east .bubble{right:58px}
+  .bubble{max-width:124px;font-size:.75rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .seat-west .bubble{left:0;right:auto;top:58px;transform:translateY(6px)}
+  .seat-east .bubble{left:auto;right:0;top:58px;transform:translateY(6px)}
+  .seat-north .bubble,.seat-north2 .bubble{left:50%;right:auto;top:100%;max-width:116px;margin-top:2px;transform:translateX(-50%) translateY(6px)}
+  .bubble.show,.seat-west .bubble.show,.seat-east .bubble.show{transform:none}
+  .seat-north .bubble.show,.seat-north2 .bubble.show{transform:translateX(-50%)}
 }
 @media (max-width:560px){
   .topbar .logo{display:none}

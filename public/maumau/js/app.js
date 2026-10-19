@@ -296,9 +296,16 @@
     const wait = S.humanWait;
     S.humanWait = null;
     if (wait) wait(move);
+    else S.queued = move;
   }
   function waitHuman(ms) {
     return new Promise((res) => {
+      if (S.queued) {
+        const queued = S.queued;
+        S.queued = null;
+        res(queued);
+        return;
+      }
       S.humanWait = res;
       if (ms) {
         S.humanTimer = setTimeout(() => {
@@ -333,7 +340,7 @@
   }
   function chooseCard(card) {
     const st = S.state;
-    if (!st || !S.humanWait) return;
+    if (!st || st.turn !== 0) return;
     if (st.phase !== 'play' && st.phase !== 'drawn') return;
     const legal = E.legalMoves(st, 0).some((m) => m.type === 'play' && m.card === card);
     if (!legal) {
@@ -363,7 +370,6 @@
         renderActions();
         return;
       }
-      if (!S.humanWait) return;
       releaseHuman(move);
     });
     return btn;
@@ -487,7 +493,7 @@
       const lead = arr[i] === best ? ' lead' : '';
       bars += '<div class="ti-row' + lead + '"><span class="ti-name">' + esc(names[i] || '') + '</span><span class="ti-bar"><i style="width:' + pct + '%"></i></span><span class="ti-val">' + arr[i] + '</span></div>';
     }
-    $('target-info').innerHTML = '<div class="ti-head"><span>bis ' + target + '</span><b>' + match.handNo + ' Runden</b></div>' + bars;
+    $('target-info').innerHTML = '<div class="ti-head"><span>bis ' + target + '</span><b>' + match.handNo + (match.handNo === 1 ? ' Runde' : ' Runden') + '</b></div>' + bars;
     $('tariff').textContent = scoring
       ? 'Wenig Punkte sind gut. Bube 20, Ass 11, König, Dame und 10 je 10.'
       : 'Gezählt werden gewonnene Runden. Punkte der Karten bleiben aus.';
@@ -567,6 +573,7 @@
   }
 
   async function playLoop(gen) {
+    S.queued = null;
     let guard = 0;
     while (S.state && S.state.phase !== 'done') {
       if (gen !== S.gen) throw CANCEL;
@@ -581,6 +588,7 @@
       }
       const st = S.state;
       const seat = st.turn;
+      if (seat !== 0 || S.watch) S.queued = null;
       if (seat === 0 && !S.watch) {
         render();
         const move = await waitHuman();
@@ -1105,29 +1113,45 @@
     S.started = true;
     $('intro').hidden = true;
     if (Voice) Voice.unlock();
+    const opp = params.get('opp');
+    if (opp === '3' || opp === '4') settings.rules.opponents = +opp;
     ensureMatch();
+    const hands = [
+      ['H9', 'HJ', 'S8', 'D10', 'CA'],
+      ['C7', 'SK', 'HQ', 'S9', 'DA'],
+      ['D7', 'H8', 'CJ', 'SA', 'C9'],
+    ];
+    let talon = ['D8', 'CK', 'HA', 'C8', 'SQ', 'HK', 'D9', 'S7'];
+    if (settings.rules.opponents >= 3) {
+      hands.push(['C10', 'CQ', 'SJ', 'H10', 'DJ']);
+      talon = ['DQ', 'DK'];
+    }
+    if (settings.rules.opponents >= 4) {
+      hands.push(['DQ', 'DK', 'S7', 'HK', 'D9']);
+      talon = ['C8', 'HA'];
+    }
     S.state = E.setup({
       rules: rulesNow(),
-      hands: [
-        ['H9', 'HJ', 'S8', 'D10', 'CA'],
-        ['C7', 'SK', 'HQ', 'S9', 'DA'],
-        ['D7', 'H8', 'CJ', 'SA', 'C9'],
-      ],
+      hands: hands,
       discard: ['H7', 'S10'],
-      talon: ['D8', 'CK', 'HA', 'C8', 'SQ', 'HK', 'D9', 'S7'],
+      talon: talon,
       turn: 0,
       activeSuit: 'S',
     });
-    S.state.players = 3;
-    match.scores = [4, 18, 11];
-    match.wins = [1, 0, 0];
+    const seeded = [4, 18, 7, 11, 0];
+    match.scores = hands.map(function (_, i) { return seeded[i] || 0; });
+    match.wins = hands.map(function () { return 0; });
+    match.wins[0] = 1;
     match.handNo = 1;
     match.rules = S.state.rules;
     S.state.events.splice(0);
     render();
     logLine('<b>Horst:</b> Fünf Karten. Ick seh schon, det wird nix.', 'horst');
     logLine('<b>Margarethe:</b> Mau-Mau, ganz gemütlich. Aber bitte mit Stil.', 'margarethe');
+    const lenaSeat = seatById('lena');
+    if (lenaSeat) logLine('<b>Lena:</b> ' + esc(Talk.line('lena', 'welcome')), 'lena');
     say(1, 'Mau. Gleich is Feierabend.', { force: true });
+    if (lenaSeat) say(lenaSeat.seat, 'Hi! Der Kaffee ist warm, die Karten auch.', { force: true });
     sys('Punkte statt Geld. Eine 7 zieht zwei, eine 8 setzt aus, der Bube wünscht.');
     const gen = S.gen;
     playLoop(gen).then(() => {
