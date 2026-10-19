@@ -126,7 +126,9 @@ Die leeren SECRET-Zeilen in `.do/app.yaml` sind Platzhalter. Nach dem Eintragen 
 
 Die Variablen müssen stehen, bevor die Functions zum ersten Mal gebaut werden. Danach ein Redeploy. Kontrolle im Browser: `https://<deine-app>.ondigitalocean.app/api/sf/chat` liefert `{"ok":true}`. Fehlt der xAI-Schlüssel, kommt 503, und der Tisch redet mit den festen Sprüchen.
 
-DigitalOcean hängt an die Route noch Paket und Funktion. Mit Route `/api`, Paket `sf` und Funktion `chat` heißt der Pfad `/api/sf/chat` (analog `/api/sf/tts`). Das Paket heißt absichtlich nicht `default`: an das Paket `default` lassen sich keine Umgebungsvariablen hängen, der Bau bricht dann ab. Der Browser probiert zuerst `/api/chat` und `/api/tts` (so der lokale Server), danach `/api/sf/chat` und `/api/sf/tts`. Die alten Pfade `/api/default/chat` und `/api/default/tts` bleiben ein letzter, harmloser Versuch.
+DigitalOcean hängt an die Route noch Paket und Funktion. Mit Route `/api`, Paket `sf` und Funktion `chat` heißt der Pfad `/api/sf/chat` (analog `/api/sf/tts`). Das Paket heißt absichtlich nicht `default`: an das Paket `default` lassen sich keine Umgebungsvariablen hängen, der Bau bricht dann ab. Ein Pfad ohne Paketnamen, etwa `/api/chat`, antwortet mit 400 (`Incomplete web function path`). Der Browser probiert deshalb zuerst `/api/sf/chat` und `/api/sf/tts`, danach `/api/chat` und `/api/tts` (so der lokale Server). Die alten Pfade `/api/default/chat` und `/api/default/tts` bleiben ein letzter, harmloser Versuch.
+
+Jede Funktion liegt vollständig in ihrem Ordner: `packages/sf/chat/` und `packages/sf/tts/` enthalten `index.js` und eine Kopie von `lib/handlers.js`. Die Laufzeit packt nur diesen Ordner. `project.yml` setzt `main: index.main` (Datei `index.js`, Export `main`). Ein Dateiname an dieser Stelle sucht einen Export namens `js`, der Aufruf endet dann mit der Plattform-Meldung, bevor der eigene Code antwortet.
 
 ### Kosten
 
@@ -136,4 +138,4 @@ xAI und ElevenLabs rechnen getrennt. Grok 4.3 kostet 1,25 Dollar je Million Eing
 
 ### Wenn die API fehlt
 
-Der Browser fragt `GET /api/chat` und, wenn das nicht antwortet, `GET /api/sf/chat`. Kommt kein `{"ok":true}`, bleiben für diesen Besuch die festen Sprüche und die fertigen MP3s. Zwei fehlgeschlagene Chats hintereinander schalten genauso ab. Ein einzelner Aussetzer fällt nur für diese Zeile auf den Spruchvorrat zurück. Feste Spielsprüche mit MP3 gehen nie an ElevenLabs. Sätze ohne MP3, deren Stimme fehlschlägt, spricht der Browser. `?ai=0` schaltet das freie Gespräch für den Besuch aus. Während einer Antwort steht im Chat „Horst schreibt“ oder „Margarethe schreibt“. Während der Wiedergabe pausiert das Freisprechen wie bisher.
+Der Browser fragt zuerst `GET /api/sf/chat` und, wenn das nicht antwortet, `GET /api/chat`. Kommt kein `{"ok":true}`, bleiben für diesen Besuch die festen Sprüche und die fertigen MP3s. Zwei fehlgeschlagene Chats hintereinander schalten genauso ab. Ein einzelner Aussetzer fällt nur für diese Zeile auf den Spruchvorrat zurück. Feste Spielsprüche mit MP3 gehen nie an ElevenLabs. Sätze ohne MP3, deren Stimme fehlschlägt, spricht der Browser. `?ai=0` schaltet das freie Gespräch für den Besuch aus. Während einer Antwort steht im Chat „Horst schreibt“ oder „Margarethe schreibt“. Während der Wiedergabe pausiert das Freisprechen wie bisher.

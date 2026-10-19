@@ -225,10 +225,42 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
       assert.equal(out.statusCode, 200);
       assert.deepEqual(out.body, { ok: true });
       assert.equal(typeof tts.main, 'function');
+      delete process.env.XAI_API_KEY;
+      const missing = await chat.main({ http: { method: 'GET', headers: {} } });
+      assert.equal(missing.statusCode, 503);
+      assert.deepEqual(missing.body, { error: 'nicht erreichbar' });
     } finally {
       if (prev == null) delete process.env.XAI_API_KEY;
       else process.env.XAI_API_KEY = prev;
     }
+  });
+
+  test('Funktionsordner sind eigenständig und main zeigt auf den Export', () => {
+    const root = path.join(__dirname, '../../api');
+    const lib = fs.readFileSync(path.join(root, 'lib/handlers.js'));
+    const project = fs.readFileSync(path.join(root, 'project.yml'), 'utf8');
+    assert.equal(project.includes('main: index.js'), false);
+    assert.equal(project.split('main: index.main').length - 1, 2);
+    for (const name of ['chat', 'tts']) {
+      const dir = path.join(root, 'packages/sf', name);
+      assert.equal(fs.existsSync(path.join(dir, '.include')), false);
+      const copy = fs.readFileSync(path.join(dir, 'handlers.js'));
+      assert.equal(copy.equals(lib), true);
+      const index = fs.readFileSync(path.join(dir, 'index.js'), 'utf8');
+      assert.match(index, /require\('\.\/handlers\.js'\)/);
+      assert.equal(index.includes('../../../lib/'), false);
+      assert.match(index, /exports\.main = main/);
+    }
+    const audio = H.toFunctionResponse({
+      status: 200,
+      audio: Buffer.from([0xff, 0xfb]),
+      headers: { 'Content-Type': 'audio/mpeg' },
+    });
+    assert.equal(typeof audio.body, 'string');
+    assert.equal(Buffer.from(audio.body, 'base64')[0], 0xff);
+    const json = H.toFunctionResponse({ status: 200, json: { ok: true }, headers: {} });
+    assert.deepEqual(json.body, { ok: true });
+    assert.equal(typeof json.body, 'object');
   });
 
   test('lokaler Server: Seite, Chat, Ablehnung', async () => {
