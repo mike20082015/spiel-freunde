@@ -10,6 +10,7 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 |---|---|
 | `/` | Startseite |
 | `/skat/` | Spielbarer Skat-Prototyp: Du gegen Horst und Margarethe |
+| `/jass/` | Spielbarer Schieber: Du und Urs gegen Vreni und Horst |
 | `/spielpartner/` | Deine Spielpartner: Horst, Margarethe und die Premium-Runde. 14 Tage Test nur in diesem Browser |
 
 In der Vorschau führen die großen Buttons auf der Startseite nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. Startseite, Skat und Spielpartner tragen ein goldenes Band „Vorschau“.
@@ -40,6 +41,7 @@ Oder im Ordner `skat/` das Startskript (`./start.sh`, `start.bat`, `start.comman
 ```bash
 cd skat
 node --test tests/
+node --test ../jass/tests
 node --test ../spielpartner/tests
 ```
 

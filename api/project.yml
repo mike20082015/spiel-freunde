@@ -10,6 +10,8 @@ packages:
       XAI_MODEL: "${XAI_MODEL}"
       VOICE_HORST: "${VOICE_HORST}"
       VOICE_MARGARETHE: "${VOICE_MARGARETHE}"
+      VOICE_URS: "${VOICE_URS}"
+      VOICE_VRENI: "${VOICE_VRENI}"
       ELEVEN_MODEL: "${ELEVEN_MODEL}"
       DAILY_LIMIT: "${DAILY_LIMIT}"
     functions:
