@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spiel-Freunde: Die besten Kartenspiele aus Deutschland, Österreich und der Schweiz</title>
+<meta name="description" content="Skat, Doppelkopf, Schafkopf, Jass und mehr mit KI-Mitspielern, die Charakter haben. 14 Tage kostenlos spielen.">
+<link rel="icon" href="assets/variante-a-favicon-dunkel.svg" type="image/svg+xml">
+<link rel="icon" href="assets/variante-a-favicon-dunkel-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/variante-a-icon-dunkel-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="nav" id="top">
+  <div class="wrap nav-in">
+    <div class="nav-brand">
+      <a class="logo" href="#top" aria-label="Spiel-Freunde Startseite"><img src="assets/variante-a-lockup-dunkel-web.svg" alt="Spiel-Freunde" width="796" height="175"></a>
+      <span class="preview-badge">Vorschau</span>
+    </div>
+    <nav class="nav-links" aria-label="Hauptnavigation">
+      <a href="/skat/">Skat spielen</a>
+      <a href="#mitspieler">Mitspieler</a>
+      <a href="#spiele">Spiele</a>
+      <a href="#orte">Orte</a>
+      <a href="#preise">Preise</a>
+      <a href="#faq">Fragen</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="link-login" href="#">Anmelden</a>
+      <a class="btn btn-gold btn-sm" href="/skat/">Kostenlos testen</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="wrap hero-in">
+    <div class="hero-copy">
+      <p class="kicker"><span class="dot"></span> Kartenspiele mit KI-Mitspielern, die leben</p>
+      <h1>Die besten Kartenspiele aus <span class="hl">Deutschland, Österreich</span> und der <span class="hl">Schweiz.</span></h1>
+      <p class="lead">Lebendig statt statisch: Du setzt Dich als Avatar mit Deinem eigenen Gesicht an den Tisch. Neben Dir sitzen Mitspieler mit echter Persönlichkeit, die sich an Dich erinnern, im Chat antworten und Dich auch mal aufziehen.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-gold btn-lg" href="/skat/">14 Tage kostenlos spielen</a>
+        <a class="btn btn-line btn-lg" href="/skat/">Jetzt Skat ausprobieren</a>
+        <a class="btn btn-ghost btn-lg" href="#mitspieler">Mitspieler kennenlernen</a>
+      </div>
+      <ul class="hero-trust">
+        <li><b>Spaß statt Geld:</b> kein Glücksspiel, keine Einsätze</li>
+        <li><b>Fair:</b> die KI schummelt nie</li>
+        <li><b>Jederzeit:</b> Deine Runde wartet immer</li>
+      </ul>
+    </div>
+
+    <!-- Stammtisch-Szene -->
+    <div class="scene" aria-label="Animierte Stammtisch-Szene mit Margarethe, Horst und Uschi">
+      <div class="frame">
+        <div class="zoom">
+          <img class="scene-img" src="assets/stammtisch-szene.jpg" alt="Gemütliche Kneipe: Margarethe, Horst und Uschi sitzen mit Dir am Holztisch und spielen Karten" width="1280" height="720">
+          <span class="spot sp-margarethe"></span><span class="spot sp-horst"></span><span class="spot sp-uschi"></span>
+          <span class="lamp"></span>
+        </div>
+        <div class="vignette"></div>
+      </div>
+      <div class="overlay">
+        <div class="person p-margarethe" data-who="margarethe">
+          <div class="bubble" id="bub-margarethe"><span></span></div>
+          <span class="tag">Margarethe</span>
+        </div>
+        <div class="person p-horst" data-who="horst">
+          <div class="bubble" id="bub-horst"><span></span></div>
+          <span class="tag">Horst</span>
+        </div>
+        <div class="person p-uschi" data-who="uschi">
+          <div class="bubble" id="bub-uschi"><span></span></div>
+          <span class="tag">Uschi</span>
+        </div>
+        <div class="you-tag"><span class="ava-you">Du</span><span class="chat-chip" id="you-chat">Jetzt passt mal auf!</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint">♠ Scroll und lern Deine Runde kennen ♠</div>
+</section>
+
+<!-- LEBENDIG BAND -->
+<section class="band">
+  <div class="wrap band-in">
+    <div class="band-item"><span class="band-ic">❖</span><div><b>Sie erinnern sich</b><p>An Deinen Namen, Deine Stärken und an den Grand von letzter Woche.</p></div></div>
+    <div class="band-item"><span class="band-ic">✎</span><div><b>Sie antworten im Chat</b><p>Was Du schreibst, wird gehört. Mit Widerspruch, Lob und Gelächter.</p></div></div>
+    <div class="band-item"><span class="band-ic">✦</span><div><b>Jeder Abend ist anders</b><p>Geschichten, die weitergehen, und saisonale Events von Oktoberfest bis Songkran.</p></div></div>
+  </div>
+</section>
+
+<!-- MITSPIELER -->
+<section class="sec cream" id="mitspieler">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Deine Mitspieler</p>
+      <h2>Drei Charaktere. Eine Runde, die sich echt anfühlt.</h2>
+      <p class="sub">Sie spielen nicht nur, sie leben am Tisch. Sie loben, sticheln, erzählen aus ihrem Leben und reagieren auf jeden Spruch von Dir. Wie viel Frotzelei Du verträgst, stellst Du selbst ein: gemütlich, ehrlich oder Stammtisch.</p>
+    </div>
+    <div class="chars">
+      <article class="char">
+        <div class="char-img"><img src="assets/figur-witwe-foto.jpg" alt="Margarethe von Hohenfels, die reiche Witwe"></div>
+        <div class="char-body">
+          <p class="char-role">Die reiche Witwe</p>
+          <h3>Margarethe von Hohenfels</h3>
+          <p>Elegant, ein klein wenig eitel und am liebsten im Mittelpunkt. Erzählt zwischen zwei Stichen von ihrer neuesten Kreuzfahrt und spielt riskant, wenn sie glänzen will.</p>
+          <ul class="traits"><li>Perlenkette</li><li>Kreuzfahrten</li><li>riskante Solos</li></ul>
+          <blockquote>„Schätzchen, so spielt man doch nicht in besseren Kreisen.“</blockquote>
+        </div>
+      </article>
+      <article class="char">
+        <div class="char-img"><img src="assets/figur-berliner-foto.jpg" alt="Horst Kaluppke, der Stinkstiefel aus Berlin"></div>
+        <div class="char-body">
+          <p class="char-role">Der Stinkstiefel aus Berlin</p>
+          <h3>Horst Kaluppke</h3>
+          <p>Meckert über jede Karte, über das Wetter und über seinen Vermieter. Spielt kühl und berechnend. Unter der Schiebermütze schlägt aber ein großes Herz.</p>
+          <ul class="traits"><li>Schiebermütze</li><li>Berliner Schnauze</li><li>eiskalt im Spiel</li></ul>
+          <blockquote>„Na toll. Und dafür bin ick extra wach geblieben?“</blockquote>
+        </div>
+      </article>
+      <article class="char">
+        <div class="char-img"><img src="assets/figur-nachbarin-foto.jpg" alt="Uschi Lammert, die lustige Nachbarin"></div>
+        <div class="char-body">
+          <p class="char-role">Die lustige Nachbarin</p>
+          <h3>Uschi Lammert</h3>
+          <p>Herzlich, laut lachend und immer mit guter Laune im Gepäck. Alle unterschätzen sie, und genau deshalb spielt sie die ganze Runde an die Wand.</p>
+          <ul class="traits"><li>Strickjacke</li><li>Lachfalten</li><li>heimliche Meisterin</li></ul>
+          <blockquote>„Ach Gott, schon wieder gewonnen. Tut mir fast leid!“</blockquote>
+        </div>
+      </article>
+    </div>
+    <div class="chat-demo">
+      <div class="chat-head"><span class="live"></span> So klingt es am Tisch</div>
+      <div class="chat-lines">
+        <p class="cl you"><b>Du:</b> Ich hätte Kreuz spielen sollen, oder?</p>
+        <p class="cl h"><b>Horst:</b> Wat heißt hier sollen? Müssen! Mensch, streng dich mal mehr an!</p>
+        <p class="cl m"><b>Margarethe:</b> Lass ihn, Horst. Wir können nicht alle so begabt sein wie ich.</p>
+        <p class="cl u"><b>Uschi:</b> Na, das war ja wohl nix. Aber ich mag dich trotzdem!</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SPIELE -->
+<section class="sec felt-dark" id="spiele">
+  <div class="wrap">
+    <div class="sec-head light">
+      <p class="eyebrow">Die Spiele</p>
+      <h2>Vom Küchentisch bis zur Berghütte</h2>
+      <p class="sub">Die Klassiker aus dem ganzen deutschsprachigen Raum, jedes mit sauberem Regelwerk und einstellbaren Hausregeln. Neu dabei? Die KI erklärt Dir jede Regel in Ruhe.</p>
+    </div>
+    <div class="games">
+      <article class="game game-feature">
+        <div class="game-top"><span class="flags"><i class="fl de" title="Deutschland"></i></span><span class="badge">Zum Start</span></div>
+        <h3>Skat</h3>
+        <p>Der König der Kartenspiele, zu dritt. Du wählst Deine Regeln:</p>
+        <div class="rules">
+          <span class="rule"><b>Offizielle Skatordnung</b> wie bei DSkV und ISPA</span>
+          <span class="rule"><b>Kneipenskat</b> mit Bock, Ramsch und Kontra</span>
+        </div>
+        <a class="btn btn-gold game-cta" href="/skat/">Jetzt Skat ausprobieren</a>
+        <p class="game-meta">3 Spieler · Klassiker</p>
+      </article>
+      <article class="game">
+        <div class="game-top"><span class="flags"><i class="fl de"></i><i class="fl at"></i><i class="fl ch"></i></span><span class="badge free">Gratis</span></div>
+        <h3>Mau-Mau</h3><p>Der entspannte Einstieg. Regeln kennt jeder, gelacht wird viel.</p><p class="game-meta">2 bis 5 Spieler · Leicht</p>
+      </article>
+      <article class="game">
+        <div class="game-top"><span class="flags"><i class="fl de"></i></span></div>
+        <h3>Doppelkopf</h3><p>Re, Kontra und die Frage: Wer spielt hier eigentlich mit wem?</p><p class="game-meta">4 Spieler · Klassiker</p>
+      </article>
+      <article class="game">
+        <div class="game-top"><span class="flags"><i class="fl de"></i><i class="fl at"></i><i class="fl ch"></i></span></div>
+        <h3>Rommé</h3><p>Sätze und Reihen auslegen, der Familienklassiker schlechthin.</p><p class="game-meta">2 bis 6 Spieler · Klassiker</p>
+      </article>
+      <article class="game">
+        <div class="game-top"><span class="flags"><i class="fl de"></i></span></div>
+        <h3>Canasta</h3><p>Gemütlich Karten sammeln und mit Deinem Partner groß auslegen.</p><p class="game-meta">meist 4 Spieler · Klassiker</p>
+      </article>
+      <article class="game">
+        <div class="game-top"><span class="flags"><i class="fl by" title="Bayern"></i><i class="fl at"></i></span></div>
+        <h3>Schafkopf</h3><p>Der bayerische Stammtischklassiker. Sauspiel, Wenz und Solo.</p><p class="game-meta">4 Spieler · Regional</p>
+      </article>
+      <article class="game">
+        <div class="game-top"><span class="flags"><i class="fl at"></i></span></div>
+        <h3>Schnapsen</h3><p>Das österreichische Duell zu zweit. Schnell, schlau und spannend.</p><p class="game-meta">2 Spieler · Regional</p>
+      </article>
+      <article class="game">
+        <div class="game-top"><span class="flags"><i class="fl at"></i><i class="fl by"></i></span></div>
+        <h3>Watten</h3><p>Bluffen erlaubt! Aus Tirol, Bayern und Südtirol an Deinen Tisch.</p><p class="game-meta">meist 4 Spieler · Regional</p>
+      </article>
+      <article class="game">
+        <div class="game-top"><span class="flags"><i class="fl ch"></i></span></div>
+        <h3>Jass</h3><p>Der Schweizer Nationalsport mit Karten, wie in der Berghütte.</p><p class="game-meta">meist 4 Spieler · Regional</p>
+      </article>
+      <article class="game">
+        <div class="game-top"><span class="flags"><i class="fl de"></i></span><span class="badge free">Leicht</span></div>
+        <h3>Schwimmen</h3><p>Auch bekannt als 31. Tauschen, klopfen und hoffen, dass Du nicht absäufst.</p><p class="game-meta">2 bis 9 Spieler · Leicht</p>
+      </article>
+      <article class="game">
+        <div class="game-top"><span class="flags"><i class="fl de"></i></span><span class="badge free">Leicht</span></div>
+        <h3>Elfer raus</h3><p>Ab der Elf geht es los. Herrlich einfach und perfekt zum Plaudern.</p><p class="game-meta">2 bis 6 Spieler · Leicht</p>
+      </article>
+      <article class="game game-soon">
+        <div class="game-top"><span class="flags"><i class="fl intl" title="international">◎</i></span><span class="badge soon">Bald</span></div>
+        <h3>Bridge</h3><p>Der internationale Klassiker. Endlich immer einen Partner am Tisch.</p><p class="game-meta">4 Spieler · in Vorbereitung</p>
+      </article>
+    </div>
+    <p class="legend"><span><i class="fl de"></i> Deutschland</span><span><i class="fl by"></i> Bayern</span><span><i class="fl at"></i> Österreich</span><span><i class="fl ch"></i> Schweiz</span></p>
+  </div>
+</section>
+
+<!-- ORTE -->
+<section class="sec cream" id="orte">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Die Orte</p>
+      <h2>Wo möchtest Du heute spielen?</h2>
+      <p class="sub">Jeder Ort hat seine eigene Stimmung, und Deine Mitspieler reagieren darauf. So fühlt sich jede Runde ein bisschen anders an.</p>
+    </div>
+    <div class="places">
+      <article class="place">
+        <div class="place-img" style="background-image:url(assets/ort-kneipe.jpg)"><span class="smoke s1"></span><span class="smoke s2"></span></div>
+        <div class="place-body">
+          <h3>Die verrauchte Eckkneipe</h3>
+          <p>Holztisch, Bierdeckel, Musikbox. Horst fühlt sich pudelwohl, Margarethe rümpft die Nase über den Rauch.</p>
+        </div>
+      </article>
+      <article class="place">
+        <div class="place-img" style="background-image:url(assets/ort-rayong.jpg)"></div>
+        <div class="place-body">
+          <h3>Am Strand von Rayong</h3>
+          <p>Palmen, Sonnenuntergang, Meeresrauschen in Thailand. Margarethe bestellt einen Cocktail, Horst schimpft über die Hitze.</p>
+        </div>
+      </article>
+      <article class="place">
+        <div class="place-img" style="background-image:url(assets/ort-anden.jpg)"><span class="ember e1"></span><span class="ember e2"></span><span class="ember e3"></span></div>
+        <div class="place-body">
+          <h3>In den Anden</h3>
+          <p>Bergpanorama, klare Luft und eine Hütte mit Kaminfeuer in Argentinien. Uschi schwärmt von der Aussicht, alle frieren ein bisschen.</p>
+        </div>
+      </article>
+    </div>
+    <p class="more-places">Bald mehr: Wiener Kaffeehaus, bayerischer Biergarten, Schweizer Berghütte, Weihnachtsmarkt und Kreuzfahrtschiff.</p>
+  </div>
+</section>
+
+<!-- SO FUNKTIONIERT'S -->
+<section class="sec wine" id="so-gehts">
+  <div class="wrap">
+    <div class="sec-head light">
+      <p class="eyebrow">So funktioniert's</p>
+      <h2>In drei Schritten an Deinem Tisch</h2>
+    </div>
+    <ol class="steps">
+      <li class="step"><span class="step-n">1</span><h3>Avatar erstellen</h3><p>Lade ein Foto hoch und setz Dich mit Deinem eigenen Gesicht an den Tisch.</p></li>
+      <li class="step"><span class="step-n">2</span><h3>Spiel und Ort wählen</h3><p>Skat in der Kneipe oder Jass in den Anden? Regeln und Spielstärke bestimmst Du.</p></li>
+      <li class="step"><span class="step-n">3</span><h3>Losspielen und lachen</h3><p>Deine Mitspieler sind schon da. Die KI erklärt Dir die Regeln und spielt immer fair.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- PREISE -->
+<section class="sec cream" id="preise">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Preise</p>
+      <h2>Erst ausprobieren, dann entscheiden</h2>
+      <p class="sub">14 Tage kostenlos und mit allen Funktionen. Danach wählst Du Dein Abo, monatlich kündbar. Es gibt keine Einsätze und keine Geldgewinne.</p>
+    </div>
+    <div class="trial">
+      <span class="trial-big">14 Tage</span>
+      <span class="trial-txt"><b>kostenlos testen</b> Alle Spiele, alle Orte, alle Mitspieler</span>
+      <a class="btn btn-wine" href="/skat/">Jetzt starten</a>
+    </div>
+    <div class="plans">
+      <article class="plan">
+        <h3>Skat</h3>
+        <p class="price"><span class="amt">9,95 €</span><span class="per">pro Monat</span></p>
+        <ul>
+          <li>Skat ohne Einschränkung</li>
+          <li>Offizielle Skatordnung und Kneipenskat</li>
+          <li>Alle drei Mitspieler und Orte</li>
+          <li>Mau-Mau gratis dazu</li>
+        </ul>
+        <a class="btn btn-outline" href="/skat/">Skat wählen</a>
+      </article>
+      <article class="plan plan-hot">
+        <span class="ribbon">Beliebt</span>
+        <h3>Alle Spiele</h3>
+        <p class="price"><span class="amt">19,95 €</span><span class="per">pro Monat</span></p>
+        <ul>
+          <li>Skat, Doppelkopf, Rommé, Canasta</li>
+          <li>Schafkopf, Schnapsen, Watten, Jass</li>
+          <li>Leichte Spiele und später Bridge</li>
+          <li>Ranglisten und Turniere</li>
+        </ul>
+        <a class="btn btn-gold" href="/skat/">Alle Spiele wählen</a>
+      </article>
+    </div>
+    <div class="shop">
+      <div class="shop-cards"><span class="sc sc1">♦</span><span class="sc sc2">♣</span><span class="sc sc3">♥</span></div>
+      <p><b>Im Shop:</b> Premium-Avatare, neue Orte, besondere Kartendecks und Tischdesigns. Bezahlen kannst Du per Kreditkarte, PayPal oder Krypto.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FÜR WEN -->
+<section class="sec felt-dark" id="fuer-wen">
+  <div class="wrap">
+    <div class="sec-head light">
+      <p class="eyebrow">Für wen</p>
+      <h2>Ein Stück Heimat und Geselligkeit</h2>
+    </div>
+    <div class="who">
+      <article class="who-card">
+        <span class="who-ic">✈</span>
+        <h3>Für alle, die weit weg von zu Hause leben</h3>
+        <p>Ob in Thailand, Spanien oder Argentinien: Die vertraute Kartenrunde fehlt. Hier findest Du sie wieder, mit Deinen Spielen, Deiner Sprache und dem Humor von daheim.</p>
+      </article>
+      <article class="who-card">
+        <span class="who-ic">⌂</span>
+        <h3>Für alle, denen zu Hause die Mitspieler fehlen</h3>
+        <p>Die alte Runde gibt es nicht mehr, oder keiner hat Zeit? Deine Mitspieler sind immer da, reden, lachen und freuen sich auf Dich. Auch spät am Abend.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- TRADITION -->
+<section class="tradition">
+  <div class="wrap trad-in">
+    <div class="trad-suits"><span>♣</span><span class="r">♥</span><span>♠</span><span class="r">♦</span></div>
+    <blockquote>„Kartenspiele sind seit Jahrhunderten Teil unserer Lebensart. Wir bringen sie in die neue Zeit.“</blockquote>
+    <p>Skat am Küchentisch, Doppelkopf im Verein, Schafkopf am Stammtisch, Jass in der Berghütte.</p>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="sec cream" id="faq">
+  <div class="wrap faq-wrap">
+    <div class="sec-head">
+      <p class="eyebrow">Fragen</p>
+      <h2>Gut zu wissen</h2>
+    </div>
+    <div class="faq">
+      <details open><summary>Ist das Glücksspiel?</summary><p>Nein, ganz klar nicht. Bei uns geht es um Spaß und Gemeinschaft. Es gibt keine Einsätze und keine Gewinne in Geld.</p></details>
+      <details><summary>Schummelt die KI?</summary><p>Niemals. Ein festes Regelwerk entscheidet, was erlaubt ist, gemischt wird mit einem sicheren Zufallsgenerator, und die Spiel-KI kennt nur die Karten, die auch ein echter Spieler kennen würde. Die Persönlichkeit sorgt nur für die Sprüche.</p></details>
+      <details><summary>Ich kenne die Regeln nicht so gut. Geht das trotzdem?</summary><p>Na klar! Auf der Einsteiger-Stufe bekommst Du Tipps, und Deine Mitspieler erklären Dir jede Regel geduldig. Mau-Mau ist der perfekte Anfang.</p></details>
+      <details><summary>Werden die Sprüche nicht zu frech?</summary><p>Das bestimmst Du. Wähle zwischen gemütlich, ehrlich und Stammtisch. Selbst am Stammtisch bleibt es humorvoll und nie verletzend.</p></details>
+      <details><summary>Was passiert nach den 14 Tagen?</summary><p>Du entscheidest Dich für Skat (9,95 € im Monat) oder alle Spiele (19,95 € im Monat). Wenn Du nichts wählst, endet der Test einfach.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final">
+  <div class="wrap final-in">
+    <div class="final-avas">
+      <img src="assets/avatar-witwe-foto.jpg" alt=""><img src="assets/avatar-berliner-foto.jpg" alt=""><img src="assets/avatar-nachbarin-foto.jpg" alt="">
+    </div>
+    <h2>Deine Runde wartet schon auf Dich.</h2>
+    <p>Margarethe hat die Karten gemischt, Horst meckert schon, und Uschi hat Kaffee gekocht.</p>
+    <div class="final-ctas">
+      <a class="btn btn-gold btn-lg" href="/skat/">14 Tage kostenlos spielen</a>
+      <a class="btn btn-line btn-lg" href="/skat/">Jetzt Skat ausprobieren</a>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div class="foot-brand">
+      <a class="logo logo-foot" href="#top"><img src="assets/variante-a-lockup-dunkel-web.svg" alt="Spiel-Freunde" width="796" height="175"></a>
+      <p>Die besten Kartenspiele aus Deutschland, Österreich und der Schweiz. Mit Liebe gemacht in Chiang Mai, Thailand.</p>
+    </div>
+    <div class="foot-col"><b>Spiele</b><a href="/skat/">Skat ausprobieren</a><a href="#spiele">Doppelkopf</a><a href="#spiele">Schafkopf</a><a href="#spiele">Jass</a></div>
+    <div class="foot-col"><b>Portal</b><a href="#mitspieler">Mitspieler</a><a href="#orte">Orte</a><a href="#preise">Preise</a><a href="#faq">Fragen</a></div>
+    <div class="foot-col"><b>Rechtliches</b><a href="#">Impressum</a><a href="#">Datenschutz</a><a href="#">AGB</a></div>
+  </div>
+  <div class="wrap foot-bottom">
+    <span>© 2026 Spiel-Freunde.com · Michael Manns, Chiang Mai</span>
+    <span>Kein Glücksspiel. Nur Spaß.</span>
+    <a class="powered" href="https://lead-monster.net" target="_blank" rel="noopener">powered by lead-monster.net</a>
+  </div>
+</footer>
+
+<script src="assets/app.js"></script>
+</body>
+</html>
