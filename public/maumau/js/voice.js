@@ -15,6 +15,12 @@
   const FEMALE = /(female|frau|anna|petra|katja|helena|hedda|marlene|vicki|amala|seraphina|elke|google deutsch)/i;
   const VOICED = { horst: 1, margarethe: 1, lena: 1, ruediger: 1 };
 
+  function seatVoice(character) {
+    if (VOICED[character]) return true;
+    var bridge = root.SpielpartnerStimmen;
+    return !!(bridge && typeof bridge.voiced === 'function' && bridge.voiced(character));
+  }
+
   const V = {
     unlocked: false,
     queue: [],
@@ -55,7 +61,7 @@
 
   function speak(character, text, opts) {
     opts = opts || {};
-    if (!VOICED[character] || !enabled() || !text) return false;
+    if (!seatVoice(character) || !enabled() || !text) return false;
     while (V.queue.length >= 3) {
       let i = V.queue.findIndex(function (x) { return !x.priority; });
       if (i < 0) i = 0;
@@ -143,7 +149,8 @@
   function pickVoice(character) {
     const vs = germanVoices();
     if (!vs.length) return null;
-    const male = SYNTH[character] && SYNTH[character].male;
+    const extra = root.SpielpartnerStimmen && root.SpielpartnerStimmen.synth ? root.SpielpartnerStimmen.synth(character) : null;
+    const male = (SYNTH[character] && SYNTH[character].male) || (extra && extra.male);
     return vs.find(function (v) { return (male ? MALE : FEMALE).test(v.name); }) || vs[character === 'horst' ? 0 : vs.length - 1];
   }
 
@@ -155,7 +162,8 @@
         return;
       }
       const u = new root.SpeechSynthesisUtterance(item.text);
-      const cfg = SYNTH[item.character] || { pitch: 1, rate: 1 };
+      const extraTone = root.SpielpartnerStimmen && root.SpielpartnerStimmen.synth ? root.SpielpartnerStimmen.synth(item.character) : null;
+      const cfg = SYNTH[item.character] || extraTone || { pitch: 1, rate: 1 };
       u.lang = 'de-DE';
       u.pitch = cfg.pitch;
       u.rate = cfg.rate;

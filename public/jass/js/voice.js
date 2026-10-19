@@ -48,10 +48,17 @@
   function onPlayback(fn) { if (typeof fn === 'function') V.listeners.push(fn); }
   function setGetter(fn) { if (typeof fn === 'function') V.getSettings = fn; }
 
+  function tone(character) {
+    if (SYNTH[character]) return SYNTH[character];
+    var bridge = root.SpielpartnerStimmen;
+    if (bridge && typeof bridge.synth === 'function') return bridge.synth(character);
+    return null;
+  }
+
   function speak(character, text, opts) {
     opts = opts || {};
     var spoken = String(text || '').trim();
-    if (!spoken || !SYNTH[character]) return false;
+    if (!spoken || !tone(character)) return false;
     if (!V.getSettings() || V.getSettings().sound === false) return false;
     var item = { character: character, text: spoken, priority: !!opts.priority };
     if (item.priority) V.queue.unshift(item);
@@ -102,7 +109,8 @@
   }
   function pickVoice(character) {
     var vs = (root.speechSynthesis && root.speechSynthesis.getVoices && root.speechSynthesis.getVoices()) || [];
-    var male = SYNTH[character].male;
+    var profile = tone(character) || { male: false };
+    var male = profile.male;
     var list = vs.filter(function (v) { return /de/i.test(v.lang || ''); });
     var pool = list.length ? list : vs;
     return pool.find(function (v) { return (male ? MALE : FEMALE).test(v.name); }) || pool[male ? 0 : pool.length - 1] || null;
@@ -112,8 +120,9 @@
       if (!root.speechSynthesis || typeof root.SpeechSynthesisUtterance !== 'function') { resolve(); return; }
       var utter = new root.SpeechSynthesisUtterance(item.text);
       utter.lang = 'de-DE';
-      utter.pitch = SYNTH[item.character].pitch;
-      utter.rate = SYNTH[item.character].rate;
+      var profile = tone(item.character) || { pitch: 1, rate: 1 };
+      utter.pitch = profile.pitch;
+      utter.rate = profile.rate;
       utter.volume = volume();
       var voice = pickVoice(item.character);
       if (voice) utter.voice = voice;

@@ -90,6 +90,7 @@
   function refreshSeats() {
     const n = S.state ? S.state.players - 1 : rulesNow().opponents;
     S.seats = Seats.layout(n);
+    if (window.SpielpartnerLineup) SpielpartnerLineup.dress(S.seats, 'maumau', localStorage, n);
   }
 
   function logLine(html, cls) {
@@ -1183,6 +1184,23 @@
     get match() { return match; },
     render: render,
   };
+
+  if (window.SpielpartnerRunde) SpielpartnerRunde.mount({
+    game: 'maumau',
+    count: function () { return S.state ? S.state.players - 1 : rulesNow().opponents; },
+    inHand: function () {
+      if (!S.started || !S.state || S.state.phase === 'done') return false;
+      const summary = $('modal-summary');
+      const session = $('modal-session');
+      if (summary && !summary.hidden) return false;
+      if (session && !session.hidden) return false;
+      return true;
+    },
+    apply: function () {
+      refreshSeats();
+      S.seats.forEach(paintPortrait);
+    },
+  });
 
   if (params.get('shot') === '1') showShot();
   else if (params.get('autostart') === '1') start();

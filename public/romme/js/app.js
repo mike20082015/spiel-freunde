@@ -147,20 +147,21 @@
       name: typeof info.name === 'string' && info.name ? info.name : 'Du',
     };
   }
-  async function mountPortraits() {
+  function refreshOpponents() {
+    if (window.SpielpartnerLineup) SpielpartnerLineup.dress(Seats.seats, 'romme', localStorage);
     Seats.seats.forEach((p) => {
-      if (p.seat === 0) return;
+      if (!p || p.id === 'du') return;
       const wrap = $('ava-' + p.seat);
-      wrap.querySelector('.ini').textContent = p.initials;
-      $('name-' + p.seat).textContent = p.name;
-      if (!p.portrait) return;
-      const img = document.createElement('img');
-      img.className = 'ava';
-      img.alt = '';
-      img.addEventListener('error', () => img.remove());
-      img.src = p.portrait;
-      wrap.insertBefore(img, wrap.firstChild);
+      if (!wrap) return;
+      const ini = wrap.querySelector('.ini');
+      if (ini) ini.textContent = p.initials;
+      const name = $('name-' + p.seat);
+      if (name) name.textContent = p.name;
+      if (window.SpielpartnerLineup) SpielpartnerLineup.paintSeat(wrap, p);
     });
+  }
+  async function mountPortraits() {
+    refreshOpponents();
     const face = await playerFace();
     if (!face) return;
     $('you-ini').textContent = face.initials || 'Du';
@@ -965,5 +966,21 @@
   if (params.get('ai') === '0' && Talk.disableLive) Talk.disableLive();
   else if (Talk.probe) Talk.probe();
   window.__romme = { get state() { return S.state; }, settings: settings, seats: Seats, E: E, AI: AI };
+  if (window.SpielpartnerRunde) SpielpartnerRunde.mount({
+    game: 'romme',
+    count: function () { return 3; },
+    inHand: function () {
+      if (!S.started || !S.state || S.state.phase === 'done') return false;
+      const summary = $('modal-summary');
+      const session = $('modal-session');
+      const end = $('modal-end');
+      if (summary && !summary.hidden) return false;
+      if (session && !session.hidden) return false;
+      if (end && !end.hidden) return false;
+      return true;
+    },
+    apply: refreshOpponents,
+  });
+
   if (params.get('autostart') === '1') start();
 })();
