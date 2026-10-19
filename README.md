@@ -73,7 +73,7 @@ Nach dem ersten Deploy die Domain `spiel-freunde.com` in den App-Einstellungen a
 
 App Platform setzt bei Static Sites fest etwa **24 Stunden Cache am CDN** und etwa **10 Sekunden im Browser**. Ein Redeploy leert den CDN-Cache. Eigene `Cache-Control`-Header lassen sich an einer Static Site nicht pro Datei setzen (der Schalter für Edge-Cache gilt dort nicht).
 
-Die Stimmen gleichen das aus: `public/skat/js/voice.js` legt die MP3s im Cache Storage unter `sf-skat-voice-v1` ab, dekodiert sie in AudioBuffer und hält einen kleinen Pool von Audio-Elementen bereit. Begrüßung und häufige Ansagen werden beim Öffnen vorgeladen. Sobald ein Satz in der Warteschlange liegt, startet der Download des nächsten. Zwischen zwei Sätzen gibt es keine zusätzliche Pause.
+Die Stimmen gleichen das aus: `public/skat/js/voice.js` legt die MP3s im Cache Storage unter `sf-skat-voice-v2` ab, dekodiert sie in AudioBuffer und hält einen kleinen Pool von Audio-Elementen bereit. Begrüßung und häufige Ansagen werden beim Öffnen vorgeladen. Sobald ein Satz in der Warteschlange liegt, startet der Download des nächsten. Zwischen zwei Sätzen gibt es keine zusätzliche Pause.
 
 Falls später ein eigener Proxy davor steht, passen diese Header:
 
