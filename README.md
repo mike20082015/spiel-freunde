@@ -2,7 +2,7 @@
 
 Die besten Kartenspiele aus Deutschland, Österreich und der Schweiz.
 
-Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, Du-Form. Kein Build-Schritt, keine Geheimnisse, keine `VITE_`-Variablen. Inhaber: Michael Manns.
+Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, Du-Form. Kein Build-Schritt, keine Geheimnisse, keine `VITE_`-Variablen. Betreiber: Interconsult LLC.
 
 ## Seiten
 
