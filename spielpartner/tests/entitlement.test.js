@@ -8,7 +8,7 @@ const C = require('../../public/spielpartner/cards.js');
 
 const DAY = 24 * 60 * 60 * 1000;
 const START = 1700000000000;
-const PREMIUM = ['lena', 'jonas', 'oemer', 'hilde', 'sepp', 'ruediger', 'chantal', 'urs', 'vreni', 'luce'];
+const PREMIUM = ['lena', 'jonas', 'oemer', 'oma-hilde', 'sepp', 'ruediger', 'chantal', 'urs', 'vreni', 'luce'];
 
 function catalog() {
   return JSON.parse(fs.readFileSync(path.join(__dirname, '../../public/spielpartner/avatare.json'), 'utf8'));
@@ -204,6 +204,40 @@ test('Karte zeigt Abzeichen und lässt das Video weg', () => {
   assert.match(premium, /sp-badge-premium">Premium</);
   assert.match(premium, /<video/);
   assert.equal(premium.includes('Video folgt'), false);
+});
+
+test('Stimme hören gilt für die neuen Spielpartner, nicht für Luce', () => {
+  const voiced = ['horst', 'margarethe', 'lena', 'jonas', 'oemer', 'oma-hilde', 'sepp', 'ruediger', 'chantal', 'urs', 'vreni'];
+  voiced.forEach((slug) => {
+    assert.equal(typeof C.VOICE_LINES[slug], 'string', slug);
+    const card = C.cardHtml({
+      name: slug,
+      slug: slug,
+      intro: 'Kurz.',
+      origin: 'Hier',
+      personality: 'Ruhig.',
+      tier: 'premium',
+      portrait: '',
+      hasVideo: false,
+      video: ''
+    });
+    assert.match(card, new RegExp('data-voice="' + slug + '"'));
+    assert.match(card, /Stimme hören/);
+  });
+  assert.equal(C.VOICE_LINES.luce, undefined);
+  const luce = C.cardHtml({
+    name: 'Luce Morel',
+    slug: 'luce',
+    intro: 'Wein.',
+    origin: 'Beaujolais',
+    personality: 'Ruhig.',
+    tier: 'premium',
+    portrait: '',
+    hasVideo: false,
+    video: ''
+  });
+  assert.equal(luce.includes('data-voice'), false);
+  assert.doesNotMatch(JSON.stringify(C.VOICE_LINES), /grok|elevenlabs|openai|x\.?ai/i);
 });
 
 test('Katalog: Horst und Margarethe Standard, der Rest Premium', () => {

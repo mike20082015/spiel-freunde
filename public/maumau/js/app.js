@@ -987,7 +987,6 @@
       let reply = '';
       try { reply = await Talk.askAI(who.id, { message: message, game: game }); }
       catch (e) { reply = Talk.cannedReply(who.id, message); }
-      if (who.id === 'lena' || who.id === 'ruediger') await new Promise((res) => setTimeout(res, 280));
       typing.remove();
       say(who.seat, reply, { force: true, priority: true });
     }
@@ -1017,7 +1016,7 @@
     if (!settings.sound && Voice) Voice.stopAll();
     if (settings.sound && Voice) Voice.unlock();
     renderTop();
-    sys(settings.sound ? 'Ton an. Horst und Margarethe sprechen, Lena bleibt bei der Blase.' : 'Ton aus. Alle bleiben bei der Sprechblase.');
+    sys(settings.sound ? 'Ton an. Horst, Lena, Rüdiger und Margarethe sprechen.' : 'Ton aus. Alle bleiben bei der Sprechblase.');
   });
   $('btn-talk').addEventListener('click', () => {
     settings.talk = settings.talk === 'voice' ? 'chat' : 'voice';

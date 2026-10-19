@@ -21,7 +21,7 @@
     { id: 'urs', slug: 'urs', name: 'Urs', full: 'Urs Gerber', line: 'Ruhig, trocken, mit einem Lächeln in den Mundwinkeln.', tier: 'premium', male: true },
     { id: 'vreni', slug: 'vreni', name: 'Vreni', full: 'Vreni Meier', line: 'Witzig, wach, lässt sich nichts vormachen.', tier: 'premium', male: false },
     { id: 'sepp', slug: 'sepp', name: 'Sepp', full: 'Sepp Huber', line: 'Gemütlich, bodenständig, sagt was er denkt.', tier: 'premium', male: true },
-    { id: 'hilde', slug: 'hilde', name: 'Oma Hilde', full: 'Oma Hilde', line: 'Weich im Ton, wach mit den Karten.', tier: 'premium', male: false },
+    { id: 'hilde', slug: 'oma-hilde', name: 'Oma Hilde', full: 'Oma Hilde', line: 'Weich im Ton, wach mit den Karten.', tier: 'premium', male: false },
     { id: 'lena', slug: 'lena', name: 'Lena', full: 'Lena Berger', line: 'Frisch, direkt, fair im Sieg und in der Niederlage.', tier: 'premium', male: false },
     { id: 'jonas', slug: 'jonas', name: 'Jonas', full: 'Jonas Rehm', line: 'Charmant, etwas eitel, spielt mit Ruhe.', tier: 'premium', male: true },
     { id: 'oemer', slug: 'oemer', name: 'Ömer', full: 'Ömer Aydin', line: 'Gastfreundlich, warm, lacht zuerst.', tier: 'premium', male: true },

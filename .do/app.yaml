@@ -68,34 +68,6 @@ functions:
         value: 4yZGYlR0JpmqiCxBgPi5
         scope: RUN_AND_BUILD_TIME
         type: GENERAL
-      - key: VOICE_SEPP
-        value: ""
-        scope: RUN_AND_BUILD_TIME
-        type: GENERAL
-      - key: VOICE_HILDE
-        value: ""
-        scope: RUN_AND_BUILD_TIME
-        type: GENERAL
-      - key: VOICE_LENA
-        value: ""
-        scope: RUN_AND_BUILD_TIME
-        type: GENERAL
-      - key: VOICE_JONAS
-        value: ""
-        scope: RUN_AND_BUILD_TIME
-        type: GENERAL
-      - key: VOICE_OEMER
-        value: ""
-        scope: RUN_AND_BUILD_TIME
-        type: GENERAL
-      - key: VOICE_RUEDIGER
-        value: ""
-        scope: RUN_AND_BUILD_TIME
-        type: GENERAL
-      - key: VOICE_CHANTAL
-        value: ""
-        scope: RUN_AND_BUILD_TIME
-        type: GENERAL
       - key: DAILY_LIMIT
         value: "400"
         scope: RUN_AND_BUILD_TIME

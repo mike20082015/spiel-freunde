@@ -76,7 +76,21 @@ function mockFetch(delayMs) {
           ? 'Grüessech. Ruhig, mir sind no lang nid am Ziel.'
           : system.indexOf('Vreni Meier') !== -1
             ? 'Hoi! Die Farb hät ich auch genommen.'
-            : 'Na endlich. Ick dachte schon, du redest gar nicht mehr.';
+            : system.indexOf('Lena Berger') !== -1
+              ? 'Moin! Die Vorlesung war lang, die Karten sind besser.'
+              : system.indexOf('Jonas Rehm') !== -1
+                ? 'Drei Asse sind raus. Der Rest ist trockene Rechnung.'
+                : system.indexOf('Ömer Aydin') !== -1
+                  ? 'Hömma, setz dich. Dat hier is Kölsch, und die Runde is warm.'
+                  : system.indexOf('Oma Hilde') !== -1
+                    ? 'Setz dich. Der Kaffee ist warm, und ich seh die Ablage.'
+                    : system.indexOf('Sepp Huber') !== -1
+                      ? 'Mei, a Maß steht scho. Passt scho, setz di her.'
+                      : system.indexOf('Rüdiger Falk') !== -1
+                        ? 'Hömma, erst bedienen, dann stechen. Steht so in der Regel.'
+                        : system.indexOf('Chantal Kowalski') !== -1
+                          ? 'Hömma Schätzken, erzähl, ich hör dir zu und spiel trotzdem.'
+                          : 'Na endlich. Ick dachte schon, du redest gar nicht mehr.';
       return {
         ok: true,
         status: 200,

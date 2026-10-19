@@ -9,7 +9,6 @@ const talk = require('../../public/jass/js/talk.js').JassTalk;
 const ALLOWED = [
   'XAI_API_KEY', 'ELEVENLABS_API_KEY', 'XAI_MODEL', 'VOICE_HORST', 'VOICE_MARGARETHE',
   'ELEVEN_MODEL', 'DAILY_LIMIT', 'XAI_IMAGE_MODEL', 'AVATAR_DAILY_LIMIT', 'VOICE_URS', 'VOICE_VRENI',
-  'VOICE_SEPP', 'VOICE_HILDE', 'VOICE_LENA', 'VOICE_JONAS', 'VOICE_OEMER', 'VOICE_RUEDIGER', 'VOICE_CHANTAL',
 ];
 
 test('Sitze: Du, Vreni, Urs, Horst, Bilder mit Initialen', () => {

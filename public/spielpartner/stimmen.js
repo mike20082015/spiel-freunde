@@ -379,8 +379,8 @@
   }
 
   function usesNativeApi(talk, id) {
-    if (!talk || !talk.REPLIES || !talk.REPLIES[id]) return false;
-    if (id === 'horst' || id === 'margarethe') return true;
+    if (!talk || !id) return false;
+    if (talk.REPLIES && talk.REPLIES[id]) return true;
     if ((id === 'urs' || id === 'vreni') && talk.CHARACTERS && talk.CHARACTERS[id]) return true;
     return false;
   }

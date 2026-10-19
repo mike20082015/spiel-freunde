@@ -839,7 +839,6 @@
       let reply = '';
       try { reply = await Talk.askAI(person.id, { message: message, game: game }); }
       catch (e) { reply = Talk.cannedReply(person.id, message); }
-      if (person.id === 'oma-hilde') await new Promise((res) => setTimeout(res, 280));
       typing.remove();
       say(person.seat, reply, { force: true, priority: true });
     }
@@ -874,7 +873,7 @@
     if (!settings.sound && Voice) Voice.stopAll();
     if (settings.sound && Voice) Voice.unlock();
     renderTop();
-    sys(settings.sound ? 'Ton an. Horst und Margarethe sprechen, Oma Hilde bleibt bei der Blase.' : 'Ton aus. Alle bleiben bei der Sprechblase.');
+    sys(settings.sound ? 'Ton an. Horst, Oma Hilde und Margarethe sprechen.' : 'Ton aus. Alle bleiben bei der Sprechblase.');
   });
   $('btn-talk').addEventListener('click', () => {
     settings.talk = settings.talk === 'voice' ? 'chat' : 'voice';

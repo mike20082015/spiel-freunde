@@ -34,6 +34,29 @@
     return (first + last).toLocaleUpperCase('de-DE');
   }
 
+  var VOICE_LINES = {
+    horst: 'Na, setz dich. Ick hab nich ewig Zeit.',
+    margarethe: 'Ach Schätzchen, der Tisch ist gedeckt.',
+    lena: 'Moin! Die Karten können warten, der Kaffee nicht.',
+    jonas: 'Ich zähl mit. Trocken, aber fair.',
+    oemer: 'Hömma, setz dich. Dat Essen kommt gleich.',
+    'oma-hilde': 'Setz dich. Der Kaffee ist warm, und ich pass auf.',
+    sepp: 'Servus. Mei, passt scho.',
+    ruediger: 'Hömma, erst die Regel, dann die Karte.',
+    chantal: 'Hömma Schätzken, setz dich zu mir.',
+    urs: 'Grüessech. Es pressiert nid.',
+    vreni: 'Hoi! Endlich, ich ha scho d Charte zellt.'
+  };
+
+  function voiceHtml(avatar) {
+    var slug = avatar && avatar.slug;
+    if (!VOICE_LINES[slug]) return '';
+    return '<div class="sp-voice">' +
+      '<button type="button" class="btn btn-outline btn-sm sp-listen" data-voice="' + escapeHtml(slug) + '">Stimme hören</button>' +
+      '<p class="sp-voice-line" data-voice-line hidden></p>' +
+      '</div>';
+  }
+
   function hasPlayableVideo(avatar) {
     return !!(avatar && avatar.hasVideo === true && avatar.video);
   }
@@ -67,6 +90,7 @@
         '<p class="sp-intro">' + escapeHtml(avatar && avatar.intro) + '</p>' +
         '<p class="sp-personality">' + escapeHtml(avatar && avatar.personality) + '</p>' +
         '<p class="sp-access" data-access></p>' +
+        voiceHtml(avatar) +
         '<div class="sp-media">' + mediaHtml(avatar) + '</div>' +
       '</div>' +
     '</article>';
@@ -75,6 +99,7 @@
   return {
     escapeHtml: escapeHtml,
     initials: initials,
+    VOICE_LINES: VOICE_LINES,
     hasPlayableVideo: hasPlayableVideo,
     mediaHtml: mediaHtml,
     cardHtml: cardHtml

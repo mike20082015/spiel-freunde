@@ -527,4 +527,90 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     const vreni = H.buildTtsRequest({ character: 'vreni', text: 'Hoi.' }, { ELEVENLABS_API_KEY: 'test-eleven', VOICE_VRENI: '' });
     assert.ok(vreni.url.indexOf(H.DEFAULT_VRENI) !== -1);
   });
+
+  test('neue Figuren: Persona, beide Hilde-Namen, Stimme mit Default und Override', async () => {
+    const voices = {
+      lena: H.DEFAULT_LENA,
+      jonas: H.DEFAULT_JONAS,
+      oemer: H.DEFAULT_OEMER,
+      hilde: H.DEFAULT_HILDE,
+      'oma-hilde': H.DEFAULT_HILDE,
+      sepp: H.DEFAULT_SEPP,
+      ruediger: H.DEFAULT_RUEDIGER,
+      chantal: H.DEFAULT_CHANTAL,
+    };
+    assert.equal(H.PERSONA.hilde, H.PERSONA['oma-hilde']);
+    assert.match(H.PERSONA.lena, /etwa 22/);
+    assert.match(H.PERSONA.lena, /Moin/);
+    assert.match(H.PERSONA.jonas, /zählst die Karten/);
+    assert.match(H.PERSONA.oemer, /Köln/);
+    assert.match(H.PERSONA.hilde, /etwa 75/);
+    assert.match(H.PERSONA.sepp, /Passt scho/);
+    assert.match(H.PERSONA.ruediger, /Regeln/);
+    assert.match(H.PERSONA.chantal, /Schätzken/);
+    const blob = Object.keys(voices).map((name) => H.PERSONA[name]).join('\n');
+    assert.match(blob, /Keine Versprechen über Geld oder Glücksspiel/);
+    assert.match(blob, /höchstens 40 Wörter/);
+    assert.match(blob, /Verdeckte Karten/);
+    assert.doesNotMatch(blob, /grok|elevenlabs|openai|x\.?ai/i);
+    const yml = fs.readFileSync(path.join(__dirname, '../../api/project.yml'), 'utf8');
+    for (const key of ['VOICE_LENA', 'VOICE_JONAS', 'VOICE_OEMER', 'VOICE_HILDE', 'VOICE_OMA_HILDE', 'VOICE_SEPP', 'VOICE_RUEDIGER', 'VOICE_CHANTAL']) {
+      assert.equal(yml.includes(key), false, key);
+    }
+    for (const name of Object.keys(voices)) {
+      assert.equal(H.validateChat({ character: name, message: 'Moin' }).ok, true, name);
+      assert.equal(H.validateTts({ character: name, text: 'Moin' }).ok, true, name);
+      const req = H.buildTtsRequest({ character: name, text: 'Moin' }, { ELEVENLABS_API_KEY: 'test-eleven' });
+      assert.ok(req.url.indexOf('/' + voices[name] + '/') !== -1, name);
+    }
+    const override = H.buildTtsRequest({ character: 'sepp', text: 'Mei' }, {
+      ELEVENLABS_API_KEY: 'test-eleven',
+      VOICE_SEPP: 'OverrideSeppVoice1',
+    });
+    assert.ok(override.url.indexOf('/OverrideSeppVoice1/') !== -1);
+    const empty = H.buildTtsRequest({ character: 'lena', text: 'Moin' }, {
+      ELEVENLABS_API_KEY: 'test-eleven',
+      VOICE_LENA: '',
+    });
+    assert.ok(empty.url.indexOf('/' + H.DEFAULT_LENA + '/') !== -1);
+    const alias = H.buildTtsRequest({ character: 'oma-hilde', text: 'Kaffee' }, {
+      ELEVENLABS_API_KEY: 'test-eleven',
+      VOICE_HILDE: 'OmaHildeOverride1',
+    });
+    assert.ok(alias.url.indexOf('/OmaHildeOverride1/') !== -1);
+    const own = H.buildTtsRequest({ character: 'hilde', text: 'Kaffee' }, {
+      ELEVENLABS_API_KEY: 'test-eleven',
+      VOICE_HILDE: 'HildeOwnVoiceId01',
+      VOICE_OMA_HILDE: 'OmaOwnVoiceId0001',
+    });
+    assert.ok(own.url.indexOf('/HildeOwnVoiceId01/') !== -1);
+    const parsed = H.validateChat({
+      character: 'sepp',
+      message: 'Servus',
+      history: [
+        { role: 'lena', text: 'Moin' },
+        { role: 'oma-hilde', text: 'Kaffee' },
+        { role: 'hilde', text: 'Keks' },
+        { role: 'fremd', text: 'weg' },
+      ],
+    });
+    assert.equal(parsed.value.history.length, 3);
+    const prompt = JSON.stringify(H.buildChatBody(parsed.value, {}));
+    assert.match(prompt, /Lena sagt: Moin/);
+    assert.match(prompt, /Oma Hilde sagt: Kaffee/);
+    assert.match(prompt, /Passt scho/);
+
+    H.resetLimits();
+    let calls = 0;
+    const fetchImpl = async () => {
+      calls += 1;
+      return { ok: true, json: async () => ({ choices: [{ message: { content: 'Passt scho.' } }] }) };
+    };
+    const tight = chatDeps(fetchImpl, Object.assign({}, ENV, { DAILY_LIMIT: '1' }));
+    assert.equal((await H.handleChat(event('POST', { character: 'sepp', message: 'eins' }), tight)).status, 200);
+    const limited = await H.handleChat(event('POST', { character: 'lena', message: 'zwei' }), tight);
+    assert.equal(limited.status, 503);
+    assert.equal(limited.json.reason, 'rate_limited');
+    assert.equal(calls, 1);
+  });
 });
