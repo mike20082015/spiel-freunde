@@ -56,12 +56,12 @@
   },
   {
     "name": "Oma Hilde",
-    "slug": "hilde",
+    "slug": "oma-hilde",
     "intro": "Die liebe Oma, die alle an die Wand spielt. Sie schiebt Dir den Teller hin und holt sich danach in Ruhe die Stiche.",
     "origin": "Münsterland",
     "personality": "Weich im Ton, wach mit den Karten. Hier geht es um die Runde, nicht um Geld.",
     "tier": "premium",
-    "portrait": "/media/spielpartner/hilde.jpg",
+    "portrait": "/media/spielpartner/oma-hilde.jpg",
     "hasVideo": false,
     "video": ""
   },
