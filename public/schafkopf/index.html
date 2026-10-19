@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schafkopf am Stammtisch · Spiel-Freunde (Vorschau)</title>
+<meta name="description" content="Spielbares bayerisches Schafkopf von Spiel-Freunde: Du, Horst, Sepp und Margarethe. Sauspiel, Wenz und Solo, Punkte statt Geld.">
+<link rel="icon" href="../assets/variante-a-favicon-dunkel.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../skat/css/fonts.css">
+<link rel="stylesheet" href="css/schafkopf.css">
+</head>
+<body>
+<div class="app" id="app">
+  <header class="topbar">
+    <a class="logo" href="/" aria-label="Zur Startseite von Spiel-Freunde"><img src="../assets/variante-a-lockup-dunkel-web.svg" alt="Spiel-Freunde" width="796" height="175"></a>
+    <span class="preview-badge">Vorschau</span>
+    <div class="topbar-title"><span class="suits"><span>♣</span><span class="r">♥</span><span>♠</span><span class="r">♦</span></span> Schafkopf am Stammtisch</div>
+    <nav class="topbar-actions" aria-label="Spielsteuerung">
+      <button class="tbtn tlevel" id="btn-level" type="button" title="Spielstärke"><span class="lbl-long">Stärke: </span><b id="level-label">Kneipe</b></button>
+      <button class="tbtn ticon" id="btn-sound" type="button" aria-pressed="true" title="Stimmen an oder aus"><span class="ico" aria-hidden="true"></span><span class="lbl-long">Ton</span></button>
+      <button class="tbtn ticon" id="btn-talk" type="button" aria-pressed="false" title="Mitreden"><span class="ico" aria-hidden="true"></span><span class="lbl-long">Mitreden</span></button>
+      <button class="tbtn" id="btn-hint" type="button" aria-pressed="false" title="Regeln lernen"><span class="tdot"></span><span class="lbl-long">Regeln lernen</span><span class="lbl-short">Tipps</span></button>
+      <button class="tbtn" id="btn-settings" type="button" title="Einstellungen"><span class="lbl-long">Einstellungen</span><span class="lbl-short">Regeln</span></button>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <section class="table-area" aria-label="Spieltisch">
+      <div class="statusbar" id="status" role="status" aria-live="polite">
+        <span class="st-main" id="st-main">Willkommen am Stammtisch</span>
+        <span class="st-chips" id="st-chips"></span>
+      </div>
+      <div class="room">
+        <div class="tabletop" id="tabletop">
+          <div class="wood-grain"></div>
+
+          <div class="seat seat-west" id="seat-1" data-seat="1">
+            <div class="ava-wrap" id="ava-1"><span class="ini">HK</span><span class="turn-ring"></span><span class="talk-ring" aria-hidden="true"><i></i><i></i><i></i></span><span class="talk-wave" aria-hidden="true"><i></i><i></i><i></i></span></div>
+            <div class="seat-info"><b class="seat-name" id="name-1">Horst</b><span class="seat-role" id="role-1"></span><div class="opp-cards" id="backs-1"></div></div>
+            <div class="bubble" id="bubble-1"></div>
+          </div>
+          <div class="seat seat-north" id="seat-2" data-seat="2">
+            <div class="ava-wrap" id="ava-2"><span class="ini">Sp</span><span class="turn-ring"></span><span class="talk-ring" aria-hidden="true"><i></i><i></i><i></i></span><span class="talk-wave" aria-hidden="true"><i></i><i></i><i></i></span></div>
+            <div class="seat-info"><b class="seat-name" id="name-2">Sepp</b><span class="seat-role" id="role-2"></span><div class="opp-cards" id="backs-2"></div></div>
+            <div class="bubble" id="bubble-2"></div>
+          </div>
+          <div class="seat seat-east" id="seat-3" data-seat="3">
+            <div class="ava-wrap" id="ava-3"><span class="ini">MH</span><span class="turn-ring"></span><span class="talk-ring" aria-hidden="true"><i></i><i></i><i></i></span><span class="talk-wave" aria-hidden="true"><i></i><i></i><i></i></span></div>
+            <div class="seat-info"><b class="seat-name" id="name-3">Margarethe</b><span class="seat-role" id="role-3"></span><div class="opp-cards" id="backs-3"></div></div>
+            <div class="bubble" id="bubble-3"></div>
+          </div>
+
+          <div class="board" id="board">
+            <div class="trick" id="trick" aria-label="Aktueller Stich">
+              <div class="trick-slot north" id="trick-2"></div>
+              <div class="trick-slot west" id="trick-1"></div>
+              <div class="trick-mid" id="trick-mid"></div>
+              <div class="trick-slot east" id="trick-3"></div>
+              <div class="trick-slot south" id="trick-0"></div>
+            </div>
+          </div>
+
+          <div class="intro" id="intro">
+            <p class="intro-kicker">Spiel-Freunde · Stammtisch</p>
+            <h2>Platz am Stammtisch</h2>
+            <p>Bayerisches Schafkopf zu viert. Links sitzt Horst, gegenüber Sepp, der Wirt, rechts Margarethe. Sauspiel, Wenz und Solo. Gezählt wird in Punkten, nie in echtem Geld.</p>
+            <p class="intro-partners"><a href="/spielpartner/">Deine Spielpartner</a></p>
+            <button class="btn btn-gold" id="btn-start" type="button">Platz nehmen</button>
+            <p class="intro-small" id="intro-small"></p>
+          </div>
+
+          <div class="me" id="seat-0" data-seat="0">
+            <div class="me-tag">
+              <span class="ava-you" id="you-ava"><span class="ini" id="you-ini">Du</span></span>
+              <span class="seat-role" id="role-0"></span>
+              <span class="me-bubble" id="bubble-0"></span>
+            </div>
+            <div class="hint-box" id="hint-box" hidden></div>
+            <div class="chooser" id="chooser" hidden>
+              <p id="chooser-title">Was spielst du?</p>
+              <div class="chooser-games" id="chooser-games"></div>
+            </div>
+            <div class="actions" id="actions"></div>
+            <div class="hand" id="hand" aria-label="Deine Karten"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <section class="side-card score-card">
+        <h2>Punkteliste <span class="mode-badge" id="mode-badge">20</span></h2>
+        <div class="target-info" id="target-info"></div>
+        <div class="score-wrap"><table class="score" id="score-table"></table></div>
+        <p class="tariff" id="tariff"></p>
+        <p class="partner-foot"><a href="/spielpartner/">Deine Spielpartner</a></p>
+      </section>
+      <section class="side-card chat-card">
+        <h2><span class="live"></span> Am Tisch</h2>
+        <div class="chat-log" id="chat-log" aria-live="polite"></div>
+        <div class="hf-bar" id="hf-bar" hidden>
+          <span class="hf-state" id="hf-state" data-state="aus"><i aria-hidden="true"></i><b id="hf-label">aus</b></span>
+          <span class="hf-hint">Am besten mit Kopfhörer</span>
+          <button type="button" class="hf-mute" id="btn-hf-mute" aria-pressed="false">Stumm</button>
+        </div>
+        <form class="chat-form" id="chat-form" autocomplete="off">
+          <input id="chat-input" type="text" maxlength="160" placeholder="Schreib was in die Runde ..." aria-label="Nachricht an den Tisch">
+          <button class="mic" id="btn-mic" type="button" hidden aria-pressed="false" title="Sprechen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2z"/></svg><span class="sr">Mikrofon</span></button>
+          <button class="btn btn-gold btn-sm" type="submit">Senden</button>
+        </form>
+        <p class="mic-hint" id="mic-hint" hidden></p>
+      </section>
+    </aside>
+  </main>
+
+  <div class="modal" id="modal-summary" hidden>
+    <div class="modal-card" id="summary"></div>
+  </div>
+  <div class="modal" id="modal-settings" hidden>
+    <div class="modal-card settings">
+      <h3>Einstellungen</h3>
+      <div class="opt-grid">
+        <fieldset class="opt">
+          <legend>Spielstärke</legend>
+          <label class="radio"><input type="radio" name="level" value="anfaenger"> <span><b>Anfänger</b><small>Rufspiel ab vier Trümpfen mit zwei Obern, eine kleine Farbe rufen.</small></span></label>
+          <label class="radio"><input type="radio" name="level" value="kneipe"> <span><b>Kneipe</b><small>Sie suchen die Sau, schmieren und spielen Solo, wenn das Blatt es hergibt.</small></span></label>
+          <label class="radio"><input type="radio" name="level" value="turnier"> <span><b>Turnier</b><small>Sie zählen mit und geben Stoß, ohne in fremde Karten zu sehen.</small></span></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Spielen bis</legend>
+          <label class="radio inline"><input type="radio" name="target" value="10"> <span>10</span></label>
+          <label class="radio inline"><input type="radio" name="target" value="20"> <span>20</span></label>
+          <label class="radio inline"><input type="radio" name="target" value="50"> <span>50</span></label>
+          <label class="radio inline"><input type="radio" name="target" value="custom"> <span>Eigenes Ziel</span></label>
+          <label class="numfield"><input type="number" id="target-custom" min="5" max="500" step="1"> <span>Punkte</span></label>
+          <p class="note">Gewonnen hat, wer das Ziel erreicht und allein vorn liegt. Gleichstand spielt weiter.</p>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Tariftafel</legend>
+          <label class="radio inline"><input type="radio" name="ruf" value="1"> <span>Rufspiel 1</span></label>
+          <label class="radio inline"><input type="radio" name="ruf" value="2"> <span>Rufspiel 2</span></label>
+          <label class="numfield"><span>Einzelspiel</span><input type="number" id="opt-solo" min="1" max="50" step="1"></label>
+          <label class="numfield"><span>Einheit</span><input type="number" id="opt-einheit" min="1" max="20" step="1"></label>
+          <label class="radio inline"><input type="radio" name="unit" value="Punkte"> <span>Punkte</span></label>
+          <label class="radio inline"><input type="radio" name="unit" value="Cent"> <span>Cent</span></label>
+          <p class="note">Schneider, Schwarz und jeder Laufende kosten eine Einheit. Cent ist nur der alte Name. Es wird nichts gezahlt.</p>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Spiele</legend>
+          <label class="switch"><input type="checkbox" id="opt-wenz"> <span><b>Wenz</b></span></label>
+          <label class="switch"><input type="checkbox" id="opt-farbwenz"> <span><b>Farbwenz</b></span></label>
+          <label class="switch"><input type="checkbox" id="opt-geier"> <span><b>Geier</b><small>Hausregel, sonst aus.</small></span></label>
+          <label class="switch"><input type="checkbox" id="opt-farbgeier"> <span><b>Farbgeier</b></span></label>
+          <label class="switch"><input type="checkbox" id="opt-tout"> <span><b>Tout</b></span></label>
+          <label class="switch"><input type="checkbox" id="opt-sie"> <span><b>Sie</b></span></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Alle weiter</legend>
+          <label class="radio"><input type="radio" name="allPass" value="throw"> <span><b>Zusammenwerfen</b><small>Offiziell. Der Nächste gibt neu.</small></span></label>
+          <label class="radio"><input type="radio" name="allPass" value="ramsch"> <span><b>Ramsch</b><small>Wer die meisten Augen hat, zahlt jedem.</small></span></label>
+          <label class="radio"><input type="radio" name="allPass" value="stock"> <span><b>Stock</b><small>Jeder legt den Rufspielpreis hinein.</small></span></label>
+          <label class="radio"><input type="radio" name="allPass" value="must"> <span><b>Der Geber muss</b></span></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Hausregeln</legend>
+          <label class="switch"><input type="checkbox" id="opt-legen"> <span><b>Klopfen nach vier Karten</b><small>Jeder Klopfer verdoppelt.</small></span></label>
+          <label class="switch"><input type="checkbox" id="opt-stoss"> <span><b>Stoß und Retour</b></span></label>
+          <label class="switch"><input type="checkbox" id="opt-supra"> <span><b>Noch einmal verdoppeln nach Retour</b></span></label>
+          <label class="switch"><input type="checkbox" id="opt-davon"> <span><b>Davonlaufen</b></span></label>
+          <label class="switch"><input type="checkbox" id="opt-bock"> <span><b>Bockrunde</b><small>Nach einem verlorenen Spiel zählt das nächste doppelt.</small></span></label>
+          <label class="radio inline"><input type="radio" name="wenzLauf" value="2"> <span>Wenz-Laufende ab 2</span></label>
+          <label class="radio inline"><input type="radio" name="wenzLauf" value="3"> <span>ab 3</span></label>
+          <label class="radio inline"><input type="radio" name="laufMax" value="0"> <span>Laufende offen</span></label>
+          <label class="radio inline"><input type="radio" name="laufMax" value="4"> <span>höchstens 4</span></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Blatt und Bild</legend>
+          <label class="radio"><input type="radio" name="deck" value="long"> <span><b>Lang, 32 Karten</b></span></label>
+          <label class="radio"><input type="radio" name="deck" value="short"> <span><b>Kurz, ohne 7 und 8</b></span></label>
+          <label class="radio"><input type="radio" name="face" value="bavaria"> <span><b>Bayerisches Bild</b></span></label>
+          <label class="radio"><input type="radio" name="face" value="french"> <span><b>Französische Zeichen</b><small>Kreuz Eichel, Pik Gras, Herz, Karo Schellen. Dame Ober, Bube Unter.</small></span></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Ton</legend>
+          <label class="switch"><input type="checkbox" id="opt-sound"> <span><b>Stimmen</b><small>Horst und Margarethe sprechen. Sepp bleibt bei der Sprechblase.</small></span></label>
+          <label class="range"><span>Lautstärke</span><input type="range" id="opt-volume" min="0" max="100" step="5"><output id="opt-volume-out"></output></label>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Mitreden</legend>
+          <label class="radio"><input type="radio" name="talk" value="chat"> <span><b>Nur schreiben</b></span></label>
+          <label class="radio"><input type="radio" name="talk" value="voice"> <span><b>Mit Mikrofon</b><small>Knopf neben dem Chat, oder Freisprechen ohne Knopf.</small></span></label>
+          <div id="handsfree-block" hidden>
+            <label class="switch" id="handsfree-label"><input type="checkbox" id="opt-handsfree"> <span><b>Freisprechen</b><small>Nach einer kurzen Pause geht der Satz von allein raus.</small></span></label>
+            <p class="note" id="handsfree-phones">Am besten mit Kopfhörer</p>
+            <p class="note warn-note" id="handsfree-support" hidden></p>
+          </div>
+          <p class="note warn-note" id="talk-support" hidden></p>
+        </fieldset>
+        <fieldset class="opt">
+          <legend>Tempo</legend>
+          <div>
+            <label class="radio inline"><input type="radio" name="speed" value="slow"> <span>Gemütlich</span></label>
+            <label class="radio inline"><input type="radio" name="speed" value="normal"> <span>Normal</span></label>
+            <label class="radio inline"><input type="radio" name="speed" value="fast"> <span>Flott</span></label>
+          </div>
+        </fieldset>
+      </div>
+      <p class="note">Regeln und Spielstärke gelten ab dem nächsten Spiel. Sauspiel, Wenz und Farbsolo bleiben im Tarif der Tafel. Kein Einsatz, kein Gewinn in Geld.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost-dark" id="btn-reset" type="button">Punkteliste zurücksetzen</button>
+        <button class="btn btn-gold" type="button" data-close>Fertig</button>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="modal-session" hidden>
+    <div class="modal-card session" id="session"></div>
+  </div>
+</div>
+<script src="/assets/avatar-store.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/seats.js"></script>
+<script src="js/talk.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/cards.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
