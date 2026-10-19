@@ -1050,7 +1050,7 @@
     if (!(settings.handsFree && settings.talk === 'voice' && micSupport().ok)) return;
     if (state === 'hört zu') input.placeholder = 'Sprich einfach los ...';
     else if (state === 'pausiert') input.placeholder = 'Kurz pausiert, die anderen reden ...';
-    else input.placeholder = 'Mikrofon ist stumm';
+    else input.placeholder = 'Mikrofon ist aus';
   }
   function updateMuteButton() {
     const btn = $('btn-hf-mute');
