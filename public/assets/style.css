@@ -302,6 +302,9 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;letter-spacin
 }
 @media (max-width:860px){
   .nav-links,.link-login{display:none}
+  .hero-ctas{order:3}
+  .lead{order:4}
+  .scene{order:5;margin:8px 0 18px}
   .band-in{grid-template-columns:1fr;gap:18px}
   .chars,.places{grid-template-columns:1fr;max-width:480px;margin:0 auto}
   .steps{grid-template-columns:1fr;gap:40px}.steps::before{display:none}
