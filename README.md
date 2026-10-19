@@ -14,14 +14,15 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 | `/skat/` | Spielbarer Skat-Prototyp: Du gegen Horst und Margarethe |
 | `/canasta/` | Spielbares Canasta: Du mit Margarethe gegen Horst und Oma Hilde |
 | `/schafkopf/` | Spielbares Schafkopf: Du, Horst, Sepp und Margarethe |
+| `/doppelkopf/` | Spielbares Doppelkopf: Du, Horst, Rüdiger und Margarethe |
 | `/jass/` | Spielbarer Schieber: Du und Urs gegen Vreni und Horst |
 
-In der Vorschau führen die großen Buttons auf der Startseite nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. Startseite, Skat, Canasta, Schafkopf, Jass, Spielpartner und Mein Avatar tragen ein goldenes Band „Vorschau“.
+In der Vorschau führen die großen Buttons auf der Startseite nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. Startseite, Skat, Canasta, Schafkopf, Jass, Doppelkopf, Spielpartner und Mein Avatar tragen ein goldenes Band „Vorschau“.
 
 Veröffentlicht wird nur der Ordner `public/`. Tests, Werkzeuge und die Startskripte bleiben außerhalb.
 
 ```
-public/                  Startseite, 404, /skat/, /canasta/, /schafkopf/, /jass/ und /mein-avatar/
+public/                  Startseite, 404, /skat/, /canasta/, /schafkopf/, /jass/, /doppelkopf/ und /mein-avatar/
 skat/tests, skat/tools   Regeltests und Browser-Checks, nicht öffentlich
 skat/start.sh            lokaler Server, nicht öffentlich
 tools/                   Entwurf-Helfer der Startseite, nicht öffentlich
@@ -48,6 +49,7 @@ node --test ../jass/tests
 node --test ../spielpartner/tests
 cd ../canasta && node --test tests/
 cd ../schafkopf && node --test tests/
+cd ../doppelkopf && node --test tests/
 ```
 
 Die Spiellogik liegt in `public/skat/js/`. Details zum Skat-Prototyp stehen in `skat/README.md`.
