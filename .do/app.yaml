@@ -60,6 +60,14 @@ functions:
         value: ""
         scope: RUN_AND_BUILD_TIME
         type: GENERAL
+      - key: VOICE_URS
+        value: BfwuiKSWxqDOcSYQr6EC
+        scope: RUN_AND_BUILD_TIME
+        type: GENERAL
+      - key: VOICE_VRENI
+        value: 4yZGYlR0JpmqiCxBgPi5
+        scope: RUN_AND_BUILD_TIME
+        type: GENERAL
       - key: DAILY_LIMIT
         value: "400"
         scope: RUN_AND_BUILD_TIME

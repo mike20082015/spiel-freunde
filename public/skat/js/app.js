@@ -536,7 +536,20 @@
   }
 
   /* ---------- Spielablauf ---------- */
+  function roundGate() {
+    return !window.SpielpartnerRounds || SpielpartnerRounds.gate();
+  }
+
+  function paintFreeRounds() {
+    if (window.SpielpartnerRounds) SpielpartnerRounds.paint($('intro-rounds'));
+  }
+
+  function noteFinishedRound() {
+    return window.SpielpartnerRounds ? SpielpartnerRounds.finish() : null;
+  }
+
   function newGame() {
+    if (!roundGate()) return;
     S.gen++;
     S.prevLastTrick = S.st && S.st.lastTrick ? { trick: S.st.lastTrick, game: S.st.game } : S.prevLastTrick;
     S.displayTrick = []; S.collectTo = null; S.winIdx = -1; S.selected = []; S.fresh = []; S.busy = false; S.declareSel = null;
@@ -672,6 +685,7 @@
   }
 
   async function finishGame() {
+    noteFinishedRound();
     const st = S.st;
     const r = st.result;
     await delay(350);
@@ -1482,12 +1496,14 @@
   renderTopbar();
   applyTalkMode(false);
   $('intro-small').textContent = 'Spielstärke: ' + LEVEL_NAMES[settings.level] + ' · ' + (targetValue() ? 'Spielen bis ' + targetValue() : 'ohne Limit') + ' · Ton ' + (settings.sound ? 'an' : 'aus');
+  paintFreeRounds();
   sys('Willkommen in der Eckkneipe. Nimm Platz, dann wird gegeben.');
   if (params.get('ai') === '0' && Talk.disableLive) Talk.disableLive();
   else if (Talk.probe) Talk.probe();
 
   function start() {
     if (S.started) return;
+    if (!roundGate()) return;
     S.started = true;
     unlockOnce();
     $('intro').hidden = true;

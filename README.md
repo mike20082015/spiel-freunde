@@ -2,7 +2,7 @@
 
 Die besten Kartenspiele aus Deutschland, Österreich und der Schweiz.
 
-Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, Du-Form. Kein Build-Schritt, keine Geheimnisse, keine `VITE_`-Variablen. Betreiber: Interconsult LLC.
+Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, Du-Form. Kein Build-Schritt, keine Geheimnisse, keine `VITE_`-Variablen. Ein Angebot der Interconsult LLC.
 
 ## Seiten
 
@@ -15,13 +15,14 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 | `/canasta/` | Spielbares Canasta: Du mit Margarethe gegen Horst und Oma Hilde |
 | `/schafkopf/` | Spielbares Schafkopf: Du, Horst, Sepp und Margarethe |
 | `/doppelkopf/` | Spielbares Doppelkopf: Du, Horst, Rüdiger und Margarethe |
+| `/jass/` | Spielbarer Schieber: Du und Urs gegen Vreni und Horst |
 
-In der Vorschau führen die großen Buttons auf der Startseite nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. Startseite, Skat und Spielpartner tragen ein goldenes Band „Vorschau“.
+In der Vorschau führen die großen Buttons auf der Startseite nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. Startseite, Skat, Canasta, Schafkopf, Jass, Doppelkopf, Spielpartner und Mein Avatar tragen ein goldenes Band „Vorschau“.
 
 Veröffentlicht wird nur der Ordner `public/`. Tests, Werkzeuge und die Startskripte bleiben außerhalb.
 
 ```
-public/                  Startseite, 404, /skat/, /canasta/, /schafkopf/, /doppelkopf/ und /mein-avatar/
+public/                  Startseite, 404, /skat/, /canasta/, /schafkopf/, /jass/, /doppelkopf/ und /mein-avatar/
 skat/tests, skat/tools   Regeltests und Browser-Checks, nicht öffentlich
 skat/start.sh            lokaler Server, nicht öffentlich
 tools/                   Entwurf-Helfer der Startseite, nicht öffentlich
@@ -44,6 +45,7 @@ Oder im Ordner `skat/` das Startskript (`./start.sh`, `start.bat`, `start.comman
 ```bash
 cd skat
 node --test tests/
+node --test ../jass/tests
 node --test ../spielpartner/tests
 cd ../canasta && node --test tests/
 cd ../schafkopf && node --test tests/

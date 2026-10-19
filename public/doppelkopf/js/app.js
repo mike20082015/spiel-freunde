@@ -527,6 +527,7 @@
       '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next">Weiter</button></div>';
     $('modal-summary').hidden = false;
     $('btn-next').addEventListener('click', () => {
+      if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
       $('modal-summary').hidden = true;
       if (S.nextWait) { const fn = S.nextWait; S.nextWait = null; fn(); }
     });
@@ -541,6 +542,7 @@
       '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-again">Neue Punkteliste</button></div>';
     $('modal-session').hidden = false;
     $('btn-again').addEventListener('click', () => {
+      if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
       $('modal-session').hidden = true;
       const dealer = match.dealer;
       match = blankMatch();
@@ -551,6 +553,7 @@
   }
 
   async function dealAndPlay() {
+    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
     const gen = ++S.gen;
     try {
       match.rules = rulesNow();
@@ -576,6 +579,10 @@
       E.applyToMatch(match, S.state);
       saveMatch();
       render();
+      if (result.completed && window.SpielpartnerRounds) {
+        SpielpartnerRounds.finish();
+        SpielpartnerRounds.paint($('intro-rounds'));
+      }
       if (match.winner != null) {
         showSession();
         await new Promise((res) => { S.nextWait = res; });
@@ -925,6 +932,7 @@
 
   function start() {
     if (S.started) return;
+    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
     S.started = true;
     $('intro').hidden = true;
     if (Voice) Voice.unlock();
@@ -933,6 +941,7 @@
   }
 
   function showShot() {
+    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
     $('intro').hidden = true;
     S.started = true;
     match.rules = rulesNow();
@@ -962,6 +971,7 @@
   renderScore();
   applyTalk(false);
   sys('Doppelkopf am Tisch. Nimm Platz, dann wird gegeben.');
+  if (window.SpielpartnerRounds) SpielpartnerRounds.paint($('intro-rounds'));
   if (params.get('ai') === '0' && Talk.disableLive) Talk.disableLive();
   else if (Talk.probe) Talk.probe();
 

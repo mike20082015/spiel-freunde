@@ -563,6 +563,7 @@
       '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next">Nächste Runde</button></div>';
     $('modal-summary').hidden = false;
     $('btn-next').addEventListener('click', () => {
+      if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
       $('modal-summary').hidden = true;
       if (S.nextWait) { const go = S.nextWait; S.nextWait = null; go(); }
     });
@@ -588,6 +589,7 @@
     if (ours) { talk(2, 'sessionHuman', 1, true); talk(3, 'encourage', 1, true); }
     else { talk(3, 'sessionSelf', 1, true); talk(1, 'sessionSelf', 1, true); }
     $('btn-again').addEventListener('click', () => {
+      if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
       $('modal-session').hidden = true;
       match.scores = [0, 0];
       match.rows = [];
@@ -599,6 +601,7 @@
   }
 
   function dealAndPlay() {
+    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
     S.gen += 1;
     const gen = S.gen;
     S.selected = [];
@@ -628,6 +631,7 @@
       match.dealer = (match.dealer + 1) % 4;
       saveMatch();
       renderScore();
+      if (window.SpielpartnerRounds) SpielpartnerRounds.finish();
       if (result.winner === 0) { talk(2, 'roundWin', 1, true); talk(1, 'roundLose', 0.7); }
       else if (result.winner === 1) { talk(1, 'roundWin', 1, true); talk(3, 'roundWin', 0.8, true); talk(2, 'roundLose', 0.6); }
       const winner = E.matchWinner(match.scores, targetValue());
@@ -994,6 +998,7 @@
 
   function start() {
     if (S.started) return;
+    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
     S.started = true;
     $('intro').hidden = true;
     if (Voice) Voice.unlock();
@@ -1006,6 +1011,7 @@
   renderScore();
   applyTalk(false);
   sys('Canasta am Küchentisch. Nimm Platz, dann wird gegeben.');
+  if (window.SpielpartnerRounds) SpielpartnerRounds.paint($('intro-rounds'));
   if (params.get('ai') === '0' && Talk.disableLive) Talk.disableLive();
   else if (Talk.probe) Talk.probe();
 
