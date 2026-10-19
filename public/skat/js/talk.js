@@ -1,7 +1,9 @@
 /*
  * Spiel-Freunde Skat: Tischgespräche
  * Kurze Sprüche je Figur und Ereignis, plus Stichwort-Antworten auf den Chat.
- * askAI() und speakAI() fragen /api/chat und /api/tts. Die Schlüssel bleiben auf dem Server.
+ * askAI() und speakAI() fragen /api/chat und /api/tts.
+ * Auf App Platform liegen dieselben Funktionen unter /api/sf/chat und /api/sf/tts.
+ * Die Schlüssel bleiben auf dem Server.
  * Fällt der Aufruf aus, gelten wieder die festen Sprüche und die Browserstimme.
  */
 (function (root) {
@@ -175,12 +177,13 @@
 
   /*
    * Freies Tischgespräch. context: { message, game: { phase, declarer, game, scores }, history }
-   * Zuerst GET /api/chat. Auf App Platform liegt dieselbe Funktion unter /api/default/chat.
+   * Zuerst GET /api/chat (lokaler Server). Auf App Platform liegt dieselbe Funktion unter /api/sf/chat.
+   * /api/default/chat bleibt ein letzter, harmloser Versuch für einen älteren Stand.
    * Klappt das nicht, bleibt der feste Spruch, für den Rest des Besuchs ohne weitere Versuche.
    */
   const PATHS = {
-    chat: ['/api/chat', '/api/default/chat'],
-    tts: ['/api/tts', '/api/default/tts'],
+    chat: ['/api/chat', '/api/sf/chat', '/api/default/chat'],
+    tts: ['/api/tts', '/api/sf/tts', '/api/default/tts'],
   };
   const history = [];
   let live = null;

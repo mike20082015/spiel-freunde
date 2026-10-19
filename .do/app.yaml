@@ -6,7 +6,8 @@
 # Die Skat-Stimmen cachen sich zusätzlich im Browser (Cache Storage).
 #
 # Functions-Komponente api: Quelle api/, Route /api.
-# Pfade danach /api/default/chat und /api/default/tts.
+# Paket sf (benannt, damit project.yml Umgebungsvariablen tragen darf).
+# Pfade danach /api/sf/chat und /api/sf/tts.
 # SECRET-Werte hier leer lassen. Echte Schlüssel nur im Dashboard.
 # Vor doctl apps update die verschlüsselten Werte aus `doctl apps spec get` übernehmen.
 name: spiel-freunde

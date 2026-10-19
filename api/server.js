@@ -2,6 +2,8 @@
 
 /*
  * Lokaler Server für die Seite und /api/chat plus /api/tts.
+ * Dieselben Pfade gibt es mit Paketnamen: /api/sf/chat und /api/sf/tts (App Platform).
+ * /api/default/chat und /api/default/tts bleiben erreichbar, damit alte Aufrufe nicht ins Leere laufen.
  * Auf App Platform laufen dieselben Handler als Functions, nicht dieser Prozess.
  *
  *   node api/server.js              Seite und API, Schlüssel aus der Umgebung
@@ -137,8 +139,8 @@ async function handleNodeRequest(req, res, options) {
     return;
   }
   const deps = { env: optionsSafe.env || process.env, fetch: optionsSafe.fetch || fetch };
-  const isChat = url.pathname === '/api/chat' || url.pathname === '/api/default/chat';
-  const isTts = url.pathname === '/api/tts' || url.pathname === '/api/default/tts';
+  const isChat = url.pathname === '/api/chat' || url.pathname === '/api/sf/chat' || url.pathname === '/api/default/chat';
+  const isTts = url.pathname === '/api/tts' || url.pathname === '/api/sf/tts' || url.pathname === '/api/default/tts';
   if (isChat || isTts) {
     let raw = '';
     if (req.method === 'POST') {

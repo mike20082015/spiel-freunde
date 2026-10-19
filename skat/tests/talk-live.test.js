@@ -30,7 +30,7 @@ test.describe('askAI und speakAI', { concurrency: 1 }, () => {
     const first = await Talk.askAI('horst', { message: 'hallo' });
     assert.ok(Talk.REPLIES.horst.greet.includes(first));
     const seen = calls;
-    assert.equal(seen, 2);
+    assert.equal(seen, 3);
     const second = await Talk.askAI('horst', { message: 'hallo nochmal' });
     assert.ok(Talk.REPLIES.horst.greet.includes(second));
     assert.equal(calls, seen);
@@ -55,7 +55,7 @@ test.describe('askAI und speakAI', { concurrency: 1 }, () => {
     assert.deepEqual(seen, ['/api/chat', '/api/chat']);
   });
 
-  test('zweiter Pfad auf App Platform und Verlauf der letzten Runden', async () => {
+  test('zweiter Pfad /api/sf/chat auf App Platform und Verlauf der letzten Runden', async () => {
     const posts = [];
     global.fetch = async (url, opts) => {
       if (!opts || opts.method !== 'POST') {
@@ -63,7 +63,7 @@ test.describe('askAI und speakAI', { concurrency: 1 }, () => {
         return jsonRes({ ok: true });
       }
       posts.push(JSON.parse(opts.body));
-      assert.equal(url, '/api/default/chat');
+      assert.equal(url, '/api/sf/chat');
       return jsonRes({ text: posts.length === 1 ? 'Na jut.' : 'Nu aber.' });
     };
     assert.equal(await Talk.askAI('horst', { message: 'erste Frage' }), 'Na jut.');
@@ -71,6 +71,26 @@ test.describe('askAI und speakAI', { concurrency: 1 }, () => {
     assert.equal(posts[1].history.length >= 2, true);
     assert.equal(posts[1].history.some((turn) => turn.text === 'Na jut.'), true);
     assert.ok(posts[1].history.length <= 6);
+  });
+
+  test('älterer Pfad /api/default bleibt ein harmloser letzter Versuch', async () => {
+    const seen = [];
+    global.fetch = async (url, opts) => {
+      seen.push(url + ' ' + ((opts && opts.method) || 'GET'));
+      if (!opts || opts.method !== 'POST') {
+        if (url === '/api/chat' || url === '/api/sf/chat') return jsonRes({}, false);
+        if (url === '/api/default/chat') return jsonRes({ ok: true });
+        return jsonRes({}, false);
+      }
+      return jsonRes({ text: 'Na jut.' });
+    };
+    assert.equal(await Talk.askAI('horst', { message: 'hallo' }), 'Na jut.');
+    assert.deepEqual(seen, [
+      '/api/chat GET',
+      '/api/sf/chat GET',
+      '/api/default/chat GET',
+      '/api/default/chat POST',
+    ]);
   });
 
   test('zwei fehlgeschlagene Antworten schalten für den Besuch ab', async () => {

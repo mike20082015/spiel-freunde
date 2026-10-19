@@ -219,10 +219,12 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     const prev = process.env.XAI_API_KEY;
     process.env.XAI_API_KEY = 'test-key';
     try {
-      const chat = require('../../api/packages/default/chat/index.js');
+      const chat = require('../../api/packages/sf/chat/index.js');
+      const tts = require('../../api/packages/sf/tts/index.js');
       const out = await chat.main({ http: { method: 'GET', headers: {} } });
       assert.equal(out.statusCode, 200);
       assert.deepEqual(out.body, { ok: true });
+      assert.equal(typeof tts.main, 'function');
     } finally {
       if (prev == null) delete process.env.XAI_API_KEY;
       else process.env.XAI_API_KEY = prev;
@@ -238,6 +240,11 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
       const health = await fetch('http://127.0.0.1:' + port + '/api/chat');
       assert.equal(health.status, 200);
       assert.deepEqual(await health.json(), { ok: true });
+      const healthSf = await fetch('http://127.0.0.1:' + port + '/api/sf/chat');
+      assert.equal(healthSf.status, 200);
+      assert.deepEqual(await healthSf.json(), { ok: true });
+      const healthOld = await fetch('http://127.0.0.1:' + port + '/api/default/chat');
+      assert.equal(healthOld.status, 200);
       const page = await fetch('http://127.0.0.1:' + port + '/skat/');
       assert.equal(page.status, 200);
       assert.match(await page.text(), /chat-log/);

@@ -87,7 +87,7 @@ Falls später ein eigener Proxy davor steht, passen diese Header:
 
 Horst und Margarethe antworten im Chat über Grok. Sätze ohne fertige MP3 spricht ElevenLabs. Beides läuft in einer **Functions-Komponente** (Gratis-Kontingent). Der Browser sieht keine Schlüssel und keine `VITE_`-Variable.
 
-Die Spiellogik bleibt in `public/skat/js/`. Die Functions liegen in `api/` (`project.yml`, Paket `default`, Funktionen `chat` und `tts`). Lokal, mit Probebetrieb ohne echte Schlüssel:
+Die Spiellogik bleibt in `public/skat/js/`. Die Functions liegen in `api/` (`project.yml`, Paket `sf`, Funktionen `chat` und `tts`). Lokal, mit Probebetrieb ohne echte Schlüssel:
 
 ```bash
 node api/server.js --mock
@@ -124,9 +124,9 @@ Umgebungsvariablen der Komponente `api`, Scope **RUN_AND_BUILD_TIME** (Bau- und 
 
 Die leeren SECRET-Zeilen in `.do/app.yaml` sind Platzhalter. Nach dem Eintragen im Dashboard nicht mit einer Spec überschreiben, in der die Schlüssel wieder leer sind. Wer per `doctl apps update --spec` arbeitet, holt vorher `doctl apps spec get` und übernimmt die verschlüsselten Werte. Diesen Export nicht committen.
 
-Die Variablen müssen stehen, bevor die Functions zum ersten Mal gebaut werden. Danach ein Redeploy. Kontrolle im Browser: `https://<deine-app>.ondigitalocean.app/api/default/chat` liefert `{"ok":true}`. Fehlt der xAI-Schlüssel, kommt 503, und der Tisch redet mit den festen Sprüchen.
+Die Variablen müssen stehen, bevor die Functions zum ersten Mal gebaut werden. Danach ein Redeploy. Kontrolle im Browser: `https://<deine-app>.ondigitalocean.app/api/sf/chat` liefert `{"ok":true}`. Fehlt der xAI-Schlüssel, kommt 503, und der Tisch redet mit den festen Sprüchen.
 
-DigitalOcean hängt an die Route noch Paket und Funktion. Mit Route `/api`, Paket `default` und Funktion `chat` heißt der Pfad `/api/default/chat` (analog `/api/default/tts`). Der Browser probiert zuerst `/api/chat` und `/api/tts` (so der lokale Server) und danach die Pfade mit `default`.
+DigitalOcean hängt an die Route noch Paket und Funktion. Mit Route `/api`, Paket `sf` und Funktion `chat` heißt der Pfad `/api/sf/chat` (analog `/api/sf/tts`). Das Paket heißt absichtlich nicht `default`: an das Paket `default` lassen sich keine Umgebungsvariablen hängen, der Bau bricht dann ab. Der Browser probiert zuerst `/api/chat` und `/api/tts` (so der lokale Server), danach `/api/sf/chat` und `/api/sf/tts`. Die alten Pfade `/api/default/chat` und `/api/default/tts` bleiben ein letzter, harmloser Versuch.
 
 ### Kosten
 
@@ -136,4 +136,4 @@ xAI und ElevenLabs rechnen getrennt. Grok 4.3 kostet 1,25 Dollar je Million Eing
 
 ### Wenn die API fehlt
 
-Der Browser fragt einmal `GET /api/chat`. Kommt kein `{"ok":true}`, bleiben für diesen Besuch die festen Sprüche und die fertigen MP3s. Zwei fehlgeschlagene Chats hintereinander schalten genauso ab. Ein einzelner Aussetzer fällt nur für diese Zeile auf den Spruchvorrat zurück. Feste Spielsprüche mit MP3 gehen nie an ElevenLabs. Sätze ohne MP3, deren Stimme fehlschlägt, spricht der Browser. `?ai=0` schaltet das freie Gespräch für den Besuch aus. Während einer Antwort steht im Chat „Horst schreibt“ oder „Margarethe schreibt“. Während der Wiedergabe pausiert das Freisprechen wie bisher.
+Der Browser fragt `GET /api/chat` und, wenn das nicht antwortet, `GET /api/sf/chat`. Kommt kein `{"ok":true}`, bleiben für diesen Besuch die festen Sprüche und die fertigen MP3s. Zwei fehlgeschlagene Chats hintereinander schalten genauso ab. Ein einzelner Aussetzer fällt nur für diese Zeile auf den Spruchvorrat zurück. Feste Spielsprüche mit MP3 gehen nie an ElevenLabs. Sätze ohne MP3, deren Stimme fehlschlägt, spricht der Browser. `?ai=0` schaltet das freie Gespräch für den Besuch aus. Während einer Antwort steht im Chat „Horst schreibt“ oder „Margarethe schreibt“. Während der Wiedergabe pausiert das Freisprechen wie bisher.
