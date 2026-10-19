@@ -9,7 +9,7 @@ const Stimmen = require('../../public/spielpartner/stimmen.js');
 const E = require('../../public/spielpartner/entitlement.js');
 const H = require('../../api/lib/handlers.js');
 
-const GAMES = ['skat', 'canasta', 'schafkopf', 'jass', 'doppelkopf', 'maumau', 'romme', 'bridge'];
+const GAMES = ['skat', 'canasta', 'schafkopf', 'jass', 'doppelkopf', 'maumau', 'romme', 'schnapsen', 'watten', 'bridge'];
 const START = Date.UTC(2026, 5, 1);
 
 function memory() {
@@ -31,6 +31,9 @@ test('jedes Spiel behält seine Standard-Besetzung', () => {
   assert.deepEqual(L.defaults('maumau', 3), ['horst', 'lena', 'margarethe']);
   assert.deepEqual(L.defaults('maumau', 4), ['horst', 'lena', 'ruediger', 'margarethe']);
   assert.deepEqual(L.defaults('romme'), ['horst', 'margarethe', 'hilde']);
+  assert.deepEqual(L.defaults('schnapsen'), ['sepp']);
+  assert.deepEqual(L.defaults('watten'), ['horst', 'sepp', 'hilde']);
+  assert.deepEqual(L.places(1), ['Gegenüber']);
   assert.deepEqual(L.defaults('bridge'), ['jonas', 'margarethe', 'ruediger']);
   assert.equal(L.talkId('romme', 'hilde'), 'oma-hilde');
   assert.equal(L.talkId('canasta', 'oma-hilde'), 'hilde');
