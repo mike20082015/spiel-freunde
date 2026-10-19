@@ -9,16 +9,17 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 | Pfad | Inhalt |
 |---|---|
 | `/` | Startseite |
+| `/mein-avatar/` | Name und Gesicht für den Tisch. Das Bild bleibt auf dem Gerät |
+| `/spielpartner/` | Deine Spielpartner: Horst, Margarethe und die Premium-Runde. 14 Tage Test nur in diesem Browser, plus Link zum eigenen Avatar |
 | `/skat/` | Spielbarer Skat-Prototyp: Du gegen Horst und Margarethe |
 | `/canasta/` | Spielbares Canasta: Du mit Margarethe gegen Horst und Oma Hilde |
-| `/spielpartner/` | Deine Spielpartner: Horst, Margarethe und die Premium-Runde. 14 Tage Test nur in diesem Browser |
 
 In der Vorschau führen die großen Buttons auf der Startseite nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. Startseite, Skat und Spielpartner tragen ein goldenes Band „Vorschau“.
 
 Veröffentlicht wird nur der Ordner `public/`. Tests, Werkzeuge und die Startskripte bleiben außerhalb.
 
 ```
-public/                  Startseite, 404, /skat/ und /canasta/
+public/                  Startseite, 404, /skat/, /canasta/ und /mein-avatar/
 skat/tests, skat/tools   Regeltests und Browser-Checks, nicht öffentlich
 skat/start.sh            lokaler Server, nicht öffentlich
 tools/                   Entwurf-Helfer der Startseite, nicht öffentlich
@@ -91,7 +92,7 @@ Falls später ein eigener Proxy davor steht, passen diese Header:
 
 Horst und Margarethe antworten im Chat über Grok. Sätze ohne fertige MP3 spricht ElevenLabs. Beides läuft in einer **Functions-Komponente** (Gratis-Kontingent). Der Browser sieht keine Schlüssel und keine `VITE_`-Variable.
 
-Die Spiellogik bleibt in `public/skat/js/`. Die Functions liegen in `api/` (`project.yml`, Paket `sf`, Funktionen `chat` und `tts`). Lokal, mit Probebetrieb ohne echte Schlüssel:
+Die Spiellogik bleibt in `public/skat/js/`. Die Functions liegen in `api/` (`project.yml`, Paket `sf`, Funktionen `chat`, `tts` und `avatar`). Lokal, mit Probebetrieb ohne echte Schlüssel:
 
 ```bash
 node api/server.js --mock
@@ -121,6 +122,8 @@ Umgebungsvariablen der Komponente `api`, Scope **RUN_AND_BUILD_TIME** (Bau- und 
 | `XAI_API_KEY` | SECRET | ja | Schlüssel aus der xAI-Konsole |
 | `ELEVENLABS_API_KEY` | SECRET | ja | Schlüssel aus ElevenLabs |
 | `XAI_MODEL` | GENERAL, plain | nein | `grok-4.3` (die alten `grok-4-fast`-Namen leiten seit Mai 2026 dorthin um). Der Aufruf schickt nur `model`, `messages`, `max_tokens` und `temperature`. |
+| `XAI_IMAGE_MODEL` | GENERAL, plain | nein | `grok-imagine-image-2.0` für das gezeichnete Gesicht unter `/api/sf/avatar`. |
+| `AVATAR_DAILY_LIMIT` | GENERAL, plain | nein | `30` gezeichnete Gesichter je UTC-Tag in dieser Funktion. Dazu höchstens 4 je IP und Stunde. |
 | `VOICE_MARGARETHE` | GENERAL, plain | nein | `28LWddKi67H2YN9L2PvK` |
 | `VOICE_HORST` | GENERAL, plain | nein | ElevenLabs-Stimmen-ID von Horst. Liegt nicht im Repo. Ohne sie spricht Horst freie Sätze mit der Browserstimme. Die festen MP3s bleiben. |
 | `ELEVEN_MODEL` | GENERAL, plain | nein | `eleven_flash_v2_5` (kurz und auf Deutsch; `eleven_turbo_v2_5` geht auch) |
@@ -130,9 +133,13 @@ Die leeren SECRET-Zeilen in `.do/app.yaml` sind Platzhalter. Nach dem Eintragen 
 
 Die Variablen müssen stehen, bevor die Functions zum ersten Mal gebaut werden. Danach ein Redeploy. Kontrolle im Browser: `https://<deine-app>.ondigitalocean.app/api/sf/chat` liefert `{"ok":true}`. Fehlt der xAI-Schlüssel, kommt 503, und der Tisch redet mit den festen Sprüchen.
 
-DigitalOcean hängt an die Route noch Paket und Funktion. Mit Route `/api`, Paket `sf` und Funktion `chat` heißt der Pfad `/api/sf/chat` (analog `/api/sf/tts`). Das Paket heißt absichtlich nicht `default`: an das Paket `default` lassen sich keine Umgebungsvariablen hängen, der Bau bricht dann ab. Ein Pfad ohne Paketnamen, etwa `/api/chat`, antwortet mit 400 (`Incomplete web function path`). Der Browser probiert deshalb zuerst `/api/sf/chat` und `/api/sf/tts`, danach `/api/chat` und `/api/tts` (so der lokale Server). Die alten Pfade `/api/default/chat` und `/api/default/tts` bleiben ein letzter, harmloser Versuch.
+DigitalOcean hängt an die Route noch Paket und Funktion. Mit Route `/api`, Paket `sf` und Funktion `chat` heißt der Pfad `/api/sf/chat` (analog `/api/sf/tts` und `/api/sf/avatar`). Das Paket heißt absichtlich nicht `default`: an das Paket `default` lassen sich keine Umgebungsvariablen hängen, der Bau bricht dann ab. Ein Pfad ohne Paketnamen, etwa `/api/chat`, antwortet mit 400 (`Incomplete web function path`). Der Browser probiert deshalb zuerst `/api/sf/chat` und `/api/sf/tts`, danach `/api/chat` und `/api/tts` (so der lokale Server). Die alten Pfade `/api/default/chat` und `/api/default/tts` bleiben ein letzter, harmloser Versuch. Das Gesicht geht denselben Weg: `/api/sf/avatar`, dann `/api/avatar`, dann `/api/default/avatar`.
 
-Jede Funktion liegt vollständig in ihrem Ordner: `packages/sf/chat/` und `packages/sf/tts/` enthalten `index.js` und eine Kopie von `lib/handlers.js`. Die Laufzeit packt nur diesen Ordner. `project.yml` setzt `main: index.main` (Datei `index.js`, Export `main`). Ein Dateiname an dieser Stelle sucht einen Export namens `js`, der Aufruf endet dann mit der Plattform-Meldung, bevor der eigene Code antwortet.
+Jede Funktion liegt vollständig in ihrem Ordner: `packages/sf/chat/`, `packages/sf/tts/` und `packages/sf/avatar/` enthalten `index.js` und eine Kopie von `lib/handlers.js`. Die Laufzeit packt nur diesen Ordner. `project.yml` setzt `main: index.main` (Datei `index.js`, Export `main`). Ein Dateiname an dieser Stelle sucht einen Export namens `js`, der Aufruf endet dann mit der Plattform-Meldung, bevor der eigene Code antwortet.
+
+### Mein Avatar
+
+Unter `/mein-avatar/` legt jemand den Namen fest und wählt ein echtes Foto (Zuschneiden im Browser, etwa 512 Pixel), ein gezeichnetes Gesicht oder eines der fertigen Bilder. Metadaten liegen im `localStorage`, das Bild in IndexedDB. Auf der Seite steht: „Dein Foto bleibt auf deinem Gerät.“ `window.SpielFreundeAvatar.playerSeat()` liefert Name und Bildadresse für Skat, Canasta und später Jass. Der Schlüssel für das gezeichnete Gesicht bleibt an der Function. Die Seite nennt keinen Anbieter.
 
 ### Kosten
 

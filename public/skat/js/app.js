@@ -6,6 +6,44 @@
   const NAMES = ['Du', 'Horst', 'Margarethe'];
   const WHO = [null, 'horst', 'margarethe'];
   const AVATARS = [null, 'assets/avatar-berliner-foto.jpg', 'assets/avatar-witwe-foto.jpg'];
+  let playerSeatCache = { name: 'Du', initial: 'Du', imageUrl: null, kind: 'none', presetId: '' };
+
+  function youFaceHtml(big) {
+    const seat = playerSeatCache || {};
+    const cls = 'ava-you' + (big ? ' big' : '') + (seat.imageUrl ? ' has-photo' : '');
+    if (seat.imageUrl) return '<span class="' + cls + '"><img src="' + esc(seat.imageUrl) + '" alt=""></span>';
+    return '<span class="' + cls + '">' + esc(seat.initial || 'Du') + '</span>';
+  }
+
+  function paintFace(el, seat) {
+    if (!el) return;
+    el.classList.toggle('has-photo', !!seat.imageUrl);
+    el.replaceChildren();
+    if (seat.imageUrl) {
+      const img = document.createElement('img');
+      img.alt = '';
+      img.src = seat.imageUrl;
+      el.appendChild(img);
+    } else el.textContent = seat.initial || 'Du';
+  }
+
+  function paintPlayerSeat() {
+    const seat = playerSeatCache || { name: 'Du', initial: 'Du' };
+    paintFace($('ava-you'), seat);
+    paintFace($('settings-ava'), seat);
+    const nameEl = $('me-name');
+    if (nameEl) nameEl.textContent = seat.name || 'Du';
+    const settingsName = $('settings-ava-name');
+    if (settingsName) settingsName.textContent = seat.name || 'Du';
+  }
+
+  async function refreshPlayerSeat() {
+    const api = window.SpielFreundeAvatar;
+    if (!api || typeof api.playerSeat !== 'function') return;
+    try { playerSeatCache = await api.playerSeat(); }
+    catch (e) { return; }
+    paintPlayerSeat();
+  }
   const SPEEDS = { slow: 1.6, normal: 1, fast: 0.45 };
   const DEFAULTS = { mode: 'official', deck: 'four', speed: 'normal', hints: false, sound: true, volume: 80, talk: 'chat', handsFree: false, target: 'none', targetCustom: 1001, level: 'kneipe' };
   const LEVEL_NAMES = { anfaenger: 'Anfänger', kneipe: 'Kneipe', turnier: 'Turnier' };
@@ -727,7 +765,7 @@
     const order = E.standings(sc);
     const target = targetValue();
     const title = winner === 0 ? 'Du gewinnst die Runde!' : NAMES[winner] + ' gewinnt die Runde!';
-    const ava = winner === 0 ? '<span class="ava-you big">Du</span>' : '<img src="' + AVATARS[winner] + '" alt="">';
+    const ava = winner === 0 ? youFaceHtml(true) : '<img src="' + AVATARS[winner] + '" alt="">';
     const quotes = [];
     const speakers = winner === 2 ? [2, 1] : [1, 2];
     for (const p of speakers) {
@@ -777,7 +815,7 @@
       const d = r.declarer;
       const you = d === 0;
       const title = you ? (r.won ? 'Gewonnen!' : 'Verloren') : NAMES[d] + (r.won ? ' gewinnt' : ' verliert');
-      const ava = you ? '<span class="ava-you">Du</span>' : '<img src="' + AVATARS[d] + '" alt="">';
+      const ava = you ? youFaceHtml(false) : '<img src="' + AVATARS[d] + '" alt="">';
       const g = r.game;
       let calc;
       if (g.type === 'null') calc = E.gameLabel(g) + ' = ' + E.nullValue(g);
@@ -1433,6 +1471,10 @@
     if (t && t.closest && (t.closest('#btn-mic') || t.closest('#btn-hf-mute') || t.closest('#handsfree-label'))) return;
     ensureHandsFree();
   }, true);
+
+  refreshPlayerSeat();
+  window.addEventListener('sf-avatar', refreshPlayerSeat);
+  window.addEventListener('storage', (e) => { if (!e.key || e.key === 'sf-player-avatar') refreshPlayerSeat(); });
 
   $('btn-hint').setAttribute('aria-pressed', String(settings.hints));
   document.body.classList.toggle('deck-two', settings.deck === 'two');

@@ -127,20 +127,21 @@
     return say(seat, Talk.line(who.id, ev), { force: force });
   }
 
-  function playerFace() {
+  async function playerFace() {
     const api = window.SpielFreundeAvatar;
     if (!api || typeof api.playerSeat !== 'function') return null;
     let info;
-    try { info = api.playerSeat(); } catch (e) { return null; }
+    try { info = await api.playerSeat(); } catch (e) { return null; }
     if (!info || typeof info !== 'object') return null;
-    const src = info.image || info.portrait || info.src || info.photo || '';
+    const src = info.imageUrl || info.image || info.portrait || info.src || info.photo || '';
+    const initials = (typeof info.initials === 'string' && info.initials) || (typeof info.initial === 'string' && info.initial) || 'Du';
     return {
       src: typeof src === 'string' ? src : '',
-      initials: typeof info.initials === 'string' && info.initials ? info.initials : 'Du',
+      initials: initials,
       name: typeof info.name === 'string' && info.name ? info.name : 'Du',
     };
   }
-  function mountPortraits() {
+  async function mountPortraits() {
     Seats.seats.forEach((p) => {
       if (p.seat === 0) return;
       const wrap = $('ava-' + p.seat);
@@ -155,7 +156,7 @@
       img.src = p.portrait;
       wrap.insertBefore(img, wrap.firstChild);
     });
-    const face = playerFace();
+    const face = await playerFace();
     if (!face) return;
     $('you-ini').textContent = face.initials || 'Du';
     if (!face.src) return;

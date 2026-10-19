@@ -7,7 +7,7 @@
 #
 # Functions-Komponente api: Quelle api/, Route /api.
 # Paket sf (benannt, damit project.yml Umgebungsvariablen tragen darf).
-# Pfade danach /api/sf/chat und /api/sf/tts.
+# Pfade danach /api/sf/chat, /api/sf/tts und /api/sf/avatar.
 # Jede Funktion bringt handlers.js selbst mit. main ist index.main.
 # SECRET-Werte hier leer lassen. Echte Schlüssel nur im Dashboard.
 # Vor doctl apps update die verschlüsselten Werte aus `doctl apps spec get` übernehmen.
@@ -38,6 +38,14 @@ functions:
     envs:
       - key: XAI_MODEL
         value: grok-4.3
+        scope: RUN_AND_BUILD_TIME
+        type: GENERAL
+      - key: XAI_IMAGE_MODEL
+        value: grok-imagine-image-2.0
+        scope: RUN_AND_BUILD_TIME
+        type: GENERAL
+      - key: AVATAR_DAILY_LIMIT
+        value: "30"
         scope: RUN_AND_BUILD_TIME
         type: GENERAL
       - key: ELEVEN_MODEL

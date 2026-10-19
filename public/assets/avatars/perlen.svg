@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Illustriertes Gesicht mit Perlen">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6e3434"/>
+      <stop offset="1" stop-color="#3a1818"/>
+    </linearGradient>
+    <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3c7a4"/>
+      <stop offset="1" stop-color="#e0a67c"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" fill="url(#bg)"/>
+  <path d="M48 150c8-40 96-40 104 0v50H48z" fill="#8a2f2f"/>
+  <path d="M58 88c4-36 80-40 90 2 6 24-8 48-22 58-22 8-52 6-66-8-8-10-8-32-2-52z" fill="#f2e2c4"/>
+  <ellipse cx="100" cy="108" rx="42" ry="48" fill="url(#skin)"/>
+  <path d="M64 100c10-8 22-6 28 2M108 102c8-8 20-8 28 0" fill="none" stroke="#c48b78" stroke-width="2" stroke-linecap="round"/>
+  <ellipse cx="84" cy="108" rx="4.5" ry="5.5" fill="#3a2a24"/>
+  <ellipse cx="116" cy="108" rx="4.5" ry="5.5" fill="#3a2a24"/>
+  <path d="M88 128c6 7 18 7 24 0" fill="none" stroke="#b45a58" stroke-width="3" stroke-linecap="round"/>
+  <path d="M70 146c10 8 50 8 60 0" fill="none" stroke="#a89888" stroke-width="2"/>
+  <ellipse cx="70" cy="150" rx="5" ry="4" fill="#f7f1e3"/>
+  <ellipse cx="86" cy="154" rx="5" ry="4" fill="#f7f1e3"/>
+  <ellipse cx="102" cy="156" rx="5" ry="4" fill="#f7f1e3"/>
+  <ellipse cx="118" cy="154" rx="5" ry="4" fill="#f7f1e3"/>
+  <ellipse cx="134" cy="150" rx="5" ry="4" fill="#f7f1e3"/>
+</svg>
