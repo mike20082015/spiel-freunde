@@ -1,6 +1,5 @@
 /*
- * Spiel-Freunde Schafkopf: Stimmen von Horst und Margarethe über /api/sf/tts.
- * Sepp hat hier keine Stimme, nur die Sprechblase.
+ * Spiel-Freunde Schafkopf: Stimmen von Horst, Sepp und Margarethe über /api/sf/tts.
  * Ton startet erst nach der ersten Nutzeraktion.
  */
 (function (root) {
@@ -8,11 +7,12 @@
   const Talk = root.SchafkopfTalk;
   const SYNTH = {
     horst: { pitch: 0.65, rate: 0.95, male: true },
+    sepp: { pitch: 0.7, rate: 0.88, male: true },
     margarethe: { pitch: 1.2, rate: 0.9, male: false },
   };
   const MALE = /(male|mann|markus|stefan|hans|yannick|conrad|klaus|jonas|florian|killian|bernd|daniel)/i;
   const FEMALE = /(female|frau|anna|petra|katja|helena|hedda|marlene|vicki|amala|seraphina|elke|google deutsch)/i;
-  const VOICED = { horst: 1, margarethe: 1 };
+  const VOICED = { horst: 1, margarethe: 1, sepp: 1 };
 
   const V = {
     unlocked: false,

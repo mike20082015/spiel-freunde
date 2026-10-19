@@ -3,7 +3,7 @@
  * Süden: Du. Danach links herum: Horst, bei drei Gegnern Lena gegenüber,
  * bei vier Gegnern Lena und Rüdiger, rechts immer Margarethe.
  * Bilder: /media/spielpartner/<slug>.jpg, sonst die Initialen.
- * Lena und Rüdiger haben keine Stimme.
+ * Lena und Rüdiger sprechen über denselben Weg wie Horst.
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -33,8 +33,8 @@
 
   var ROSTER = [
     { id: 'horst', name: 'Horst', full: 'Horst Kaluppke', slug: 'horst', voice: true },
-    { id: 'lena', name: 'Lena', full: 'Lena Berger', slug: 'lena', voice: false },
-    { id: 'ruediger', name: 'Rüdiger', full: 'Rüdiger Falk', slug: 'ruediger', voice: false },
+    { id: 'lena', name: 'Lena', full: 'Lena Berger', slug: 'lena', voice: true },
+    { id: 'ruediger', name: 'Rüdiger', full: 'Rüdiger Falk', slug: 'ruediger', voice: true },
     { id: 'margarethe', name: 'Margarethe', full: 'Margarethe von Hohenfels', slug: 'margarethe', voice: true },
   ];
 

@@ -4,26 +4,43 @@ const fs = require('node:fs');
 const path = require('node:path');
 const Talk = require('../../public/maumau/js/talk.js');
 
-test('Lena hat mindestens 30 feste Sätze und keine Stimme in der Runde', () => {
+test('Lena und Rüdiger haben feste Sätze und eine Stimme in der Runde', async () => {
   assert.ok(Talk.countLines('lena') >= 30);
   const sample = Talk.cannedReply('lena', 'Hallo Lena');
   assert.equal(typeof sample, 'string');
   assert.ok(sample.length > 8);
   const src = fs.readFileSync(path.join(__dirname, '../../public/maumau/js/talk.js'), 'utf8');
   const voice = fs.readFileSync(path.join(__dirname, '../../public/maumau/js/voice.js'), 'utf8');
-  assert.match(src, /character !== 'horst' && character !== 'margarethe'/);
+  const seats = fs.readFileSync(path.join(__dirname, '../../public/maumau/js/seats.js'), 'utf8');
+  assert.match(src, /lena:\s*1/);
+  assert.match(src, /ruediger:\s*1/);
   assert.doesNotMatch(src, /grok|xai|openai|elevenlabs/i);
   assert.match(src, /\/api\/sf\/chat/);
   assert.match(src, /\/api\/sf\/tts/);
   assert.match(voice, /Talk\.speakAI/);
-  assert.doesNotMatch(voice, /lena:\s*1/);
-  assert.doesNotMatch(voice, /ruediger:\s*1/);
+  assert.match(voice, /lena:\s*1/);
+  assert.match(voice, /ruediger:\s*1/);
+  assert.match(seats, /id: 'lena'.*voice: true/);
+  assert.match(seats, /id: 'ruediger'.*voice: true/);
   Talk.resetForTests();
-  global.fetch = function () { throw new Error('Lena darf das Netz nicht fragen'); };
-  return Talk.askAI('lena', { message: 'Hallo Lena, wie geht Mau?' }).then((text) => {
+  const prev = global.fetch;
+  global.fetch = async () => ({ ok: false, json: async () => ({}) });
+  try {
+    const text = await Talk.askAI('lena', { message: 'Hallo Lena, wie geht Mau?' });
     assert.equal(typeof text, 'string');
     assert.ok(text.length > 0);
-  });
+    Talk.resetForTests();
+    global.fetch = async (url, opts) => {
+      if (!opts || opts.method !== 'POST') return { ok: true, json: async () => ({ ok: true }) };
+      assert.equal(JSON.parse(opts.body).character, 'lena');
+      assert.equal(url, '/api/sf/chat');
+      return { ok: true, json: async () => ({ text: 'Moin! Mau geht gut.' }) };
+    };
+    assert.equal(await Talk.askAI('lena', { message: 'Hallo Lena' }), 'Moin! Mau geht gut.');
+  } finally {
+    global.fetch = prev;
+    Talk.resetForTests();
+  }
 });
 
 test('Stichwort Lena landet bei Lena, Horst bei Horst, Margarethe bei Margarethe', () => {

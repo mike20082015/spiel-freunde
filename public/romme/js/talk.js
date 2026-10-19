@@ -1,7 +1,7 @@
 /*
  * Tischgespräche beim Rommé.
- * Horst und Margarethe fragen /api/sf/chat und sprechen über /api/sf/tts.
- * Oma Hilde bleibt bei festen Sätzen in der Sprechblase, ohne Stimme.
+ * Horst, Oma Hilde und Margarethe fragen /api/sf/chat und sprechen über /api/sf/tts.
+ * Fällt der Aufruf aus, gelten wieder die festen Sprüche.
  */
 (function (root, factory) {
   const api = factory();
@@ -276,6 +276,7 @@
     probeP = null;
     history.length = 0;
   }
+  const LIVE = { horst: 1, margarethe: 1, 'oma-hilde': 1 };
   function cannedNow(character, message) {
     const text = cannedReply(character, message);
     remember(message, character, text);
@@ -284,13 +285,13 @@
   async function askAI(character, context) {
     context = context || {};
     const message = String(context.message || '');
-    if (character !== 'horst' && character !== 'margarethe') return cannedNow(character, message);
+    if (!LIVE[character]) return cannedNow(character, message);
     if (live === false) return cannedNow(character, message);
     const up = await probe();
     if (!up) return cannedNow(character, message);
     try {
       const prior = (Array.isArray(context.history) ? context.history : history.slice(-6))
-        .filter((h) => h && (h.role === 'du' || h.role === 'horst' || h.role === 'margarethe'));
+        .filter((h) => h && (h.role === 'du' || LIVE[h.role]));
       const res = await doFetch(endpoint('chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -319,7 +320,7 @@
   async function speakAI(character, text) {
     const lineText = String(text || '').trim();
     if (!lineText) return null;
-    if (character !== 'horst' && character !== 'margarethe') return null;
+    if (!LIVE[character]) return null;
     if (live === false) return null;
     const up = await probe();
     if (!up) return null;

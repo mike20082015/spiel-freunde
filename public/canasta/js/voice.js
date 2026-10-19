@@ -1,7 +1,7 @@
 /*
- * Spiel-Freunde Canasta: Stimmen von Horst und Margarethe.
+ * Spiel-Freunde Canasta: Stimmen von Horst, Oma Hilde und Margarethe.
  * Reihenfolge: serverseitige Aufnahme über Talk.speakAI, sonst die Browserstimme.
- * Oma Hilde hat hier keine Stimme. Es spricht immer nur eine Figur.
+ * Es spricht immer nur eine Figur.
  * Ton startet erst nach der ersten Nutzeraktion.
  */
 (function (root) {
@@ -9,11 +9,12 @@
   const Talk = root.CanastaTalk;
   const SYNTH = {
     horst: { pitch: 0.65, rate: 0.95, male: true },
+    hilde: { pitch: 1.08, rate: 0.86, male: false },
     margarethe: { pitch: 1.2, rate: 0.9, male: false },
   };
   const MALE = /(male|mann|markus|stefan|hans|yannick|conrad|klaus|jonas|florian|killian|bernd|daniel)/i;
   const FEMALE = /(female|frau|anna|petra|katja|helena|hedda|marlene|vicki|amala|seraphina|elke|google deutsch)/i;
-  const VOICED = { horst: 1, margarethe: 1 };
+  const VOICED = { horst: 1, margarethe: 1, hilde: 1 };
 
   const V = {
     unlocked: false,
