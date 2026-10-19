@@ -116,7 +116,7 @@ Umgebungsvariablen der Komponente `api`, Scope **RUN_AND_BUILD_TIME** (Bau- und 
 |---|---|---|---|
 | `XAI_API_KEY` | SECRET | ja | Schlüssel aus der xAI-Konsole |
 | `ELEVENLABS_API_KEY` | SECRET | ja | Schlüssel aus ElevenLabs |
-| `XAI_MODEL` | GENERAL, plain | nein | `grok-4.3` (schnell, `reasoning_effort: none`; die alten `grok-4-fast`-Namen leiten seit Mai 2026 dorthin um) |
+| `XAI_MODEL` | GENERAL, plain | nein | `grok-4.3` (die alten `grok-4-fast`-Namen leiten seit Mai 2026 dorthin um). Der Aufruf schickt nur `model`, `messages`, `max_tokens` und `temperature`. |
 | `VOICE_MARGARETHE` | GENERAL, plain | nein | `28LWddKi67H2YN9L2PvK` |
 | `VOICE_HORST` | GENERAL, plain | nein | ElevenLabs-Stimmen-ID von Horst. Liegt nicht im Repo. Ohne sie spricht Horst freie Sätze mit der Browserstimme. Die festen MP3s bleiben. |
 | `ELEVEN_MODEL` | GENERAL, plain | nein | `eleven_flash_v2_5` (kurz und auf Deutsch; `eleven_turbo_v2_5` geht auch) |

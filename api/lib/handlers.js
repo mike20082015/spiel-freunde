@@ -139,8 +139,49 @@ function withCors(origin, extra) {
   return headers;
 }
 
-function fail(origin) {
-  return { status: 503, json: { error: 'nicht erreichbar' }, headers: withCors(origin) };
+function fail(origin, reason) {
+  return {
+    status: 503,
+    json: { error: 'nicht erreichbar', reason: reason || 'exception' },
+    headers: withCors(origin),
+  };
+}
+
+function upstreamReason(status) {
+  const n = Number(status);
+  if (!Number.isInteger(n) || n < 100 || n > 599) return 'upstream_error';
+  return 'upstream_' + n;
+}
+
+function redact(text, secrets) {
+  let s = String(text == null ? '' : text);
+  const list = Array.isArray(secrets) ? secrets : [];
+  for (let i = 0; i < list.length; i++) {
+    const secret = list[i];
+    if (typeof secret === 'string' && secret.length >= 6) s = s.split(secret).join('[redacted]');
+  }
+  return s.slice(0, 300);
+}
+
+async function errorSnippet(res, secrets) {
+  let raw = '';
+  try {
+    if (res && typeof res.text === 'function') raw = await res.text();
+    else if (res && typeof res.json === 'function') {
+      const data = await res.json();
+      raw = typeof data === 'string' ? data : JSON.stringify(data);
+    }
+  } catch (e) {
+    raw = '';
+  }
+  return redact(raw, secrets);
+}
+
+async function noteUpstream(res, secrets) {
+  const status = res && res.status != null ? res.status : 0;
+  const snippet = await errorSnippet(res, secrets);
+  console.error('upstream', status, snippet);
+  return upstreamReason(status);
 }
 
 function payloadOf(event) {
@@ -237,18 +278,12 @@ function buildMessages(value) {
 }
 
 function buildChatBody(value, env) {
-  const model = envStr(env, 'XAI_MODEL', DEFAULT_MODEL);
-  const body = {
-    model,
+  return {
+    model: envStr(env, 'XAI_MODEL', DEFAULT_MODEL),
     messages: buildMessages(value),
     max_tokens: MAX_TOKENS,
-    max_completion_tokens: MAX_TOKENS,
     temperature: 0.7,
-    n: 1,
-    search_parameters: { mode: 'off' },
   };
-  if (/^grok-4\.3/.test(model)) body.reasoning_effort = 'none';
-  return body;
 }
 
 function allowMinute(ip, now) {
@@ -309,34 +344,37 @@ async function handleChat(event, deps) {
   try {
     if (method === 'OPTIONS') return { status: 204, headers: withCors(origin) };
     if (method === 'GET') {
-      if (!envStr(env, 'XAI_API_KEY', '')) return fail(origin);
+      if (!envStr(env, 'XAI_API_KEY', '')) return fail(origin, 'no_key');
       return { status: 200, json: { ok: true }, headers: withCors(origin) };
     }
-    if (method !== 'POST') return fail(origin);
+    if (method !== 'POST') return fail(origin, 'invalid_input');
     const parsed = validateChat(payloadOf(event));
-    if (!parsed.ok) return fail(origin);
-    if (!envStr(env, 'XAI_API_KEY', '')) return fail(origin);
+    if (!parsed.ok) return fail(origin, 'invalid_input');
+    if (!envStr(env, 'XAI_API_KEY', '')) return fail(origin, 'no_key');
     const now = typeof deps.now === 'function' ? deps.now() : Date.now();
-    if (!takeSlot(clientIp(event), now, env)) return fail(origin);
+    if (!takeSlot(clientIp(event), now, env)) return fail(origin, 'rate_limited');
     const fetchImpl = deps.fetch || fetch;
     const body = buildChatBody(parsed.value, env);
+    const key = envStr(env, 'XAI_API_KEY', '');
     const res = await fetchWithTimeout(fetchImpl, CHAT_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + envStr(env, 'XAI_API_KEY', ''),
+        Authorization: 'Bearer ' + key,
       },
       body: JSON.stringify(body),
     }, CHAT_TIMEOUT_MS);
-    if (!res || !res.ok) return fail(origin);
+    if (!res || !res.ok) return fail(origin, await noteUpstream(res, [key, envStr(env, 'ELEVENLABS_API_KEY', '')]));
     const data = await res.json();
     const raw = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-    if (typeof raw !== 'string' || SLIP.test(raw)) return fail(origin);
+    if (typeof raw !== 'string') return fail(origin, 'empty');
+    if (SLIP.test(raw)) return fail(origin, 'filtered');
     const text = clampSpeech(raw);
-    if (!text || SLIP.test(text)) return fail(origin);
+    if (!text) return fail(origin, 'empty');
+    if (SLIP.test(text)) return fail(origin, 'filtered');
     return { status: 200, json: { text }, headers: withCors(origin) };
   } catch (e) {
-    return fail(origin);
+    return fail(origin, 'exception');
   }
 }
 
@@ -382,31 +420,39 @@ async function prepareTts(event, deps) {
   const origin = originOf(event);
   const method = methodOf(event);
   if (method === 'OPTIONS') return { result: { status: 204, headers: withCors(origin) } };
-  if (method !== 'POST') return { result: fail(origin) };
+  if (method !== 'POST') return { result: fail(origin, 'invalid_input') };
   const parsed = validateTts(payloadOf(event));
-  if (!parsed.ok) return { result: fail(origin) };
+  if (!parsed.ok) return { result: fail(origin, 'invalid_input') };
+  if (!envStr(env, 'ELEVENLABS_API_KEY', '')) return { result: fail(origin, 'no_key') };
   const req = buildTtsRequest(parsed.value, env);
-  if (!req) return { result: fail(origin) };
+  if (!req) return { result: fail(origin, 'invalid_input') };
   const now = typeof deps.now === 'function' ? deps.now() : Date.now();
-  if (!takeSlot(clientIp(event), now, env)) return { result: fail(origin) };
+  if (!takeSlot(clientIp(event), now, env)) return { result: fail(origin, 'rate_limited') };
   return { request: req, origin };
 }
 
 async function handleTts(event, deps) {
   deps = deps || {};
+  const env = deps.env || process.env;
   try {
     const prep = await prepareTts(event, deps);
     if (prep.result) return prep.result;
     const fetchImpl = deps.fetch || fetch;
     const res = await fetchWithTimeout(fetchImpl, prep.request.url, prep.request.init, TTS_TIMEOUT_MS);
-    if (!res || !res.ok || typeof res.arrayBuffer !== 'function') return fail(prep.origin);
+    const secrets = [envStr(env, 'ELEVENLABS_API_KEY', ''), envStr(env, 'XAI_API_KEY', '')];
+    if (!res || !res.ok) return fail(prep.origin, await noteUpstream(res, secrets));
+    if (typeof res.arrayBuffer !== 'function') return fail(prep.origin, 'exception');
     const ctype = res.headers && typeof res.headers.get === 'function' ? String(res.headers.get('content-type') || '') : '';
-    if (/json/i.test(ctype)) return fail(prep.origin);
+    if (/json/i.test(ctype)) {
+      console.error('upstream', res.status || 0, await errorSnippet(res, secrets));
+      return fail(prep.origin, 'upstream_json');
+    }
     const audio = Buffer.from(await res.arrayBuffer());
-    if (!audio.length || audio.length > MAX_AUDIO_BYTES) return fail(prep.origin);
+    if (!audio.length) return fail(prep.origin, 'empty');
+    if (audio.length > MAX_AUDIO_BYTES) return fail(prep.origin, 'invalid_input');
     return { status: 200, audio, headers: withCors(prep.origin, { 'Content-Type': 'audio/mpeg' }) };
   } catch (e) {
-    return fail(originOf(event));
+    return fail(originOf(event), 'exception');
   }
 }
 
