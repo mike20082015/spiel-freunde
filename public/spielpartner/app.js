@@ -22,7 +22,7 @@
       return 'Du hast Standard gewählt: Horst und Margarethe. Es wird nichts automatisch abgebucht.';
     }
     if (view.phase === 'ended') {
-      return 'Die 14 Tage sind vorbei. Standard kostet 9,95 €/Monat (Horst und Margarethe), Premium 14,95 €/Monat (alle Spielpartner). Solange Du nichts wählst, bleiben Horst und Margarethe. Es wird nichts automatisch abgebucht.';
+      return 'Die 14 Tage sind vorbei. Standard kostet ' + E.formatEuro(E.OFFER.tiers.standard.monthlyCents) + '/Monat (Horst und Margarethe), Premium ' + E.formatEuro(E.OFFER.tiers.premium.monthlyCents) + '/Monat (alle Spielpartner). Solange Du nichts wählst, bleiben Horst und Margarethe. Es wird nichts automatisch abgebucht.';
     }
     return 'Dein erster Klick startet 14 Tage Premium in diesem Browser: alle Spielpartner. Ein Konto brauchst Du dafür nicht. Es wird nichts automatisch abgebucht.';
   }

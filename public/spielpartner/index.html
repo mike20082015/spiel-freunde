@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <link rel="stylesheet" href="spielpartner.css">
+<link rel="stylesheet" href="offer.css">
 </head>
 <body class="sp-page">
 
@@ -79,35 +80,52 @@
       <div class="sec-head">
         <p class="eyebrow">Mitgliedschaft</p>
         <h2>Erst testen, dann entscheiden</h2>
-        <p class="sub">Jede neue Runde in diesem Browser beginnt mit 14 Tagen Premium: alle Spielpartner sind frei. Ein Konto gibt es noch nicht. Nach den 14 Tagen wählst Du Standard oder Premium. Es wird nichts automatisch abgebucht. Wenn Du nichts wählst, bleiben Horst und Margarethe.</p>
+        <p class="sub">Jede neue Runde in diesem Browser beginnt mit 14 Tagen Premium: alle Spielpartner sind frei. Ein Konto gibt es noch nicht. Nach den 14 Tagen wählst Du Standard oder Premium, monatlich oder für 6 und 12 Monate. Es wird nichts automatisch abgebucht. Wenn Du nichts wählst, bleiben Horst und Margarethe.</p>
       </div>
       <div class="trial">
         <span class="trial-big">14 Tage</span>
-        <span class="trial-txt"><b>alle Spielpartner gratis</b> Danach 9,95 €/Monat oder 14,95 €/Monat. Nichts läuft von allein weiter.</span>
+        <span class="trial-txt"><b>alle Spielpartner gratis</b> <span data-after-trial>Danach 9,95 €/Monat oder 14,95 €/Monat. Nichts läuft von allein weiter.</span></span>
         <a class="btn btn-wine js-trial" href="#testen">14 Tage alle Spielpartner gratis testen</a>
       </div>
-      <div class="plans">
-        <article class="plan">
-          <h3>Standard</h3>
-          <p class="price"><span class="amt">9,95 €</span><span class="per">/Monat</span></p>
-          <ul>
-            <li>Horst und Margarethe</li>
-            <li>Auch nach dem Test dabei</li>
-            <li>Keine automatische Abbuchung</li>
-          </ul>
-          <button type="button" class="btn btn-outline" disabled>Bald verfügbar</button>
-        </article>
-        <article class="plan plan-hot">
-          <span class="ribbon">Alle</span>
-          <h3>Premium</h3>
-          <p class="price"><span class="amt">14,95 €</span><span class="per">/Monat</span></p>
-          <ul>
-            <li>Alle Spielpartner</li>
-            <li>Die ersten 14 Tage gratis</li>
-            <li>Keine automatische Abbuchung</li>
-          </ul>
-          <button type="button" class="btn btn-gold" disabled>Bald verfügbar</button>
-        </article>
+      <div class="sp-offer" data-offer>
+        <div class="bill-toggle" role="group" aria-label="Abrechnungszeitraum">
+          <button type="button" data-period="monthly" aria-pressed="true">Monatlich</button>
+          <button type="button" data-period="6" aria-pressed="false">6 Monate</button>
+          <button type="button" data-period="12" aria-pressed="false">12 Monate</button>
+        </div>
+        <div class="plans">
+          <article class="plan" data-tier="standard">
+            <h3>Standard</h3>
+            <div class="bill-notes">
+              <span class="free-badge" data-badge hidden></span>
+              <span class="popular-note" data-popular hidden></span>
+            </div>
+            <p class="price"><span class="amt" data-amt>9,95 €</span><span class="per" data-per>/Monat</span></p>
+            <p class="bill-eff" data-eff hidden></p>
+            <ul>
+              <li>Horst und Margarethe</li>
+              <li>Auch nach dem Test dabei</li>
+              <li>Keine automatische Abbuchung</li>
+            </ul>
+            <button type="button" class="btn btn-outline" disabled>Bald verfügbar</button>
+          </article>
+          <article class="plan plan-hot" data-tier="premium">
+            <span class="ribbon">Alle</span>
+            <h3>Premium</h3>
+            <div class="bill-notes">
+              <span class="free-badge" data-badge hidden></span>
+              <span class="popular-note" data-popular hidden></span>
+            </div>
+            <p class="price"><span class="amt" data-amt>14,95 €</span><span class="per" data-per>/Monat</span></p>
+            <p class="bill-eff" data-eff hidden></p>
+            <ul>
+              <li>Alle Spielpartner</li>
+              <li>Die ersten 14 Tage gratis</li>
+              <li>Keine automatische Abbuchung</li>
+            </ul>
+            <button type="button" class="btn btn-gold" disabled>Bald verfügbar</button>
+          </article>
+        </div>
       </div>
       <p class="sp-fine">Bezahlen kannst Du hier noch nicht. Die Knöpfe bleiben auf „Bald verfügbar“, bis es soweit ist. Bis dahin kostet Dich der Test nichts, und es wird nichts automatisch abgebucht.</p>
     </div>
@@ -132,6 +150,7 @@
 
 <script src="entitlement.js"></script>
 <script src="cards.js"></script>
+<script src="offer.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
