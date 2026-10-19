@@ -62,8 +62,12 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     const blob = JSON.stringify(body);
     assert.equal(body.max_tokens, 80);
     assert.equal(body.model, 'grok-4.3');
-    assert.equal(body.reasoning_effort, 'none');
-    assert.equal(body.search_parameters.mode, 'off');
+    assert.equal(body.temperature, 0.7);
+    assert.deepEqual(Object.keys(body).sort(), ['max_tokens', 'messages', 'model', 'temperature']);
+    assert.equal(body.reasoning_effort, undefined);
+    assert.equal(body.search_parameters, undefined);
+    assert.equal(body.max_completion_tokens, undefined);
+    assert.equal(body.n, undefined);
     assert.match(blob, /Grand/);
     assert.match(blob, /Alleinspieler: Horst/);
     assert.match(blob, /Horst 20/);
@@ -73,7 +77,9 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     assert.equal(body.messages[1].role, 'user');
     assert.equal(body.messages[2].role, 'assistant');
     const other = H.buildChatBody(Object.assign({}, parsed.value, { character: 'margarethe' }), { XAI_MODEL: 'grok-4.7' });
+    assert.equal(other.model, 'grok-4.7');
     assert.equal(other.reasoning_effort, undefined);
+    assert.deepEqual(Object.keys(other).sort(), ['max_tokens', 'messages', 'model', 'temperature']);
     assert.match(other.messages[0].content, /Schätzchen/);
     assert.equal(other.messages[2].content, 'Horst sagt: Na.');
   });
@@ -83,6 +89,7 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     const fetchImpl = async () => { calls += 1; throw new Error('nicht rufen'); };
     const tooLong = await H.handleChat(event('POST', { character: 'horst', message: 'a'.repeat(301) }), chatDeps(fetchImpl));
     assert.equal(tooLong.status, 503);
+    assert.equal(tooLong.json.reason, 'invalid_input');
     const bad = await H.handleChat(event('POST', { character: 'fremd', message: 'hallo' }), chatDeps(fetchImpl));
     assert.equal(bad.status, 503);
     const empty = await H.handleChat(event('POST', { character: 'horst', message: '   ' }), chatDeps(fetchImpl));
@@ -94,6 +101,7 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
   test('Gesundheit, Antwort und Fehler bleiben ohne Schlüsseldetails', async () => {
     const missing = await H.handleChat(event('GET'), chatDeps(async () => { throw new Error('nein'); }, { XAI_API_KEY: '' }));
     assert.equal(missing.status, 503);
+    assert.equal(missing.json.reason, 'no_key');
     const health = await H.handleChat(event('GET'), chatDeps(async () => { throw new Error('nein'); }));
     assert.equal(health.status, 200);
     assert.deepEqual(health.json, { ok: true });
@@ -120,15 +128,33 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
       json: async () => ({ choices: [{ message: { content: 'Ich bin ein Sprachmodell von Grok.' } }] }),
     })));
     assert.equal(slipped.status, 503);
+    assert.equal(slipped.json.reason, 'filtered');
     assert.equal(JSON.stringify(slipped.json).includes('Grok'), false);
 
-    const down = await H.handleChat(event('POST', { character: 'horst', message: 'hallo' }), chatDeps(async () => ({
-      ok: false,
-      status: 401,
-      json: async () => ({ error: 'SUPERSECRET' }),
-    })));
+    const logs = [];
+    const prevErr = console.error;
+    console.error = function () { logs.push(Array.prototype.slice.call(arguments)); };
+    let down;
+    try {
+      down = await H.handleChat(event('POST', { character: 'horst', message: 'hallo' }), chatDeps(async () => ({
+        ok: false,
+        status: 401,
+        headers: { get: () => 'application/json', Authorization: 'Bearer test-key' },
+        json: async () => ({ error: 'SUPERSECRET test-key' }),
+      })));
+    } finally {
+      console.error = prevErr;
+    }
     assert.equal(down.status, 503);
+    assert.equal(down.json.reason, 'upstream_401');
     assert.equal(JSON.stringify(down.json).includes('SUPERSECRET'), false);
+    assert.equal(JSON.stringify(down.json).includes('test-key'), false);
+    assert.equal(logs.length, 1);
+    assert.deepEqual(logs[0].slice(0, 2), ['upstream', 401]);
+    assert.match(logs[0][2], /SUPERSECRET/);
+    assert.equal(String(logs[0][2]).includes('test-key'), false);
+    assert.equal(JSON.stringify(logs[0]).includes('Authorization'), false);
+    assert.equal(JSON.stringify(logs[0]).includes('Bearer'), false);
   });
 
   test('langes Gerede wird auf zwei Sätze und 40 Wörter gekürzt', () => {
@@ -147,7 +173,9 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     const tight = chatDeps(fetchImpl, Object.assign({}, ENV, { DAILY_LIMIT: '2' }));
     assert.equal((await H.handleChat(event('POST', { character: 'horst', message: 'eins' }), tight)).status, 200);
     assert.equal((await H.handleChat(event('POST', { character: 'horst', message: 'zwei' }), tight)).status, 200);
-    assert.equal((await H.handleChat(event('POST', { character: 'horst', message: 'drei' }), tight)).status, 503);
+    const limited = await H.handleChat(event('POST', { character: 'horst', message: 'drei' }), tight);
+    assert.equal(limited.status, 503);
+    assert.equal(limited.json.reason, 'rate_limited');
     assert.equal(calls, 2);
 
     H.resetLimits();
@@ -156,7 +184,9 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     for (let i = 0; i < H.PER_MINUTE; i++) {
       assert.equal((await H.handleChat(event('POST', { character: 'horst', message: 'm' + i }), fast)).status, 200);
     }
-    assert.equal((await H.handleChat(event('POST', { character: 'horst', message: 'zu viel' }), fast)).status, 503);
+    const perMinute = await H.handleChat(event('POST', { character: 'horst', message: 'zu viel' }), fast);
+    assert.equal(perMinute.status, 503);
+    assert.equal(perMinute.json.reason, 'rate_limited');
     assert.equal(calls, H.PER_MINUTE);
   });
 
@@ -179,10 +209,12 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
       now: () => 1700000000000,
     });
     assert.equal(noHorst.status, 503);
+    assert.equal(noHorst.json.reason, 'invalid_input');
     assert.equal(calls, 0);
 
     const longText = await H.handleTts(event('POST', { character: 'margarethe', text: 'a'.repeat(301) }), chatDeps(async () => { calls += 1; throw new Error('nicht'); }));
     assert.equal(longText.status, 503);
+    assert.equal(longText.json.reason, 'invalid_input');
     assert.equal(calls, 0);
 
     let sent;
@@ -213,6 +245,33 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
       now: () => 1700000000000,
     });
     assert.equal(evil.headers['Access-Control-Allow-Origin'], undefined);
+
+    const logs = [];
+    const prevErr = console.error;
+    console.error = function () { logs.push(Array.prototype.slice.call(arguments)); };
+    let denied;
+    try {
+      denied = await H.handleTts(event('POST', { character: 'margarethe', text: 'Hallo' }), {
+        env: { ELEVENLABS_API_KEY: 'test-eleven' },
+        fetch: async () => ({
+          ok: false,
+          status: 401,
+          headers: { get: () => 'application/json', 'xi-api-key': 'test-eleven' },
+          json: async () => ({ detail: 'rejected test-eleven' }),
+        }),
+        now: () => 1700000000000,
+      });
+    } finally {
+      console.error = prevErr;
+    }
+    assert.equal(denied.status, 503);
+    assert.equal(denied.json.reason, 'upstream_401');
+    assert.equal(JSON.stringify(denied.json).includes('test-eleven'), false);
+    assert.equal(logs.length, 1);
+    assert.deepEqual(logs[0].slice(0, 2), ['upstream', 401]);
+    assert.match(logs[0][2], /rejected/);
+    assert.equal(String(logs[0][2]).includes('test-eleven'), false);
+    assert.equal(JSON.stringify(logs[0]).includes('xi-api-key'), false);
   });
 
   test('Function-Einstieg antwortet auf GET', async () => {
@@ -228,7 +287,7 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
       delete process.env.XAI_API_KEY;
       const missing = await chat.main({ http: { method: 'GET', headers: {} } });
       assert.equal(missing.statusCode, 503);
-      assert.deepEqual(missing.body, { error: 'nicht erreichbar' });
+      assert.deepEqual(missing.body, { error: 'nicht erreichbar', reason: 'no_key' });
     } finally {
       if (prev == null) delete process.env.XAI_API_KEY;
       else process.env.XAI_API_KEY = prev;
