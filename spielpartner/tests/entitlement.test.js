@@ -8,7 +8,7 @@ const C = require('../../public/spielpartner/cards.js');
 
 const DAY = 24 * 60 * 60 * 1000;
 const START = 1700000000000;
-const PREMIUM = ['lena', 'jonas', 'oemer', 'hilde', 'sepp', 'ruediger', 'chantal', 'urs', 'vreni', 'luce'];
+const PREMIUM = ['lena', 'jonas', 'oemer', 'oma-hilde', 'sepp', 'ruediger', 'chantal', 'urs', 'vreni', 'luce'];
 
 function catalog() {
   return JSON.parse(fs.readFileSync(path.join(__dirname, '../../public/spielpartner/avatare.json'), 'utf8'));

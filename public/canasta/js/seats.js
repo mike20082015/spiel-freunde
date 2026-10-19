@@ -2,6 +2,7 @@
  * Sitzordnung am Canasta-Tisch.
  * Süden: Du. Norden: Partnerin Margarethe. Links Horst, rechts Oma Hilde.
  * Bilder: /media/spielpartner/<slug>.jpg, sonst die Initialen wie bei den Spielpartnern.
+ * Oma Hilde hat den Bild-Slug oma-hilde. Die Stimme bleibt unter dem Namen hilde.
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -33,7 +34,7 @@
     { seat: 0, id: 'du', name: 'Du', full: 'Du', slug: null, voice: false, team: 0, place: 'south', partner: false },
     { seat: 1, id: 'horst', name: 'Horst', full: 'Horst Kaluppke', slug: 'horst', voice: true, team: 1, place: 'west', partner: false },
     { seat: 2, id: 'margarethe', name: 'Margarethe', full: 'Margarethe von Hohenfels', slug: 'margarethe', voice: true, team: 0, place: 'north', partner: true },
-    { seat: 3, id: 'hilde', name: 'Oma Hilde', full: 'Oma Hilde', slug: 'hilde', voice: false, team: 1, place: 'east', partner: false },
+    { seat: 3, id: 'hilde', name: 'Oma Hilde', full: 'Oma Hilde', slug: 'oma-hilde', voice: false, team: 1, place: 'east', partner: false },
   ];
 
   seats.forEach(function (p) {
