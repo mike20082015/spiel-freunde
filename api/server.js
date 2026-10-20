@@ -48,7 +48,7 @@ function mockEnv() {
     VOICE_MARGARETHE: '28LWddKi67H2YN9L2PvK',
     XAI_MODEL: 'grok-4.3',
     XAI_IMAGE_MODEL: 'grok-imagine-image-2.0',
-    ELEVEN_MODEL: 'eleven_flash_v2_5',
+    ELEVEN_MODEL: 'eleven_v3',
     DAILY_LIMIT: '1000',
   };
 }

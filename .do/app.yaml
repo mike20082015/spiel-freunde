@@ -49,7 +49,7 @@ functions:
         scope: RUN_AND_BUILD_TIME
         type: GENERAL
       - key: ELEVEN_MODEL
-        value: eleven_flash_v2_5
+        value: eleven_v3
         scope: RUN_AND_BUILD_TIME
         type: GENERAL
       - key: VOICE_MARGARETHE
