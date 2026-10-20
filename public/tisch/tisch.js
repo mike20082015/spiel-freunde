@@ -448,6 +448,7 @@
   function panelSignature(view) {
     return [
       view.status, view.phase, view.yourTurn, view.bidValue, view.gameLabel, view.winnerSeat,
+      view.kontra ? 1 : 0, view.re ? 1 : 0, view.doubling && view.doubling.kind, view.doubling && view.doubling.player,
       (view.bidding && view.bidding.role), (view.bidding && view.bidding.value),
       (view.result && view.result.value), (view.hand || []).length,
     ].join('|');
@@ -521,6 +522,18 @@
       panel.querySelector('[data-game="null"]').addEventListener('click', () => declare({ type: 'null' }));
       return;
     }
+    if (view.doubling && view.yourTurn) {
+      const kontra = view.doubling.kind === 'kontra';
+      panel.innerHTML = kontra
+        ? '<h3>Kontra?</h3><p>Kontra verdoppelt den Spielwert, noch bevor die erste Karte kommt. Gewonnen wie verloren.</p>'
+        : '<h3>Re?</h3><p>Es liegt Kontra. Re verdoppelt noch einmal, der Spielwert zählt vierfach.</p>';
+      panel.innerHTML += '<div class="panel-row"><button class="btn ' + (kontra ? 'btn-wine' : 'btn-gold') + '" type="button" id="dbl-yes">'
+        + (kontra ? 'Kontra' : 'Re') + '</button><button class="btn btn-ghost-dark" type="button" id="dbl-no">'
+        + (kontra ? 'Weiter ohne Kontra' : 'Kein Re') + '</button></div>';
+      $('dbl-yes').addEventListener('click', () => act('double', { yes: true }));
+      $('dbl-no').addEventListener('click', () => act('double', { yes: false }));
+      return;
+    }
     panel.hidden = true;
   }
 
@@ -564,6 +577,12 @@
       chip.textContent = 'Code ' + view.code;
       chips.appendChild(chip);
     }
+    if (view.kontra) {
+      const chip = document.createElement('span');
+      chip.className = 'chip kontra';
+      chip.textContent = view.re ? 'Kontra · Re' : 'Kontra';
+      chips.appendChild(chip);
+    }
     paintSeats(view);
     paintOpp(view);
     paintHand(view);
@@ -598,6 +617,10 @@
       const said = Talk.callText(id, token) || (event.action === 'pass' ? 'Passe' : String(event.value || ''));
       bubble(event.seat, event.action === 'pass' ? 'Passe' : (event.action === 'hold' ? 'Ja' : String(event.value || '18')));
       Voice.speak(id, said, { kind: 'bid' });
+    } else if (event.kind === 'kontra' || event.kind === 're') {
+      const word = event.yes ? (event.kind === 'kontra' ? 'Kontra' : 'Re') : (event.kind === 'kontra' ? 'Weiter' : 'Kein Re');
+      bubble(event.seat, word);
+      Voice.speak(id, word);
     } else if (event.kind === 'declare') {
       const line = Talk.line(id, 'declare') || event.label || '';
       bubble(event.seat, event.label || line);

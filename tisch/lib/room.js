@@ -176,6 +176,9 @@ function publicResult(result) {
     value: result.value || 0,
     score: result.score ? result.score.slice() : [0, 0, 0],
     overbid: !!result.overbid,
+    kontra: !!result.kontra,
+    re: !!result.re,
+    factor: result.factor || 1,
     points: result.points || null,
     text: result.text || null,
   };
@@ -209,7 +212,11 @@ function actorSeat(state) {
     return turn ? turn.player : null;
   }
   if (state.phase === 'skat' || state.phase === 'discard' || state.phase === 'declare') return state.declarer;
-  if (state.phase === 'play') return state.turn;
+  if (state.phase === 'play') {
+    const doubling = E.doublingTurn(state);
+    if (doubling) return doubling.player;
+    return state.turn;
+  }
   return null;
 }
 
@@ -394,6 +401,12 @@ function createHub(options) {
       return true;
     }
     if (state.phase === 'play') {
+      const doubling = E.doublingTurn(state);
+      if (doubling && doubling.player === actor) {
+        E.declineDouble(state, actor);
+        pushEvent(room, { kind: doubling.kind, seat: actor, yes: false });
+        return true;
+      }
       const legal = E.legalFor(state, actor);
       if (!legal.length) return false;
       const info = E.playCard(state, actor, legal[0]);
@@ -440,10 +453,17 @@ function createHub(options) {
         E.declare(state, sanitizeGame(suggestion));
         pushEvent(room, { kind: 'declare', seat: actor, label: E.gameLabel(state.game) });
       } else if (state.phase === 'play') {
-        const choice = AI.chooseCard(view, who);
-        const info = E.playCard(state, actor, choice.card);
-        pushEvent(room, { kind: 'play', seat: actor, card: choice.card });
-        if (info.trickComplete) pushEvent(room, { kind: 'trick', winner: info.winner });
+        const doubling = E.doublingTurn(state);
+        if (doubling && doubling.player === actor) {
+          AI.actOnDoubling(state, who);
+          const yes = doubling.kind === 'kontra' ? state.kontraBy === actor : !!state.re;
+          pushEvent(room, { kind: doubling.kind, seat: actor, yes: yes });
+        } else {
+          const choice = AI.chooseCard(view, who);
+          const info = E.playCard(state, actor, choice.card);
+          pushEvent(room, { kind: 'play', seat: actor, card: choice.card });
+          if (info.trickComplete) pushEvent(room, { kind: 'trick', winner: info.winner });
+        }
       } else return false;
     } catch (e) {
       if (!fallbackAi(room)) return false;
@@ -561,7 +581,13 @@ function createHub(options) {
       return 'Spiel zu Ende.';
     }
     const actor = actorSeat(state);
-    const who = actor === seatIndex ? 'Du bist' : ((room.seats[actor] && room.seats[actor].name) ? room.seats[actor].name + ' ist' : 'Jemand ist');
+    const doubling = state.phase === 'play' ? E.doublingTurn(state) : null;
+    const name = room.seats[actor] && room.seats[actor].name;
+    if (doubling) {
+      if (actor === seatIndex) return doubling.kind === 'kontra' ? 'Kontra?' : 'Re?';
+      return (name || 'Jemand') + (doubling.kind === 'kontra' ? ' überlegt ein Kontra.' : ' überlegt Re.');
+    }
+    const who = actor === seatIndex ? 'Du bist' : (name ? name + ' ist' : 'Jemand ist');
     if (state.phase === 'bidding') return who + ' am Reizen.';
     if (state.phase === 'skat') return who + ' dran: Hand oder Skat.';
     if (state.phase === 'discard') return who + ' drückt zwei Karten.';
@@ -638,9 +664,12 @@ function createHub(options) {
     view.openHand = mine.openHand || null;
     view.special = mine.special;
     view.bidding = state.phase === 'bidding' ? E.biddingTurn(state) : null;
+    view.kontra = !!mine.kontra;
+    view.re = !!mine.re;
+    view.doubling = mine.doubling || null;
     view.result = publicResult(state.result);
     view.yourTurn = actorSeat(state) === seatIndex && room.status === 'live';
-    if (view.yourTurn && state.phase === 'play') view.legal = E.legalFor(state, seatIndex);
+    if (view.yourTurn && state.phase === 'play' && !view.doubling) view.legal = E.legalFor(state, seatIndex);
     return view;
   }
 
@@ -852,8 +881,20 @@ function createHub(options) {
       try { E.declare(state, sanitizeGame(body.game || body)); }
       catch (e) { throw new TischError(e.message || 'Die Ansage geht so nicht.', 409); }
       pushEvent(room, { kind: 'declare', seat: seat.index, label: E.gameLabel(state.game) });
+    } else if (action === 'double') {
+      const doubling = state && E.doublingTurn(state);
+      if (!doubling || doubling.player !== seat.index) throw new TischError('Du bist nicht dran.', 409);
+      try {
+        if (body.yes && doubling.kind === 'kontra') E.sayKontra(state, seat.index);
+        else if (body.yes) E.sayRe(state, seat.index);
+        else E.declineDouble(state, seat.index);
+      } catch (e) {
+        throw new TischError(e.message || 'Das geht gerade nicht.', 409);
+      }
+      pushEvent(room, { kind: doubling.kind, seat: seat.index, yes: !!body.yes });
     } else if (action === 'play') {
       if (!state || state.phase !== 'play') throw new TischError('Gerade wird nicht gespielt.', 409);
+      if (E.doublingTurn(state)) throw new TischError('Erst Kontra oder Re.', 409);
       try {
         const info = E.playCard(state, seat.index, body.card);
         pushEvent(room, { kind: 'play', seat: seat.index, card: body.card });

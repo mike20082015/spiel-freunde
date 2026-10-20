@@ -11,7 +11,7 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 | `/` | Startseite |
 | `/mein-avatar/` | Name und Gesicht für den Tisch. Das Bild bleibt auf dem Gerät |
 | `/spielpartner/` | Deine Spielpartner: Horst, Margarethe und die Premium-Runde. 14 Tage Test nur in diesem Browser, plus Link zum eigenen Avatar |
-| `/skat/` | Spielbarer Skat-Prototyp: Du gegen Horst und Margarethe |
+| `/skat/` | Spielbares Skat: Du gegen Horst und Margarethe |
 | `/tisch/` | Privater Skat-Tisch für bis zu drei Freunde, mit Einladungscode |
 | `/canasta/` | Spielbares Canasta: Du mit Margarethe gegen Horst und Oma Hilde |
 | `/schafkopf/` | Spielbares Schafkopf: Du, Horst, Sepp und Margarethe |
@@ -25,7 +25,7 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 | `/watten/` | Spielbares Watten: Du und Sepp gegen Horst und Oma Hilde |
 | `/bridge/` | Spielbares Rubber Bridge: Du und Margarethe gegen Jonas und Rüdiger. Chicago als Schalter |
 
-In der Vorschau führen die großen Buttons auf der Startseite nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. Startseite, Skat, Canasta, Schafkopf, Jass, Doppelkopf, Mau-Mau, Rommé, Schwimmen, Elfer raus, Schnapsen, Watten, Bridge, Spielpartner und Mein Avatar tragen ein goldenes Band „Vorschau“.
+Die großen Buttons auf der Startseite führen nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`.
 
 Veröffentlicht wird nur der Ordner `public/`. Tests, Werkzeuge und die Startskripte bleiben außerhalb.
 
@@ -47,7 +47,7 @@ python3 -m http.server 8000
 
 Dann [http://localhost:8000/](http://localhost:8000/) und [http://localhost:8000/skat/](http://localhost:8000/skat/).
 
-Oder im Ordner `skat/` das Startskript (`./start.sh`, `start.bat`, `start.command`). Es öffnet `/skat/`. Für das Mikrofon im Prototyp brauchst Du http://localhost, nicht file://.
+Oder im Ordner `skat/` das Startskript (`./start.sh`, `start.bat`, `start.command`). Es öffnet `/skat/`. Für das Mikrofon brauchst Du http://localhost, nicht file://.
 
 ## Tests
 
@@ -69,7 +69,7 @@ cd ../watten && node --test tests/
 cd ../bridge && node --test tests/
 ```
 
-Die Spiellogik liegt in `public/skat/js/`. Details zum Skat-Prototyp stehen in `skat/README.md`.
+Die Spiellogik liegt in `public/skat/js/`. Details zum Skat stehen in `skat/README.md`.
 
 ## DigitalOcean App Platform
 
@@ -180,7 +180,7 @@ Der Browser fragt zuerst `GET /api/sf/chat` und, wenn das nicht antwortet, `GET 
 
 Unter `/tisch/` macht jemand einen Skat-Tisch für bis zu drei Freunde auf. Der Gastgeber bekommt einen Code aus sechs Zeichen und einen Link `/tisch/?code=…`. Wer den Link öffnet oder den Code eintippt, setzt sich mit einem Namen dazu. Leere Plätze füllt der Gastgeber mit einem Spielpartner, Horst und Margarethe immer, die übrigen nur bei Test oder Premium in diesem Browser. Ein kurzer Textchat läuft über den Tisch. Die Stimmen der Spielpartner bleiben die vorhandenen: feste MP3s und, wenn nötig, `/api/sf/tts`. Dafür liegt kein Schlüssel im Browser.
 
-Gemischt und gegeben wird nur auf dem Server. Jeder Browser bekommt die Sicht aus `SkatEngine.viewFor`: eigene Karten, öffentliche Stiche, den Skat nur, wenn Du ihn selbst aufgenommen hast. Die KI auf einem leeren Platz sieht dieselbe Sicht und schummelt nicht. Sie nutzt `public/skat/js/ai.js`.
+Gemischt und gegeben wird nur auf dem Server. Jeder Browser bekommt die Sicht aus `SkatEngine.viewFor`: eigene Karten, öffentliche Stiche, den Skat nur, wenn Du ihn selbst aufgenommen hast. Kontra und Re laufen wie am Solotisch, bevor die erste Karte kommt. Die KI auf einem leeren Platz sieht dieselbe Sicht und schummelt nicht. Sie nutzt `public/skat/js/ai.js`.
 
 ### Ablauf im Dienst
 

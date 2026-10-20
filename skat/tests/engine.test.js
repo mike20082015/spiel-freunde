@@ -1,9 +1,19 @@
 /* Regeltests. Aufruf: node --test tests/   (oder: node tests/run-all.js) */
 const test = require('node:test');
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const E = require('../../public/skat/js/engine.js');
 const AI = require('../../public/skat/js/ai.js');
 const { simulate } = require('./simulate.js');
+
+function passDoubling(st) {
+  let guard = 0;
+  while (E.doublingTurn(st)) {
+    if (++guard > 5) throw new Error('Kontra-Fenster schließt nicht');
+    E.declineDouble(st, E.doublingTurn(st).player);
+  }
+}
 
 const suitGame = (t, extra) => Object.assign({ type: 'suit', trump: t }, extra || {});
 
@@ -173,6 +183,7 @@ test('Komplettes Spiel, Überreizt und Abrechnung', () => {
     E.takeSkat(st);
     E.discard(st, ['D8', 'D7']);
     E.declare(st, { type: 'suit', trump: 'C' });
+    passDoubling(st);
     // jeder spielt die KI-Karte, das Ergebnis ist deterministisch
     while (st.phase === 'play') {
       const p = st.turn;
@@ -232,6 +243,7 @@ test('Null: verloren beim ersten eigenen Stich (Spiel endet sofort), Wert 23', (
   E.playHand(st);
   E.declare(st, { type: 'null' });
   assert.strictEqual(st.game.hand, true);
+  passDoubling(st);
   E.playCard(st, 0, 'HA'); E.playCard(st, 1, 'H7'); E.playCard(st, 2, 'H9');
   assert.strictEqual(st.phase, 'done');
   assert.strictEqual(st.tricks.length, 1);
@@ -251,6 +263,7 @@ test('Null gewonnen: Alleinspieler bekommt keinen Stich, Wert 23', () => {
   E.takeSkat(st);
   E.discard(st, ['HA', 'DA']);
   E.declare(st, { type: 'null' });
+  passDoubling(st);
   while (st.phase === 'play') E.playCard(st, st.turn, AI.chooseCard(E.viewFor(st, st.turn), 'neutral').card);
   assert.strictEqual(st.result.won, true);
   assert.strictEqual(st.result.value, 23);
@@ -351,6 +364,7 @@ test('Spielstärke: alle Stufen spielen nur erlaubte Karten und sehen keine frem
         else { E.takeSkat(st); const x = AI.chooseDiscardAndGame(E.viewFor(st, st.declarer), who); E.discard(st, x.discard); E.declare(st, x.game); }
       }
       while (st.phase === 'play') {
+        if (E.doublingTurn(st)) { AI.actOnDoubling(st, who); continue; }
         const p = st.turn;
         const v = E.viewFor(st, p);
         for (const q of [0, 1, 2]) if (q !== p && !(v.openHand && q === st.declarer)) for (const c of st.hands[q]) assert(!v.hand.includes(c));
@@ -360,4 +374,144 @@ test('Spielstärke: alle Stufen spielen nur erlaubte Karten und sehen keine frem
       }
     }
   }
+});
+
+test('Kontra und Re: nur Gegenspieler, nur vor der ersten Karte, Faktor 2 und 4', () => {
+  const hands = [
+    ['CJ', 'HJ', 'CA', 'C10', 'CK', 'CQ', 'C9', 'SA', 'HA', 'DA'],
+    ['SJ', 'C8', 'S10', 'SK', 'SQ', 'S9', 'H10', 'HK', 'HQ', 'H9'],
+    ['DJ', 'C7', 'S8', 'S7', 'H8', 'H7', 'D10', 'DK', 'DQ', 'D9'],
+  ];
+  const skat = ['D8', 'D7'];
+  const setup = () => {
+    const st = scripted(hands, skat);
+    let guard = 0;
+    while (st.phase === 'bidding' && guard++ < 100) {
+      const t = E.biddingTurn(st);
+      if (t.player === 1) E.bidAction(st, t.role === 'say' && t.value <= 24);
+      else if (t.player === 2) E.bidAction(st, false);
+      else E.bidAction(st, true);
+    }
+    E.takeSkat(st);
+    E.discard(st, ['D8', 'D7']);
+    E.declare(st, { type: 'suit', trump: 'C' });
+    return st;
+  };
+  const plain = setup();
+  assert.strictEqual(plain.declarer, 0);
+  // Vorhand ist Alleinspieler, also fragt zuerst Mittelhand.
+  assert.deepStrictEqual(E.doublingTurn(plain), { kind: 'kontra', player: 1 });
+  assert.throws(() => E.sayKontra(plain, 0), /Kontra/);
+  assert.throws(() => E.playCard(plain, 0, 'CJ'), /ersten Karte/);
+  E.declineDouble(plain, 1);
+  assert.deepStrictEqual(E.doublingTurn(plain), { kind: 'kontra', player: 2 });
+  assert.throws(() => E.sayRe(plain, 0), /Re/);
+  E.sayKontra(plain, 2);
+  assert.strictEqual(plain.kontra, true);
+  assert.strictEqual(plain.kontraBy, 2);
+  assert.deepStrictEqual(E.doublingTurn(plain), { kind: 're', player: 0 });
+  assert.throws(() => E.sayRe(plain, 2), /Re/);
+  E.sayRe(plain, 0);
+  assert.strictEqual(plain.re, true);
+  assert.strictEqual(E.doublingTurn(plain), null);
+
+  const finish = (st) => {
+    while (st.phase === 'play') {
+      const p = st.turn;
+      E.playCard(st, p, AI.chooseCard(E.viewFor(st, p), 'neutral').card);
+    }
+    return st.result;
+  };
+  const doubled = finish(plain);
+  const quiet = setup();
+  passDoubling(quiet);
+  const base = finish(quiet);
+  assert.strictEqual(base.factor, 1);
+  assert.strictEqual(doubled.factor, 4);
+  assert.strictEqual(doubled.kontra, true);
+  assert.strictEqual(doubled.re, true);
+  assert.strictEqual(doubled.value, base.value * 4);
+  assert.strictEqual(doubled.scoreChange, base.scoreChange * 4);
+  assert.strictEqual(doubled.won, base.won);
+
+  const only = setup();
+  E.sayKontra(only, 1);
+  E.declineDouble(only, 0);
+  const kontra = finish(only);
+  assert.strictEqual(kontra.factor, 2);
+  assert.strictEqual(kontra.re, false);
+  assert.strictEqual(kontra.value, base.value * 2);
+  assert.strictEqual(kontra.scoreChange, base.scoreChange * 2);
+
+  const late = setup();
+  passDoubling(late);
+  E.playCard(late, late.turn, AI.chooseCard(E.viewFor(late, late.turn), 'neutral').card);
+  assert.strictEqual(E.doublingTurn(late), null);
+  assert.throws(() => E.sayKontra(late, 1), /Kontra/);
+});
+
+test('Ramsch hat kein Kontra', () => {
+  const st = E.newGame({ dealer: 2, rules: { mode: 'kneipe' }, special: 'ramsch', deck: E.createDeck() });
+  assert.strictEqual(st.phase, 'play');
+  assert.strictEqual(E.doublingTurn(st), null);
+  assert.throws(() => E.sayKontra(st, 0), /Kontra/);
+});
+
+test('KI sagt Kontra bei offenem verlorenem Null, sonst nicht, und schaut nicht in fremde Karten', () => {
+  const who = { persona: 'neutral', level: 'turnier', rng: () => 0.99 };
+  const safe = scripted(
+    [
+      ['C7', 'C8', 'C9', 'S7', 'S8', 'S9', 'H7', 'H8', 'D7', 'D8'],
+      ['C10', 'CJ', 'CQ', 'S10', 'SJ', 'SQ', 'H9', 'H10', 'D9', 'D10'],
+      ['CK', 'CA', 'SK', 'SA', 'HJ', 'HQ', 'HK', 'DJ', 'DQ', 'DK'],
+    ],
+    ['HA', 'DA']
+  );
+  E.bidAction(safe, false); E.bidAction(safe, false); E.bidAction(safe, true);
+  E.playHand(safe);
+  E.declare(safe, { type: 'null', ouvert: true, hand: true });
+  const ask = E.doublingTurn(safe);
+  assert.strictEqual(ask.kind, 'kontra');
+  const view = E.viewFor(safe, ask.player);
+  assert.ok(view.openHand);
+  for (const q of [0, 1, 2]) if (q !== ask.player && q !== safe.declarer) {
+    for (const c of safe.hands[q]) assert.ok(!view.hand.includes(c));
+  }
+  assert.strictEqual(AI.decideKontra(view, who), false);
+  assert.strictEqual(AI.decideKontra(E.viewFor(safe, safe.declarer), who), false);
+
+  const broken = scripted(
+    [
+      ['CA', 'CK', 'SA', 'SK', 'HA', 'HK', 'DA', 'DK', 'CJ', 'SJ'],
+      ['C7', 'C8', 'C9', 'S7', 'S8', 'S9', 'H7', 'H8', 'D7', 'D8'],
+      ['C10', 'CQ', 'S10', 'SQ', 'H9', 'H10', 'D9', 'D10', 'HJ', 'DJ'],
+    ],
+    ['HQ', 'DQ']
+  );
+  E.bidAction(broken, false); E.bidAction(broken, false); E.bidAction(broken, true);
+  E.playHand(broken);
+  E.declare(broken, { type: 'null', ouvert: true, hand: true });
+  const bAsk = E.doublingTurn(broken);
+  assert.strictEqual(AI.decideKontra(E.viewFor(broken, bAsk.player), who), true);
+  E.sayKontra(broken, bAsk.player);
+  const reView = E.viewFor(broken, broken.declarer);
+  assert.strictEqual(reView.doubling.kind, 're');
+  assert.strictEqual(AI.decideRe(reView, who), false);
+});
+
+test('Startseiten der Spiele tragen kein Vorschau mehr, Skat kein Prototyp-Band', () => {
+  const games = ['bridge', 'canasta', 'doppelkopf', 'elfer-raus', 'jass', 'maumau', 'romme', 'schafkopf', 'schnapsen', 'schwimmen', 'watten'];
+  for (const g of games) {
+    const html = fs.readFileSync(path.join(__dirname, '../../public', g, 'index.html'), 'utf8');
+    assert.doesNotMatch(html, /\(Vorschau\)/, g);
+  }
+  const skat = fs.readFileSync(path.join(__dirname, '../../public/skat/index.html'), 'utf8');
+  assert.match(skat, /<title>Skat am Stammtisch · Spiel-Freunde<\/title>/);
+  assert.match(skat, /Skat von Spiel-Freunde: Du gegen Horst und Margarethe/);
+  assert.doesNotMatch(skat, /\(Prototyp\)|class="proto"|Spielbarer Skat-Prototyp|noch nicht eingebaut/);
+  const tisch = fs.readFileSync(path.join(__dirname, '../../public/tisch/index.html'), 'utf8');
+  assert.doesNotMatch(tisch, /preview-badge|\(Vorschau\)|\(Prototyp\)/);
+  const app = fs.readFileSync(path.join(__dirname, '../../public/skat/js/app.js'), 'utf8');
+  assert.match(app, /showDoublePanel/);
+  assert.match(app, /Kontra · Re/);
 });

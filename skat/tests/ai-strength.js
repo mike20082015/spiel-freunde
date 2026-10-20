@@ -18,6 +18,7 @@ function runRandom(n, declSmart, defSmart, seed) {
     if (d.hand) { E.playHand(st); E.declare(st, d.game); }
     else { E.takeSkat(st); const x = AI.chooseDiscardAndGame(E.viewFor(st, st.declarer), 'neutral'); E.discard(st, x.discard); E.declare(st, x.game); }
     if (st.game.type === 'null') continue;
+    while (E.doublingTurn(st)) AI.actOnDoubling(st, 'neutral');
     while (st.phase === 'play') {
       const p = st.turn;
       const smart = p === st.declarer ? declSmart : defSmart;
@@ -40,6 +41,7 @@ function playDeal(deck, dealer, levels, rng) {
     if (d.hand) { E.playHand(st); E.declare(st, d.game); }
     else { E.takeSkat(st); const x = AI.chooseDiscardAndGame(E.viewFor(st, st.declarer), who(st.declarer)); E.discard(st, x.discard); E.declare(st, x.game); }
   }
+  while (E.doublingTurn(st)) AI.actOnDoubling(st, who);
   while (st.phase === 'play') { const p = st.turn; E.playCard(st, p, AI.chooseCard(E.viewFor(st, p), who(p)).card); }
   return st;
 }

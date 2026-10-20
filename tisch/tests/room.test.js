@@ -59,6 +59,7 @@ function drive(hub, code, claims) {
     else if (actor.phase === 'skat') hub.act(code, token, 'hand');
     else if (actor.phase === 'discard') hub.act(code, token, 'discard', { cards: actor.hand.slice(0, 2) });
     else if (actor.phase === 'declare') hub.act(code, token, 'declare', { game: { type: 'grand' } });
+    else if (actor.doubling) hub.act(code, token, 'double', { yes: actor.doubling.kind === 'kontra' && actor.you === 1 });
     else if (actor.phase === 'play') hub.act(code, token, 'play', { card: actor.legal[0] });
     else assert.fail('unerwartete Phase ' + actor.phase);
   }
@@ -132,6 +133,8 @@ test('Programm legt einen K.-o.-Tisch an, der Server setzt die Plätze, Serie en
   const views = drive(hub, made.summary.code, made.claims);
   const end = views[0];
   assert.equal(end.status, 'ended');
+  assert.equal(end.kontra, true);
+  assert.equal(end.re, false);
   assert.equal(end.winnerSeat, 0);
   assert.ok(end.scores[0] >= 51);
   assert.equal(end.scores[1], 0);
@@ -175,6 +178,7 @@ test('fremdes Blatt bleibt verdeckt, auch während die KI spielt', () => {
       else if (view.phase === 'skat') view = hub.act(made.summary.code, made.claims[0].token, 'hand');
       else if (view.phase === 'discard') view = hub.act(made.summary.code, made.claims[0].token, 'discard', { cards: view.hand.slice(0, 2) });
       else if (view.phase === 'declare') view = hub.act(made.summary.code, made.claims[0].token, 'declare', { game: { type: 'suit', trump: 'H' } });
+      else if (view.doubling) view = hub.act(made.summary.code, made.claims[0].token, 'double', { yes: false });
       else view = hub.act(made.summary.code, made.claims[0].token, 'play', { card: view.legal[0] });
     } else break;
   }

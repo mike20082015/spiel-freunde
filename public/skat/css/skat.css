@@ -26,9 +26,6 @@ img{display:block;max-width:100%}
 .logo img{height:36px;width:auto}
 .topbar-title{font-family:var(--serif);font-size:1.15rem;font-weight:500;color:var(--cream);display:flex;align-items:center;gap:10px;white-space:nowrap}
 .topbar-title .suits{display:inline-flex;gap:3px;font-size:.9rem;color:var(--cream)}.topbar-title .suits .r{color:var(--gold-2)}
-.proto{font-family:var(--sans);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#3a2a0c;background:var(--gold);padding:2px 8px;border-radius:999px}
-.preview-badge{flex:none;position:relative;display:inline-flex;align-items:center;margin-left:-6px;padding:5px 10px 5px 13px;border-radius:2px 4px 4px 2px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#3a2a0c;font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;line-height:1;box-shadow:0 8px 16px -10px rgba(0,0,0,.7)}
-.preview-badge::before{content:"";position:absolute;left:-7px;top:0;bottom:0;width:7px;background:linear-gradient(180deg,#a67c2d,#8a6424);clip-path:polygon(100% 0,0 50%,100% 100%)}
 .topbar-actions{margin-left:auto;display:flex;gap:8px}
 .lbl-short{display:none}
 .tbtn{white-space:nowrap;display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1.5px solid rgba(247,241,227,.28);color:rgba(247,241,227,.9);font-size:.88rem;font-weight:600;transition:background .2s,border-color .2s}
@@ -49,6 +46,7 @@ img{display:block;max-width:100%}
 .chip b{color:var(--gold-2)}
 .chip.bock{background:var(--wine);border-color:var(--gold-3);color:var(--cream)}
 .chip.ramsch{background:#5a3a1a;border-color:var(--gold-3)}
+.chip.kontra{background:var(--wine);border-color:var(--gold);color:var(--gold-2);letter-spacing:.06em;text-transform:uppercase;font-size:.72rem}
 
 .room{flex:1;min-height:0;position:relative}
 
@@ -454,7 +452,6 @@ img{display:block;max-width:100%}
 }
 @media (max-width:560px){
   .topbar .logo{display:none}
-  .preview-badge{font-size:.58rem;letter-spacing:.06em;padding:4px 7px 4px 9px;margin-left:0}
   .topbar-actions{margin-left:0;width:auto;flex:1;min-width:0;justify-content:space-between;gap:2px}
   .tbtn{padding:6px 6px}
   .tbtn .tdot{display:none}

@@ -58,7 +58,7 @@ test('die Seite folgt dem Tisch, dem Rundenlimit und der Fußzeile', () => {
   const html = fs.readFileSync(path.join(__dirname, '../../public/schwimmen/index.html'), 'utf8');
   const app = fs.readFileSync(path.join(__dirname, '../../public/schwimmen/js/app.js'), 'utf8');
   const home = fs.readFileSync(path.join(__dirname, '../../public/index.html'), 'utf8');
-  assert.match(html, /Vorschau/);
+  assert.doesNotMatch(html, /\(Vorschau\)/);
   assert.match(html, /Ein Angebot der Interconsult LLC/);
   assert.match(html, /href="\/impressum\.html"/);
   assert.match(html, /href="\/datenschutz\.html"/);

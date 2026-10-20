@@ -27,7 +27,7 @@ test('Sitze: Du, Horst, Lena, Chantal, Bilder mit Initialen', () => {
 
 test('Startseite zeigt Schwimmen als Neu und behält die anderen Spiele', () => {
   const html = fs.readFileSync(path.join(root, 'public/index.html'), 'utf8');
-  assert.match(html, /preview-badge">Vorschau</);
+  assert.doesNotMatch(html, /preview-badge/);
   assert.match(html, /<span class="badge">Neu<\/span>\s*<\/div>\s*<h3>Schwimmen<\/h3>/);
   assert.match(html, /href="\/schwimmen\/">Schwimmen spielen</);
   assert.match(html, /href="\/schwimmen\/">Schwimmen</);
@@ -50,6 +50,6 @@ test('Der Tisch ruft Avatar, Rundenzähler und die Rechtstexte', () => {
   assert.match(page, /\/spielpartner\/rounds\.js/);
   assert.match(page, /id="modal-paywall"/);
   assert.match(page, /Ein Angebot der Interconsult LLC/);
-  assert.match(page, /preview-badge">Vorschau</);
+  assert.doesNotMatch(page, /preview-badge/);
   assert.equal(page.includes('Michael'), false);
 });

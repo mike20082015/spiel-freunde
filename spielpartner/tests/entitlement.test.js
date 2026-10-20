@@ -516,6 +516,91 @@ test('jedes Spiel ruft den gemeinsamen Rundenzähler auf', () => {
   });
 });
 
+test('Preisliste und Helfer stehen nur einmal in entitlement.js', () => {
+  const src = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/entitlement.js'), 'utf8');
+  ['function quote(', 'function formatEuro(', 'function presentation(', 'function periodById(', 'function afterTrialSentence(', 'var OFFER ='].forEach((needle) => {
+    assert.strictEqual((src.split(needle).length - 1), 1, needle);
+  });
+});
+
+test('neuer Spieler spielt mehr als drei Runden, nach trialEndsAt wieder drei am Tag', () => {
+  const Rounds = require('../../public/spielpartner/rounds.js');
+  const Paywall = require('../../public/spielpartner/paywall.js');
+  const storage = E.memoryStorage();
+  let opened = 0;
+  const previous = global.window;
+  global.window = {
+    SpielpartnerEntitlement: E,
+    SpielpartnerPaywall: { open() { opened += 1; } }
+  };
+  try {
+    assert.strictEqual(E.describe(E.load(storage), START).phase, 'new');
+    const started = Rounds.boot(storage, START);
+    assert.strictEqual(started.phase, 'trial');
+    assert.strictEqual(started.trialEndsAt, START + 14 * DAY);
+    const hint = { textContent: '' };
+    Rounds.paint(hint, storage, START);
+    assert.match(hint.textContent, /Test läuft noch 14 Tage/);
+    const oneDayLeft = started.trialEndsAt - 12 * 60 * 60 * 1000;
+    Rounds.paint(hint, storage, oneDayLeft);
+    assert.strictEqual(hint.textContent, 'Test läuft noch 1 Tag.');
+
+    for (let n = 1; n <= 4; n++) {
+      assert.strictEqual(Rounds.gate(storage, START + n), true, 'runde ' + n);
+      const done = Rounds.finish(storage, START + n);
+      assert.strictEqual(done.paywall, false, 'paywall ' + n);
+      assert.strictEqual(done.counted, false, 'gezählt ' + n);
+    }
+    assert.strictEqual(opened, 0);
+    assert.strictEqual(E.roundsUsed(storage, START), 0);
+    assert.strictEqual(E.load(storage).trialEndsAt, START + 14 * DAY);
+
+    const direct = E.memoryStorage();
+    assert.strictEqual(E.describe(E.load(direct), START).phase, 'new');
+    for (let n = 0; n < 5; n++) {
+      assert.strictEqual(Rounds.gate(direct, START + n), true);
+      assert.strictEqual(Rounds.finish(direct, START + n).paywall, false);
+    }
+    assert.strictEqual(opened, 0);
+    assert.strictEqual(E.describe(E.load(direct), START).phase, 'trial');
+
+    const endedAt = E.load(direct).trialEndsAt;
+    assert.strictEqual(Rounds.gate(direct, endedAt), true);
+    assert.strictEqual(Rounds.finish(direct, endedAt).count, 1);
+    Rounds.finish(direct, endedAt);
+    assert.strictEqual(Rounds.finish(direct, endedAt).paywall, true);
+    assert.strictEqual(opened, 1);
+    assert.strictEqual(Rounds.gate(direct, endedAt), false);
+    assert.strictEqual(opened, 2);
+    assert.strictEqual(E.canStartRound(direct, endedAt).ok, false);
+    assert.strictEqual(E.canStartRound(direct, endedAt).remaining, 0);
+    const nextMorning = new Date(new Date(endedAt).getFullYear(), new Date(endedAt).getMonth(), new Date(endedAt).getDate() + 1, 8).getTime();
+    assert.strictEqual(E.canStartRound(direct, nextMorning).remaining, 3);
+    assert.strictEqual(Rounds.gate(direct, nextMorning), true);
+  } finally {
+    if (previous === undefined) delete global.window;
+    else global.window = previous;
+  }
+
+  const wall = Paywall.markup(E);
+  assert.match(wall, /Die 14 Tage sind vorbei/);
+  assert.match(wall, /drei Runden am Tag mit Horst und Margarethe/);
+  assert.match(wall, /Drei Runden sind gespielt/);
+  assert.match(wall, /pw-kicker/);
+  assert.match(wall, /pw-plans/);
+  assert.match(wall, /data-buy="standard"/);
+  assert.match(wall, /data-buy="premium"/);
+  assert.match(wall, /Kein Abo, keine automatische Verlängerung/);
+
+  const app = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/app.js'), 'utf8');
+  assert.match(app, /Test läuft noch /);
+  assert.equal(app.includes('Dein erster Klick startet'), false);
+  const rounds = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/rounds.js'), 'utf8');
+  assert.match(rounds, /startTrial/);
+  assert.match(rounds, /phase === 'new'/);
+  assert.match(rounds, /canStartRound/);
+});
+
 test('der Helfer zählt drei Runden und öffnet dann die Sperre', () => {
   const Rounds = require('../../public/spielpartner/rounds.js');
   const storage = E.memoryStorage();
