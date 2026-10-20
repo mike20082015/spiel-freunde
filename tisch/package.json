@@ -1,0 +1,15 @@
+{
+  "name": "spiel-freunde-tisch",
+  "private": true,
+  "description": "Autoritativer Skat-Tisch für Spiel-Freunde. Eine Instanz, Zustand im Speicher.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/*.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}

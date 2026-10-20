@@ -509,6 +509,8 @@ test('Startseiten der Spiele tragen kein Vorschau mehr, Skat kein Prototyp-Band'
   assert.match(skat, /<title>Skat am Stammtisch · Spiel-Freunde<\/title>/);
   assert.match(skat, /Skat von Spiel-Freunde: Du gegen Horst und Margarethe/);
   assert.doesNotMatch(skat, /\(Prototyp\)|class="proto"|Spielbarer Skat-Prototyp|noch nicht eingebaut/);
+  const tisch = fs.readFileSync(path.join(__dirname, '../../public/tisch/index.html'), 'utf8');
+  assert.doesNotMatch(tisch, /preview-badge|\(Vorschau\)|\(Prototyp\)/);
   const app = fs.readFileSync(path.join(__dirname, '../../public/skat/js/app.js'), 'utf8');
   assert.match(app, /showDoublePanel/);
   assert.match(app, /Kontra · Re/);

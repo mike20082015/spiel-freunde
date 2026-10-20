@@ -5,6 +5,7 @@
  * Dieselben Pfade gibt es mit Paketnamen: /api/sf/chat, /api/sf/tts und /api/sf/avatar (App Platform).
  * /api/default/chat, /api/default/tts und /api/default/avatar bleiben erreichbar, damit alte Aufrufe nicht ins Leere laufen.
  * Auf App Platform laufen dieselben Handler als Functions, nicht dieser Prozess.
+ * /api/tisch/* hängt hier nur lokal an. Auf App Platform ist das ein eigener Web-Service.
  *
  *   node api/server.js              Seite und API, Schlüssel aus der Umgebung
  *   node api/server.js --mock       feste Antworten, ohne echte Schlüssel
@@ -17,6 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const { Readable } = require('stream');
 const handlers = require('./lib/handlers');
+const tisch = require('../tisch/server');
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const MIME = {
@@ -168,6 +170,24 @@ async function handleNodeRequest(req, res, options) {
     return;
   }
   const deps = { env: optionsSafe.env || process.env, fetch: optionsSafe.fetch || fetch };
+  if (url.pathname.indexOf('/api/tisch') === 0) {
+    if (!optionsSafe.hub) {
+      sendResult(res, { status: 503, json: { ok: false, error: 'Der Tisch ist gerade nicht da.' }, headers: {} });
+      return;
+    }
+    try {
+      await tisch.handleRequest(req, res, optionsSafe.hub);
+    } catch (err) {
+      if (res.headersSent) return;
+      const known = err && err.status;
+      sendResult(res, {
+        status: known ? err.status : 500,
+        json: { ok: false, error: known ? err.message : 'Das hat nicht geklappt.' },
+        headers: {},
+      });
+    }
+    return;
+  }
   const isChat = url.pathname === '/api/chat' || url.pathname === '/api/sf/chat' || url.pathname === '/api/default/chat';
   const isTts = url.pathname === '/api/tts' || url.pathname === '/api/sf/tts' || url.pathname === '/api/default/tts';
   const isAvatar = url.pathname === '/api/avatar' || url.pathname === '/api/sf/avatar' || url.pathname === '/api/default/avatar';
@@ -255,7 +275,19 @@ function createServer(options) {
     opts.env = opts.env || mockEnv();
     opts.fetch = opts.fetch || mockFetch(opts.delayMs || 0);
   }
-  return http.createServer((req, res) => {
+  if (!opts.hub) {
+    const extra = {};
+    if (opts.tischAiDelayMs != null) extra.aiDelayMs = opts.tischAiDelayMs;
+    else extra.aiDelayMs = 450;
+    if (opts.tischAdminToken) extra.adminToken = opts.tischAdminToken;
+    if (opts.tischAllowDecks) extra.allowDecks = true;
+    if (opts.tischTtlMs != null) extra.ttlMs = opts.tischTtlMs;
+    if (opts.tischNow) extra.now = opts.tischNow;
+    if (opts.tischDataDir) extra.dataDir = opts.tischDataDir;
+    opts.tischBundle = tisch.createListeningHub(extra);
+    opts.hub = opts.tischBundle.hub;
+  }
+  const server = http.createServer((req, res) => {
     handleNodeRequest(req, res, opts).catch(() => {
       if (!res.headersSent) {
         res.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -263,6 +295,8 @@ function createServer(options) {
       }
     });
   });
+  if (opts.tischBundle) tisch.wire(server, opts.tischBundle);
+  return server;
 }
 
 function listen(options) {
