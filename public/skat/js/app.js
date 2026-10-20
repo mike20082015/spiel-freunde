@@ -255,7 +255,11 @@
     const st = S.st;
     if (st.phase === 'bidding') { const t = E.biddingTurn(st); return t && t.player === p; }
     if (st.phase === 'skat' || st.phase === 'discard' || st.phase === 'declare') return st.declarer === p;
-    if (st.phase === 'play') return st.turn === p && S.displayTrick.length < 3;
+    if (st.phase === 'play') {
+      const dbl = E.doublingTurn(st);
+      if (dbl) return dbl.player === p;
+      return st.turn === p && S.displayTrick.length < 3;
+    }
     return false;
   }
 
@@ -277,6 +281,7 @@
 
   function humanLegal() {
     const st = S.st;
+    if (E.doublingTurn(st)) return null;
     if (st.phase === 'play' && st.turn === 0 && !S.busy && S.displayTrick.length < 3) return E.legalFor(st, 0);
     return null;
   }
@@ -332,8 +337,14 @@
       else main = NAMES[d] + ' spielt für ' + st.bid + ' und überlegt die Ansage ...';
       chips.push('<span class="chip">Reizwert <b>' + st.bid + '</b></span>');
     } else if (st.phase === 'play') {
+      const dbl = E.doublingTurn(st);
       const p = st.turn;
-      if (p === 0 && S.displayTrick.length < 3) {
+      if (dbl) {
+        if (dbl.player === 0) main = dbl.kind === 'kontra'
+          ? '<em>Kontra?</em> Vor der ersten Karte kannst Du den Spielwert verdoppeln.'
+          : '<em>Re?</em> ' + NAMES[st.kontraBy] + ' hat Kontra gesagt. Re zählt vierfach.';
+        else main = NAMES[dbl.player] + (dbl.kind === 'kontra' ? ' überlegt ein Kontra …' : ' überlegt, ob Re gesagt wird …');
+      } else if (p === 0 && S.displayTrick.length < 3) {
         if (!st.trick.length) main = '<em>Du bist dran:</em> Spiel eine Karte aus.';
         else main = '<em>Du bist dran:</em> ' + followText(st);
       } else if (S.displayTrick.length === 3) main = NAMES[st.lastTrick.winner] + (st.lastTrick.winner === 0 ? ' bekommst den Stich' : ' bekommt den Stich') + ' (' + st.lastTrick.points + ' Augen).';
@@ -343,6 +354,7 @@
         chips.push('<span class="chip">Augen <b>Du ' + trickPointsFor([0]) + '</b> · Horst ' + trickPointsFor([1]) + ' · Marg. ' + trickPointsFor([2]) + '</span>');
       } else {
         chips.push('<span class="chip">Spiel <b>' + esc(E.gameLabel(st.game)) + '</b> (' + (st.declarer === 0 ? 'Du' : NAMES[st.declarer]) + ')</span>');
+        if (st.kontra) chips.push('<span class="chip kontra">' + (st.re ? 'Kontra · Re' : 'Kontra') + '</span>');
         chips.push('<span class="chip">Reizwert <b>' + st.bid + '</b></span>');
         if (st.game.type !== 'null') {
           const d = st.declarer;
@@ -426,6 +438,30 @@
         sys('Du ' + (yes ? (t.role === 'hear' ? 'hältst ' + value : 'sagst ' + value) : 'passt') + '.');
         E.bidAction(st, yes);
         afterBidding();
+        advance();
+      }));
+    });
+  }
+
+  function showDoublePanel(dbl) {
+    const st = S.st;
+    const kontra = dbl.kind === 'kontra';
+    const html = kontra
+      ? '<h3>Kontra?</h3><p>Du bist Gegenspieler. Kontra verdoppelt den Spielwert, noch bevor die erste Karte kommt. Gewonnen wie verloren.</p>'
+      : '<h3>Re?</h3><p>' + NAMES[st.kontraBy] + ' hat Kontra gesagt. Re verdoppelt noch einmal, der Spielwert zählt vierfach.</p>';
+    const yesLabel = kontra ? 'Kontra' : 'Re';
+    const noLabel = kontra ? 'Weiter ohne Kontra' : 'Kein Re';
+    const yesClass = kontra ? 'btn btn-wine' : 'btn btn-gold';
+    showPanel(html + '<div class="panel-row"><button class="' + yesClass + '" data-a="yes">' + yesLabel + '</button><button class="btn btn-ghost-dark" data-a="no">' + noLabel + '</button></div>', (p) => {
+      p.querySelectorAll('[data-a]').forEach((b) => b.addEventListener('click', () => {
+        const yes = b.dataset.a === 'yes';
+        hidePanel();
+        if (yes) {
+          if (kontra) E.sayKontra(st, 0);
+          else E.sayRe(st, 0);
+          say(0, yesLabel + '!', { kind: 'bid', speech: yesLabel + '.' });
+          sys('Du sagst ' + yesLabel + '.');
+        } else E.declineDouble(st, 0);
         advance();
       }));
     });
@@ -668,6 +704,24 @@
       if (st.phase === 'discard') { if (st.declarer === 0) { showDiscardPanel(); renderHand(); } return; }
       if (st.phase === 'declare') { if (st.declarer === 0) showDeclarePanel(); return; }
       if (st.phase === 'play') {
+        const dbl = E.doublingTurn(st);
+        if (dbl) {
+          if (dbl.player === 0) { showDoublePanel(dbl); return; }
+          hidePanel();
+          await delay(700);
+          const yes = dbl.kind === 'kontra'
+            ? AI.decideKontra(E.viewFor(st, dbl.player), aiWho(dbl.player))
+            : AI.decideRe(E.viewFor(st, dbl.player), aiWho(dbl.player));
+          if (yes) {
+            if (dbl.kind === 'kontra') E.sayKontra(st, dbl.player);
+            else E.sayRe(st, dbl.player);
+            const word = dbl.kind === 'kontra' ? 'Kontra' : 'Re';
+            say(dbl.player, word + '!', { kind: 'bid', speech: word + '.' });
+            sys(NAMES[dbl.player] + ' sagt ' + word + '.');
+          } else E.declineDouble(st, dbl.player);
+          await delay(450);
+          continue;
+        }
         hidePanel();
         const p = st.turn;
         if (p === 0) { render(); return; }
@@ -777,6 +831,7 @@
     if (r.passedIn) label = 'eingepasst';
     else if (r.ramsch) label = r.durchmarsch != null ? 'Durchmarsch' : 'Ramsch';
     else label = (r.declarer === 0 ? 'Du' : ['', 'Horst', 'Marg.'][r.declarer]) + ': ' + E.gameLabel(r.game).replace(', Schneider angesagt', ' S.').replace(', Schwarz angesagt', ' Sw.');
+    if (r.kontra) label += r.re ? ' · Kontra Re' : ' · Kontra';
     return { no: match.gameNo, label: label + (special === 'bock' ? ' ×2' : ''), change: r.score.slice(), totals: match.scores.slice() };
   }
 
@@ -879,6 +934,10 @@
       let calc;
       if (g.type === 'null') calc = E.gameLabel(g) + ' = ' + E.nullValue(g);
       else calc = r.parts.map((p) => p.label).join(' + ') + ' = ' + r.multiplier + ' × ' + E.baseValue(g) + ' = ' + (r.multiplier * E.baseValue(g));
+      if (r.kontra) {
+        const before = r.value / (r.re ? 4 : 2);
+        calc += ' → ' + before + (r.re ? ' × 4 (Kontra und Re)' : ' × 2 (Kontra)') + ' = ' + r.value;
+      }
       const extras = [];
       if (r.schwarz) extras.push('Schwarz');
       else if (r.schneider) extras.push('Schneider');
@@ -1123,7 +1182,7 @@
   const MIC = { rec: null, on: false, mode: '', downAt: 0, finalText: '', interim: '', want: false, muted: false, pausedForVoice: false, gesture: false, userEdit: false, writing: false, spoken: [], silence: 0, restart: 0 };
   function micSupport() {
     if (!SR) return { ok: false, text: 'Dein Browser kann leider keine Spracheingabe (das klappt in Chrome oder Edge). Du kannst einfach weiter schreiben.' };
-    if (!window.isSecureContext) return { ok: false, text: 'Die Spracheingabe braucht eine Adresse mit http://localhost. Starte den Prototyp mit start.command bzw. start.bat (siehe README). Bis dahin: einfach schreiben.' };
+    if (!window.isSecureContext) return { ok: false, text: 'Die Spracheingabe braucht eine Adresse mit http://localhost. Starte die Seite mit start.command bzw. start.bat (siehe README). Bis dahin: einfach schreiben.' };
     return { ok: true };
   }
   function normSpeech(s) {
