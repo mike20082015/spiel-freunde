@@ -21,7 +21,8 @@
  * Der Checkout liest quote() und BILLING_API_BASE, er speichert keine eigenen Beträge.
  *
  * Empfehlungscode: ?ref= wird unter REF_KEY gespeichert, der erste gilt,
- * 90 Tage lang. Er wird nur an den Checkout geschickt und nirgends angezeigt.
+ * 90 Tage lang. Er geht an den Checkout und an die Konto-Anmeldung,
+ * und er wird nirgends angezeigt.
  */
 (function (root, factory) {
   var api = factory();
@@ -159,14 +160,45 @@
     return state;
   }
 
+  /*
+   * Ein angemeldetes Konto ersetzt den lokalen Test. trialEndsAt und Lizenz
+   * kommen dann aus dem gespeicherten Profil (GET /me), nur für diese Antwort.
+   */
+  function overlayAccount(storage, state) {
+    var raw;
+    try { raw = JSON.parse(storage.getItem('sf-account')); }
+    catch (err) { return state; }
+    if (!raw || typeof raw !== 'object' || !raw.token || !raw.me) return state;
+    var exp = parseTime(raw.expiresAt);
+    if (exp != null && !(Date.now() < exp)) return state;
+    var trial = raw.me.trial || null;
+    if (trial && trial.active) {
+      var ends = parseTime(trial.endsAt);
+      if (ends == null && typeof trial.daysLeft === 'number') ends = Date.now() + trial.daysLeft * DAY_MS;
+      if (ends != null) state.trialEndsAt = ends;
+    } else if (trial && trial.endsAt) {
+      var ended = parseTime(trial.endsAt);
+      if (ended != null) state.trialEndsAt = ended;
+    }
+    if (raw.me.license) {
+      var lic = licenseFrom(raw.me.license);
+      if (lic) {
+        state.license = lic;
+        state.tier = lic.tier;
+      }
+    }
+    return state;
+  }
+
   function load(storage) {
+    var state;
     try {
       var text = storage.getItem(STORAGE_KEY);
-      if (!text) return normalize(null);
-      return normalize(JSON.parse(text));
+      state = text ? normalize(JSON.parse(text)) : normalize(null);
     } catch (err) {
-      return normalize(null);
+      state = normalize(null);
     }
+    return overlayAccount(storage, state);
   }
 
   function save(storage, state) {

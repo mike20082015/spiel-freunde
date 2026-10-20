@@ -1,0 +1,31 @@
+/* Anmeldekarte: dasselbe Holz und Gold wie die Sperre, nur größere Schrift */
+.signup-card h3{font-size:2.15rem;line-height:1.12}
+.signup-card .pw-kicker{font-size:.95rem}
+.signup-card .pw-lead{font-size:1.28rem;line-height:1.45}
+.signup-card .pw-field{display:block;font-size:1.2rem;font-weight:700;margin:14px 0}
+.signup-card .pw-field input{display:block;width:100%;margin-top:6px;font:inherit;font-size:1.25rem;padding:.72em .85em;border-radius:12px;border:1.5px solid var(--line,#e3d6b8);background:#fff;color:var(--ink,#2a2420)}
+.signup-card .btn{font-size:1.2rem;padding:.9em 1.3em}
+.signup-card form .btn{width:100%;margin-top:6px}
+.signup-card .pw-status{font-size:1.05rem;min-height:1.3em}
+.sf-who{display:inline-flex;align-items:center;gap:8px;margin-right:8px;color:var(--cream,#f7f1e3);font-weight:700;font-size:1rem}
+.sf-who b{color:var(--gold-2,#e9c977);font-family:var(--serif,Georgia,serif);font-weight:700;font-size:1.08rem}
+.sf-who button{font:inherit;font-weight:700;color:var(--cream,#f7f1e3);background:transparent;border:1.5px solid rgba(233,201,119,.75);border-radius:999px;padding:.4em .85em;cursor:pointer}
+.sf-who button:hover{background:rgba(247,241,227,.1)}
+.anmelden-page{min-height:100vh;display:flex;flex-direction:column;background:
+  radial-gradient(ellipse at 50% 0%,rgba(255,170,80,.16),transparent 55%),
+  linear-gradient(#3d2616,#1f130b);color:#f7f1e3}
+.anmelden-page .nav{position:relative}
+.anmelden-main{flex:1;display:grid;place-items:center;padding:28px 16px}
+.anmelden-card{width:min(640px,100%);background:linear-gradient(170deg,#fffaf0,#efe5cf);color:#2a2420;border-radius:20px;padding:28px 26px;box-shadow:0 0 0 1px rgba(176,133,50,.5),0 0 0 7px rgba(58,36,20,.7),0 40px 80px -20px rgba(0,0,0,.85)}
+.anmelden-card .btn{margin-top:8px}
+@media (max-width:560px){
+  .signup-card h3{font-size:1.75rem}
+  .signup-card .pw-lead,.signup-card .pw-field,.signup-card .pw-field input,.signup-card .btn{font-size:1.12rem}
+  .sf-who{font-size:.88rem;gap:6px}
+  .sf-who button{padding:.3em .6em}
+  /* Die Kopfzeile der Tische ist ohne Logo schon voll. Name und Abmelden
+     bekommen eine eigene Zeile, die Spielknöpfe bleiben auf dem Schirm. */
+  .topbar:has([data-sf-account]){height:auto;flex-wrap:wrap;padding-top:6px;padding-bottom:6px}
+  .topbar:has([data-sf-account]) .topbar-actions{flex-wrap:wrap;row-gap:4px}
+  .topbar .sf-who{flex:1 0 100%;order:-1;justify-content:flex-end;margin:0 0 2px}
+}

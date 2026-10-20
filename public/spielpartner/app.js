@@ -28,7 +28,7 @@
     if (view.phase === 'ended') {
       return 'Die 14 Tage sind vorbei. ' + roundLine + noAuto;
     }
-    return 'Dein erster Besuch an einem Spieltisch startet 14 Tage Premium in diesem Browser: alle Spielpartner.' + noAuto;
+    return 'Eine Proberunde ist ohne Konto frei. Danach schicken wir Dir einen Anmeldelink. Mit der ersten Anmeldung laufen 14 Testtage.' + noAuto;
   }
 
   function buttonText(view) {
@@ -72,18 +72,8 @@
     var view;
     try { view = currentView(); }
     catch (err) { view = { phase: 'new' }; }
-    if (view.phase !== 'new') {
-      if (event) event.preventDefault();
-      return;
-    }
+    if (view.phase === 'new') return;
     if (event) event.preventDefault();
-    try {
-      view = E.startTrial(localStorage, Date.now());
-    } catch (err) {
-      if (statusEl) statusEl.textContent = 'Dein Browser speichert den Test gerade nicht. Es wird trotzdem nichts abgebucht.';
-      return;
-    }
-    paint(view);
   }
 
   buttons.forEach(function (button) {
