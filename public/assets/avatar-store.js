@@ -170,10 +170,20 @@
       return { meta: meta, blob: blob };
     }
 
+    function accountName() {
+      try {
+        const raw = JSON.parse(deps.localStorage.getItem('sf-account') || 'null');
+        const name = raw && raw.player && raw.player.displayName;
+        if (typeof name === 'string' && name.trim()) return name.trim();
+      } catch (e) { /* kein Konto */ }
+      return '';
+    }
+
     async function playerSeat() {
       const meta = readMeta();
-      const name = meta.name || 'Du';
-      const initial = meta.name ? meta.name.charAt(0).toLocaleUpperCase('de') : 'Du';
+      const fromAccount = accountName();
+      const name = fromAccount || meta.name || 'Du';
+      const initial = (fromAccount || meta.name) ? name.charAt(0).toLocaleUpperCase('de') : 'Du';
       let imageUrl = null;
       let kind = 'none';
       let presetId = '';

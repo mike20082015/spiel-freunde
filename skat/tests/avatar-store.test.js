@@ -91,6 +91,15 @@ test('playerSeat fällt auf Du zurück und trennt Name vom Bild', async () => {
   const after = await api.playerSeat();
   assert.equal(after.name, 'Du');
   assert.equal(after.imageUrl, null);
+
+  localStorage.setItem('sf-account', JSON.stringify({
+    token: 'sf1',
+    expiresAt: 1700000000000 + 86400000,
+    player: { displayName: 'Helga' }
+  }));
+  const named = await api.playerSeat();
+  assert.equal(named.name, 'Helga');
+  assert.equal(named.initial, 'H');
 });
 
 test('Seiten verlinken Mein Avatar, ohne Schlüssel im Browser', () => {

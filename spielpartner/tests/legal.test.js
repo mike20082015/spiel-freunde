@@ -72,6 +72,18 @@ test('Rechtstexte sind als Entwurf markiert und enthalten die Pflichtangaben', (
   assert.match(privacy, /Vertriebspartner/);
   assert.match(privacy, /90 Tage/);
   assert.match(privacy, /Auskunft/);
+  assert.match(privacy, /E-Mail, Spielername/);
+  assert.match(privacy, /30 Minuten/);
+  assert.match(privacy, /ersten Anmeldung/);
+  assert.match(privacy, /Bearer-Token/);
+  assert.match(privacy, /nicht als Cookie/);
+  assert.match(privacy, /Kalendertag in Berlin/);
+  assert.match(privacy, /drei Runden an einem Berliner Tag/);
+  assert.match(privacy, /dieselben E-Mail|derselben E-Mail/);
+  assert.match(privacy, /Rechnungen und Lizenzcodes bleiben/);
+  assert.match(privacy, /Pro E-Mail-Adresse gibt es ein Konto/);
+  assert.equal(privacy.includes('Es gibt kein Nutzerkonto'), false);
+  assert.equal(privacy.includes('—'), false);
   assert.equal(privacy.includes('OpenAI'), false);
   assert.equal(privacy.includes('ElevenLabs'), false);
   assert.equal(privacy.includes('xAI'), false);
@@ -84,6 +96,13 @@ test('Rechtstexte sind als Entwurf markiert und enthalten die Pflichtangaben', (
   assert.match(terms, /Glücksspiel/);
   assert.match(terms, /Verbraucher/);
   assert.match(terms, /Wyoming/);
+  assert.match(terms, /Proberunde/);
+  assert.match(terms, /Pro E-Mail-Adresse gibt es ein Konto/);
+  assert.match(terms, /Anmeldelink/);
+  assert.match(terms, /Berlin/);
+  assert.match(terms, /drei Runden am Tag mit Horst und Margarethe/);
+  assert.equal(terms.includes('nur in Deinem Browser gezählt'), false);
+  assert.equal(terms.includes('—'), false);
 
   const withdrawal = fs.readFileSync(path.join(root, 'widerruf.html'), 'utf8');
   assert.match(withdrawal, /§ 356 Abs\. 5 BGB/);

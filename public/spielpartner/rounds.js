@@ -7,6 +7,7 @@
  *        /spielpartner/offer.js
  *        /spielpartner/checkout.js
  *        /spielpartner/paywall.js
+ *        /spielpartner/account.js
  *        /spielpartner/rounds.js
  *      plus offer.css und paywall.css
  *   2. <div class="modal" id="modal-paywall" hidden>
@@ -18,9 +19,10 @@
  * Der Zähler selbst liegt in SpielpartnerEntitlement (canStartRound, recordRound).
  * Fehlt das Modul, bleibt der Tisch spielbar.
  *
- * Der 14-Tage-Test startet hier, nicht erst über einen Knopf auf /spielpartner/.
- * boot() läuft beim ersten Besuch eines Spiels. gate() ruft startTrial noch
- * einmal, wenn phase "new" ist, und zwar vor canStartRound.
+ * Mit SpielpartnerAccount gilt: eine Proberunde ohne Konto, danach die
+ * Anmeldekarte. Angemeldet kommen Test und Tageslimit aus GET /me.
+ * Ohne das Kontomodul bleibt der lokale Zähler, damit ein fehlendes Skript
+ * den Tisch nicht sperrt.
  */
 (function (root, factory) {
   var api = factory();
@@ -68,7 +70,17 @@
     return view;
   }
 
+  function account() {
+    if (typeof window !== 'undefined' && window.SpielpartnerAccount) return window.SpielpartnerAccount;
+    return null;
+  }
+
   function boot(storage, now) {
+    var Acc = account();
+    if (Acc && typeof Acc.boot === 'function') {
+      try { return Acc.boot(storage, now); }
+      catch (err) { return null; }
+    }
     var Ent = entitlement();
     var store = storageOf(storage);
     if (!Ent || !store) return null;
@@ -76,6 +88,11 @@
   }
 
   function gate(storage, now) {
+    var Acc = account();
+    if (Acc && typeof Acc.gate === 'function') {
+      try { return Acc.gate(storage, now); }
+      catch (err) { return true; }
+    }
     var Ent = entitlement();
     if (!Ent || typeof Ent.canStartRound !== 'function') return true;
     var store = storageOf(storage);
@@ -91,6 +108,11 @@
   }
 
   function finish(storage, now) {
+    var Acc = account();
+    if (Acc && typeof Acc.finish === 'function') {
+      try { return Acc.finish(storage, now); }
+      catch (err) { return null; }
+    }
     var Ent = entitlement();
     if (!Ent || typeof Ent.recordRound !== 'function') return null;
     var store = storageOf(storage);
@@ -104,9 +126,16 @@
 
   function paint(el, storage, now) {
     if (!el) return;
+    var Acc = account();
+    var store = storageOf(storage);
+    if (Acc && store && typeof Acc.hint === 'function') {
+      try {
+        var hint = Acc.hint(store, now == null ? Date.now() : now);
+        if (hint) { el.textContent = hint; return; }
+      } catch (err) { /* lokale Zeile */ }
+    }
     var Ent = entitlement();
     if (!Ent || typeof Ent.canStartRound !== 'function') return;
-    var store = storageOf(storage);
     if (!store) return;
     var moment = now == null ? Date.now() : now;
     try {

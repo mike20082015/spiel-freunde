@@ -10,7 +10,8 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 |---|---|
 | `/` | Startseite |
 | `/mein-avatar/` | Name und Gesicht für den Tisch. Das Bild bleibt auf dem Gerät |
-| `/spielpartner/` | Deine Spielpartner: Horst, Margarethe und die Premium-Runde. 14 Tage Test nur in diesem Browser, plus Link zum eigenen Avatar |
+| `/spielpartner/` | Deine Spielpartner: Horst, Margarethe und die Premium-Runde. Eine Proberunde ohne Konto, danach 14 Testtage ab der ersten Anmeldung |
+| `/anmelden/` | Anmeldelink aus der Mail. Der Zugangsschlüssel bleibt im Browser |
 | `/skat/` | Spielbares Skat: Du gegen Horst und Margarethe |
 | `/canasta/` | Spielbares Canasta: Du mit Margarethe gegen Horst und Oma Hilde |
 | `/schafkopf/` | Spielbares Schafkopf: Du, Horst, Sepp und Margarethe |
