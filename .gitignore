@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 skat/screenshots/
 tools/screenshots/
+node_modules/
+tisch/data/

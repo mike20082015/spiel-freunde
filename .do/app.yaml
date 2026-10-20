@@ -80,3 +80,29 @@ functions:
         value: ""
         scope: RUN_AND_BUILD_TIME
         type: SECRET
+
+# Web-Service für den privaten Skat-Tisch.
+# Eine Instanz: die Tische liegen im Speicher. Mehr Instanzen würden die Runden spalten.
+# Route /api/tisch, dazu WebSocket /api/tisch/ws.
+# Keine Schlüssel. Chat und Stimmen bleiben an der Function api.
+# TISCH_ADMIN_TOKEN und TISCH_DATA_DIR bewusst nicht hier: solange sie fehlen,
+# bleibt die programmatische Turnier-Route zu und Ergebnisse leben im Prozess.
+# Für ein späteres K.-o. den Token als SECRET nur an dieser Komponente setzen
+# und den ResultStore an eine Datenbank hängen. Nichts davon ins Frontend,
+# nichts in api/project.yml.
+services:
+  - name: tisch
+    github:
+      repo: mike20082015/spiel-freunde
+      branch: main
+      deploy_on_push: true
+    source_dir: tisch
+    environment_slug: node-js
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    run_command: npm start
+    routes:
+      - path: /api/tisch
+    health_check:
+      http_path: /health

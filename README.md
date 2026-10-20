@@ -12,6 +12,7 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 | `/mein-avatar/` | Name und Gesicht für den Tisch. Das Bild bleibt auf dem Gerät |
 | `/spielpartner/` | Deine Spielpartner: Horst, Margarethe und die Premium-Runde. 14 Tage Test nur in diesem Browser, plus Link zum eigenen Avatar |
 | `/skat/` | Spielbarer Skat-Prototyp: Du gegen Horst und Margarethe |
+| `/tisch/` | Privater Skat-Tisch für bis zu drei Freunde, mit Einladungscode |
 | `/canasta/` | Spielbares Canasta: Du mit Margarethe gegen Horst und Oma Hilde |
 | `/schafkopf/` | Spielbares Schafkopf: Du, Horst, Sepp und Margarethe |
 | `/doppelkopf/` | Spielbares Doppelkopf: Du, Horst, Rüdiger und Margarethe |
@@ -34,6 +35,7 @@ skat/tests, skat/tools   Regeltests und Browser-Checks, nicht öffentlich
 skat/start.sh            lokaler Server, nicht öffentlich
 tools/                   Entwurf-Helfer der Startseite, nicht öffentlich
 .do/app.yaml             App-Spec für DigitalOcean
+tisch/                    Web-Service für den privaten Tisch, nicht im Static-Site-Ordner
 ```
 
 ## Lokal ansehen
@@ -50,6 +52,7 @@ Oder im Ordner `skat/` das Startskript (`./start.sh`, `start.bat`, `start.comman
 ## Tests
 
 ```bash
+cd tisch && npm test
 cd skat
 node --test tests/
 node --test ../jass/tests
@@ -172,3 +175,25 @@ xAI und ElevenLabs rechnen getrennt. Grok 4.3 kostet 1,25 Dollar je Million Eing
 ### Wenn die API fehlt
 
 Der Browser fragt zuerst `GET /api/sf/chat` und, wenn das nicht antwortet, `GET /api/chat`. Kommt kein `{"ok":true}`, bleiben für diesen Besuch die festen Sprüche und die fertigen MP3s. Zwei fehlgeschlagene Chats hintereinander schalten genauso ab. Ein einzelner Aussetzer fällt nur für diese Zeile auf den Spruchvorrat zurück. Feste Spielsprüche mit MP3 gehen nie an ElevenLabs. Sätze ohne MP3, deren Stimme fehlschlägt, spricht der Browser. `?ai=0` schaltet das freie Gespräch für den Besuch aus. Während einer Antwort steht im Chat „Horst schreibt“ oder „Margarethe schreibt“. Während der Wiedergabe pausiert das Freisprechen wie bisher.
+
+## Privater Tisch
+
+Unter `/tisch/` macht jemand einen Skat-Tisch für bis zu drei Freunde auf. Der Gastgeber bekommt einen Code aus sechs Zeichen und einen Link `/tisch/?code=…`. Wer den Link öffnet oder den Code eintippt, setzt sich mit einem Namen dazu. Leere Plätze füllt der Gastgeber mit einem Spielpartner, Horst und Margarethe immer, die übrigen nur bei Test oder Premium in diesem Browser. Ein kurzer Textchat läuft über den Tisch. Die Stimmen der Spielpartner bleiben die vorhandenen: feste MP3s und, wenn nötig, `/api/sf/tts`. Dafür liegt kein Schlüssel im Browser.
+
+Gemischt und gegeben wird nur auf dem Server. Jeder Browser bekommt die Sicht aus `SkatEngine.viewFor`: eigene Karten, öffentliche Stiche, den Skat nur, wenn Du ihn selbst aufgenommen hast. Die KI auf einem leeren Platz sieht dieselbe Sicht und schummelt nicht. Sie nutzt `public/skat/js/ai.js`.
+
+### Ablauf im Dienst
+
+Der Dienst liegt in `tisch/` und ist eine **Web-Service-Komponente**, nicht eine Function. Functions haben keinen gemeinsamen Speicher und kein WebSocket. Eine Instanz hält die Tische im RAM, schiebt Änderungen über `/api/tisch/ws` und beantwortet zusätzlich `POST /api/tisch/poll`, falls die Leitung kurz weg ist. Nach einem Neuladen gilt derselbe Platz-Token aus `localStorage`. Ohne Aktion (auch ohne offene Seite, die alle 1,5 Sekunden nachfragt) läuft ein Tisch nach 45 Minuten ab.
+
+Lokal steckt derselbe Dienst in `node api/server.js`, auch mit `--mock`. Auf App Platform ist er getrennt, Route `/api/tisch`, Port 8080, `instance_count: 1`, kleinste Instanz `apps-s-1vcpu-0.5gb`. Das steht in `.do/app.yaml`. Die Static Site und die Function `api` bleiben. Es kommt ein bezahlter Container dazu, grob der kleinste Basic-Tarif. Nicht selbst deployen.
+
+### Lizenz
+
+Der Zähler bleibt im Browser, wie am Solotisch. **Der Gastgeber** muss `SpielpartnerRounds.gate()` schaffen, bevor der Server das erste und jedes weitere Spiel gibt. **Jeder Mensch am Tisch** ruft nach einem beendeten Spiel `finish()` auf, damit die drei freien Runden hier mitzählen und der private Tisch kein unbegrenzt nebenbei ist. Test und gültige Lizenz bleiben unbegrenzt. Spielpartner zählen nicht. Der Server kennt keine Lizenz und speichert keinen Schlüssel.
+
+### Turnier später, K.-o., hier nicht gebaut
+
+`createRoom({ tournamentId, roundId, target, seats })` legt einen Tisch programmatisch an. `seats` kommt in der genannten Reihenfolge auf Platz 0, 1 und 2, der Server vergibt die Nummern. `target` ist das Rundenziel, Standard **301**, dieselbe Spanne wie „Spielen bis“ (51 bis 2001, oder ohne Limit). Erreicht jemand das Ziel und liegt allein vorn, wird der Tisch `ended`. Der ResultStore schreibt je Spiel und je Serie einen Satz **ohne Karten und ohne Tokens**: Sieger, Endstand, `externalId`, `tournamentId`, `roundId`. Eine Serie bleibt abfragbar, auch wenn der Tisch danach abläuft.
+
+`POST /api/tisch/rooms` und `GET /api/tisch/results?tournamentId=` gehen nur mit `Authorization: Bearer`, und nur wenn `TISCH_ADMIN_TOKEN` in der Umgebung des Dienstes steht. Sonst ist die Route 404. Diesen Namen nicht in `api/project.yml` setzen und nicht ins Frontend legen. `TISCH_DATA_DIR` schreibt die Sätze optional als JSON-Zeilen. Ohne den Ordner bleiben sie im Prozess. Die Platte einer App-Platform-Instanz überlebt kein neues Deploy. Für ein echtes Turnier den ResultStore später gegen eine Datenbank tauschen, weiter nur serverseitig.
