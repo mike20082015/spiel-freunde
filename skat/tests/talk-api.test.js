@@ -659,6 +659,7 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     assert.match(H.PERSONA.sepp, /Passt scho/);
     assert.match(H.PERSONA.ruediger, /Regeln/);
     assert.match(H.PERSONA.chantal, /Schätzken/);
+    assert.equal(H.DEFAULT_CHANTAL, 'SiMvlSW9cKKHDYT4BzOp');
     const blob = Object.keys(voices).map((name) => H.PERSONA[name]).join('\n');
     assert.match(blob, /Keine Versprechen über Geld oder Glücksspiel/);
     assert.match(blob, /höchstens 40 Wörter/);
@@ -679,6 +680,11 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
       VOICE_SEPP: 'OverrideSeppVoice1',
     });
     assert.ok(override.url.indexOf('/OverrideSeppVoice1/') !== -1);
+    const chantalOverride = H.buildTtsRequest({ character: 'chantal', text: 'Hömma' }, {
+      ELEVENLABS_API_KEY: 'test-eleven',
+      VOICE_CHANTAL: 'LolaOverrideVoice01',
+    });
+    assert.ok(chantalOverride.url.indexOf('/LolaOverrideVoice01/') !== -1);
     const empty = H.buildTtsRequest({ character: 'lena', text: 'Moin' }, {
       ELEVENLABS_API_KEY: 'test-eleven',
       VOICE_LENA: '',

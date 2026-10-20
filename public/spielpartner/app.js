@@ -182,6 +182,15 @@
     })
     .then(function (list) {
       if (!grid) return;
+      var intros = window.SpielpartnerIntro;
+      if (intros && typeof intros.src === 'function') {
+        list.forEach(function (avatar) {
+          var clip = intros.src(avatar.slug);
+          if (!clip) return;
+          avatar.hasVideo = true;
+          avatar.video = clip;
+        });
+      }
       grid.innerHTML = list.map(C.cardHtml).join('');
       applyFilter();
       paint(currentView());

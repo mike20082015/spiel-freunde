@@ -7,8 +7,8 @@
     "personality": "Grantig, treu und eiskalt im Spiel.",
     "tier": "standard",
     "portrait": "/media/spielpartner/horst.jpg",
-    "hasVideo": false,
-    "video": ""
+    "hasVideo": true,
+    "video": "/spielpartner/videos/horst.mp4"
   },
   {
     "name": "Margarethe von Hohenfels",
@@ -18,8 +18,8 @@
     "personality": "Charmant, riskant, immer ein bisschen zu laut für die Perlen.",
     "tier": "standard",
     "portrait": "/media/spielpartner/margarethe.jpg",
-    "hasVideo": false,
-    "video": ""
+    "hasVideo": true,
+    "video": "/spielpartner/videos/margarethe.mp4"
   },
   {
     "name": "Lena Berger",
@@ -29,8 +29,8 @@
     "personality": "Frisch, direkt, fair im Sieg und in der Niederlage.",
     "tier": "premium",
     "portrait": "/media/spielpartner/lena.jpg",
-    "hasVideo": false,
-    "video": ""
+    "hasVideo": true,
+    "video": "/spielpartner/videos/lena.mp4"
   },
   {
     "name": "Jonas Rehm",
@@ -40,8 +40,8 @@
     "personality": "Charmant, etwas eitel, spielt mit Ruhe.",
     "tier": "premium",
     "portrait": "/media/spielpartner/jonas.jpg",
-    "hasVideo": false,
-    "video": ""
+    "hasVideo": true,
+    "video": "/spielpartner/videos/jonas.mp4"
   },
   {
     "name": "Ömer Aydin",
@@ -51,8 +51,8 @@
     "personality": "Gastfreundlich, warm, lacht zuerst.",
     "tier": "premium",
     "portrait": "/media/spielpartner/oemer.jpg",
-    "hasVideo": false,
-    "video": ""
+    "hasVideo": true,
+    "video": "/spielpartner/videos/oemer.mp4"
   },
   {
     "name": "Oma Hilde",
@@ -62,8 +62,8 @@
     "personality": "Weich im Ton, wach mit den Karten. Hier geht es um die Runde, nicht um Geld.",
     "tier": "premium",
     "portrait": "/media/spielpartner/oma-hilde.jpg",
-    "hasVideo": false,
-    "video": ""
+    "hasVideo": true,
+    "video": "/spielpartner/videos/oma-hilde.mp4"
   },
   {
     "name": "Sepp Huber",
@@ -73,8 +73,8 @@
     "personality": "Gemütlich, bodenständig, sagt was er denkt.",
     "tier": "premium",
     "portrait": "/media/spielpartner/sepp.jpg",
-    "hasVideo": false,
-    "video": ""
+    "hasVideo": true,
+    "video": "/spielpartner/videos/sepp.mp4"
   },
   {
     "name": "Rüdiger Falk",
@@ -84,8 +84,8 @@
     "personality": "Genau, förmlich, unbestechlich. Schummeln kommt ihm nicht in die Tasche.",
     "tier": "premium",
     "portrait": "/media/spielpartner/ruediger.jpg",
-    "hasVideo": false,
-    "video": ""
+    "hasVideo": true,
+    "video": "/spielpartner/videos/ruediger.mp4"
   },
   {
     "name": "Chantal Kowalski",
@@ -106,8 +106,8 @@
     "personality": "Ruhig, trocken, mit einem Lächeln in den Mundwinkeln.",
     "tier": "premium",
     "portrait": "/media/spielpartner/urs.jpg",
-    "hasVideo": false,
-    "video": ""
+    "hasVideo": true,
+    "video": "/spielpartner/videos/urs.mp4"
   },
   {
     "name": "Vreni Meier",
@@ -117,8 +117,8 @@
     "personality": "Witzig, wach, lässt sich nichts vormachen.",
     "tier": "premium",
     "portrait": "/media/spielpartner/vreni.jpg",
-    "hasVideo": false,
-    "video": ""
+    "hasVideo": true,
+    "video": "/spielpartner/videos/vreni.mp4"
   },
   {
     "name": "Luce Morel",

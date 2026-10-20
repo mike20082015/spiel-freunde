@@ -136,16 +136,31 @@
     var box = $('runde-grid');
     if (!box || !L) return;
     var chosen = draft[active];
+    var intros = root.SpielpartnerIntro;
     box.innerHTML = L.AVATARS.map(function (person) {
       var on = person.id === chosen ? ' is-on' : '';
       var locked = !allowed(person, active);
       var face = '<img src="' + esc(L.portrait(person)) + '" alt="">';
+      var introBtn = intros && typeof intros.buttonHtml === 'function'
+        ? intros.buttonHtml({
+          slug: person.slug,
+          poster: L.portrait(person),
+          name: person.full
+        })
+        : '';
       return '<article class="runde-person' + on + (locked ? ' is-locked' : '') + '" data-id="' + esc(person.id) + '">' +
-        '<button type="button" class="runde-pick" data-pick="' + esc(person.id) + '">' +
+        '<div class="runde-layout">' +
+        '<div class="runde-side">' +
+        '<button type="button" class="runde-face-btn" data-pick="' + esc(person.id) + '">' +
         '<span class="runde-face">' + face + '<span class="runde-ini">' + esc(L.initials(person.full)) + '</span></span>' +
+        '</button>' +
+        introBtn +
+        '</div>' +
+        '<button type="button" class="runde-pick runde-copy-btn" data-pick="' + esc(person.id) + '">' +
         '<span class="runde-copy"><b>' + esc(person.name) + '</b><small>' + esc(person.line) + '</small></span>' +
         (locked ? '<span class="runde-lock">Premium</span>' : '') +
         '</button>' +
+        '</div>' +
         '<button type="button" class="runde-hear" data-hear="' + esc(person.id) + '">Stimme hören</button>' +
         '</article>';
     }).join('');

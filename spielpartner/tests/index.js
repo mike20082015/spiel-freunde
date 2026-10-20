@@ -2,3 +2,4 @@
 require('./entitlement.test.js');
 require('./legal.test.js');
 require('./lineup.test.js');
+require('./intro.test.js');
