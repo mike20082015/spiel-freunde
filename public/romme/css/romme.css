@@ -24,8 +24,6 @@ img{display:block;max-width:100%}
 .logo img{height:36px;width:auto}
 .topbar-title{font-family:var(--serif);font-size:1.12rem;font-weight:500;display:flex;align-items:center;gap:10px;white-space:nowrap}
 .topbar-title .suits{display:inline-flex;gap:3px;font-size:.9rem}.topbar-title .suits .r{color:var(--gold-2)}
-.preview-badge{flex:none;position:relative;display:inline-flex;align-items:center;margin-left:-4px;padding:5px 10px 5px 13px;border-radius:2px 4px 4px 2px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#3a2a0c;font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;line-height:1;box-shadow:0 8px 16px -10px rgba(0,0,0,.7)}
-.preview-badge::before{content:"";position:absolute;left:-7px;top:0;bottom:0;width:7px;background:linear-gradient(180deg,#a67c2d,#8a6424);clip-path:polygon(100% 0,0 50%,100% 100%)}
 .topbar-actions{margin-left:auto;display:flex;gap:8px}
 .lbl-short{display:none}
 .tbtn{white-space:nowrap;display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1.5px solid rgba(247,241,227,.28);color:rgba(247,241,227,.9);font-size:.88rem;font-weight:600}
@@ -325,7 +323,6 @@ button.card{padding:0;text-align:left}
 }
 @media (max-width:560px){
   .topbar .logo{display:none}
-  .preview-badge{font-size:.58rem;letter-spacing:.06em;padding:4px 7px 4px 9px}
   .topbar-actions{margin-left:0;flex:1;justify-content:space-between;gap:4px}
   .tbtn{padding:6px}
   .me-bubble{display:none}
