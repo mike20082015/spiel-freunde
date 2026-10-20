@@ -49,6 +49,17 @@
     return now == null ? Date.now() : now;
   }
 
+  function storageOf(storage) {
+    if (storage) return storage;
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage) return localStorage;
+    } catch (err) { /* privat */ }
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) return window.localStorage;
+    } catch (err) { /* privat */ }
+    return null;
+  }
+
   function parseTime(value) {
     if (typeof value === 'number' && isFinite(value)) return value;
     if (typeof value === 'string' && value.trim()) {
@@ -496,10 +507,12 @@
   }
 
   function gate(storage, now) {
+    var store = storageOf(storage);
+    if (!store) return true;
     var moment = nowOf(now);
-    var session = readSession(storage, moment);
+    var session = readSession(store, moment);
     if (session && session.me) {
-      if (failOpen(storage, moment)) return true;
+      if (failOpen(store, moment)) return true;
       var access = accessFromMe(session.me);
       if (access.paywall) {
         openPaywall();
@@ -511,12 +524,15 @@
       if (!session.me) logFail('Profil', 'noch nicht geladen');
       return true;
     }
-    if (!probeUsed(storage) || failOpen(storage, moment)) return true;
-    openSignup(storage);
+    if (!probeUsed(store) || failOpen(store, moment)) return true;
+    openSignup(store);
     return false;
   }
 
   function finish(storage, now, fetcher) {
+    var store = storageOf(storage);
+    if (!store) return { paywall: false, failOpen: true };
+    storage = store;
     var moment = nowOf(now);
     var session = readSession(storage, moment);
     if (session && session.token) {
@@ -563,6 +579,9 @@
   }
 
   function hint(storage, now) {
+    var store = storageOf(storage);
+    if (!store) return '';
+    storage = store;
     var moment = nowOf(now);
     var session = readSession(storage, moment);
     if (session && session.me) {

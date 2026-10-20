@@ -21,7 +21,8 @@
  * Der Checkout liest quote() und BILLING_API_BASE, er speichert keine eigenen Beträge.
  *
  * Empfehlungscode: ?ref= wird unter REF_KEY gespeichert, der erste gilt,
- * 90 Tage lang. Er wird nur an den Checkout geschickt und nirgends angezeigt.
+ * 90 Tage lang. Er geht an den Checkout und an die Konto-Anmeldung,
+ * und er wird nirgends angezeigt.
  */
 (function (root, factory) {
   var api = factory();

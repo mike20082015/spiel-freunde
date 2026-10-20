@@ -55,6 +55,29 @@ function seedSession(storage, me) {
   }));
 }
 
+test('Tische rufen gate() ohne Speicher auf und treffen trotzdem die Proberunde', () => {
+  const storage = E.memoryStorage();
+  const previousWindow = global.window;
+  const previousStorage = global.localStorage;
+  global.localStorage = storage;
+  global.window = {
+    localStorage: storage,
+    SpielpartnerEntitlement: E,
+    SpielpartnerPaywall: { open() {} },
+    SpielpartnerAccount: Account
+  };
+  try {
+    storage.setItem(Account.PROBE_KEY, '1');
+    assert.strictEqual(Account.gate(undefined, START), false);
+    assert.strictEqual(Rounds.gate(undefined, START), false);
+    assert.match(Account.hint(undefined, START), /Melde Dich an/);
+  } finally {
+    global.window = previousWindow;
+    if (previousStorage === undefined) delete global.localStorage;
+    else global.localStorage = previousStorage;
+  }
+});
+
 test('Proberunde, dann die Anmeldekarte, kein lokaler 14-Tage-Test', () => {
   const storage = E.memoryStorage();
   const previous = global.window;
