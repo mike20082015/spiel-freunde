@@ -95,8 +95,8 @@
     "personality": "Laut, herzlich, immer auf der Seite der Runde.",
     "tier": "premium",
     "portrait": "/media/spielpartner/chantal.jpg",
-    "hasVideo": false,
-    "video": ""
+    "hasVideo": true,
+    "video": "/spielpartner/videos/chantal.mp4"
   },
   {
     "name": "Urs Gerber",

@@ -1,7 +1,6 @@
 /*
  * Kurze Vorstellung der Spielpartner.
  * Ein Clip = eine Zeile in CLIPS plus die Datei unter public/spielpartner/videos/.
- * Chantal: chantal.mp4 ablegen und hier chantal: 'chantal.mp4' eintragen.
  * Wer nicht in CLIPS steht, bekommt keinen Abspielknopf.
  * Im Browser: window.SpielpartnerIntro. In Node: require.
  */
@@ -21,6 +20,7 @@
     'oma-hilde': 'oma-hilde.mp4',
     sepp: 'sepp.mp4',
     ruediger: 'ruediger.mp4',
+    chantal: 'chantal.mp4',
     urs: 'urs.mp4',
     vreni: 'vreni.mp4'
   };
