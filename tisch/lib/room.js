@@ -12,6 +12,13 @@
  *   Der ResultStore behält je Spiel und je Serie Sieger und Endstand,
  *   inklusive externalId, damit ein späterer Verteiler die Menschen
  *   an den nächsten Tisch setzen kann.
+ *
+ * Spielerkonto später (hier kein Login):
+ *   Ein Platz kann eine playerId aus dem Spiel-Freunde-Konto tragen
+ *   (LeadMonster /api/public/spiel-freunde, me). Die setzt nur der
+ *   Programm-Aufruf createRoom/join, nicht die öffentliche Seite.
+ *   Am Tisch gilt weiter der Anzeigename. Die playerId steht im
+ *   Ergebnis und nur in der eigenen Sicht.
  */
 
 const crypto = require('crypto');
@@ -70,6 +77,13 @@ function cleanExternal(value) {
   return id;
 }
 
+function cleanPlayerId(value) {
+  if (value == null || value === '') return null;
+  const id = String(value).trim();
+  if (!/^[A-Za-z0-9_-]{1,80}$/.test(id)) throw new TischError('Spielerkonto ist ungültig.');
+  return id;
+}
+
 function resolveTarget(spec) {
   if (!spec || (spec.target === undefined && spec.targetCustom === undefined)) return DEFAULT_TARGET;
   if (spec.target === 'none' || spec.target === null || spec.target === '') return null;
@@ -97,6 +111,7 @@ function emptySeat(index) {
     kind: 'empty',
     aiId: null,
     externalId: null,
+    playerId: null,
     conn: 0,
     lastSeen: 0,
   };
@@ -109,6 +124,7 @@ function freeSeat(seat) {
   seat.kind = 'empty';
   seat.aiId = null;
   seat.externalId = null;
+  seat.playerId = null;
   seat.conn = 0;
   seat.lastSeen = 0;
 }
@@ -131,6 +147,7 @@ function publicSeat(seat, you, now) {
     kind: seat.kind,
     aiId: seat.kind === 'ai' ? seat.aiId : null,
     externalId: seat.externalId || null,
+    playerId: seat.index === you ? (seat.playerId || null) : null,
     connected: seat.kind === 'empty' ? false : !!connected,
     host: false,
     you: seat.index === you,
@@ -144,6 +161,7 @@ function seatBrief(seat) {
     kind: seat.kind,
     aiId: seat.kind === 'ai' ? seat.aiId : null,
     externalId: seat.externalId || null,
+    playerId: seat.playerId || null,
   };
 }
 
@@ -496,9 +514,10 @@ function createHub(options) {
     seat.token = token;
     seat.tokenHash = hashToken(token);
     seat.externalId = cleanExternal(spec && spec.externalId);
+    seat.playerId = cleanPlayerId(spec && spec.playerId);
     seat.conn = 0;
     seat.lastSeen = now();
-    claims.push({ seat: index, token, name, externalId: seat.externalId });
+    claims.push({ seat: index, token, name, externalId: seat.externalId, playerId: seat.playerId });
     return seat;
   }
 
@@ -512,6 +531,7 @@ function createHub(options) {
     seat.token = null;
     seat.tokenHash = null;
     seat.externalId = null;
+    seat.playerId = null;
     pushEvent(room, { kind: 'seat', seat: index, aiId: id, name: seat.name });
   }
 
@@ -686,7 +706,7 @@ function createHub(options) {
         else assignHuman(room, index, seatSpec, claims);
       });
     } else {
-      assignHuman(room, 0, { name: input.name, externalId: input.externalId }, claims);
+      assignHuman(room, 0, { name: input.name, externalId: input.externalId, playerId: input.playerId }, claims);
     }
     if (!room.seats.some((seat) => seat.kind === 'human')) throw new TischError('Mindestens ein Mensch muss sitzen.');
     const host = room.seats.find((seat) => seat.kind === 'human');
@@ -696,13 +716,17 @@ function createHub(options) {
     return { summary: summary(room), claims };
   }
 
-  function join(code, name) {
+  function join(code, name, spec) {
     const room = requireRoom(code);
     if (room.status !== 'lobby') throw new TischError('Die Runde spielt schon.', 409);
     const index = room.seats.findIndex((seat) => seat.kind === 'empty');
     if (index < 0) throw new TischError('Der Tisch ist voll.', 409);
     const claims = [];
-    assignHuman(room, index, { name }, claims);
+    assignHuman(room, index, {
+      name,
+      externalId: spec && spec.externalId,
+      playerId: spec && spec.playerId,
+    }, claims);
     pushEvent(room, { kind: 'join', seat: index, name: claims[0].name });
     bump(room);
     return { claim: claims[0], view: viewOf(room, index) };

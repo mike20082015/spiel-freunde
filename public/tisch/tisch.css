@@ -20,6 +20,11 @@ body.tisch-home .app{height:auto;min-height:100vh}
 .code-xl{font-family:var(--serif);font-size:clamp(1.8rem,6vw,2.6rem);letter-spacing:.22em;color:var(--wine);margin:6px 0 4px;font-weight:700}
 .invite-line{font-size:.82rem;word-break:break-all;color:var(--ink-2);margin-bottom:10px}
 .lobby{width:min(520px,calc(100% - 24px))}
+#lobby.intro{top:50%;max-height:calc(100% - 16px);overflow:auto;padding:16px 18px 14px}
+#lobby.intro p{margin-bottom:8px}
+#lobby .code-xl{margin:0 0 2px;line-height:1.05}
+#lobby .seat-row{padding:6px 0}
+#lobby .fine{margin-top:4px}
 .seat-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line);text-align:left}
 .seat-row b{font-family:var(--serif);font-size:1.05rem}
 .seat-row .who{flex:1;min-width:120px}
@@ -57,5 +62,7 @@ body.tisch-home .app{height:auto;min-height:100vh}
   body[data-screen="lobby"] .app,
   body[data-screen="game"] .app,
   body[data-screen="ended"] .app{height:calc(100vh - 46px);min-height:0}
+  body[data-screen="lobby"] .table-legal,
+  body[data-screen="game"] .table-legal,
+  body[data-screen="ended"] .table-legal{padding:8px 16px}
 }
-#lobby.intro{max-height:calc(100% - 20px);overflow:auto}

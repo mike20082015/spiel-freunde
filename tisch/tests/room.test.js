@@ -103,8 +103,8 @@ test('Programm legt einen K.-o.-Tisch an, der Server setzt die Plätze, Serie en
     target: 51,
     decks: [monsterDeck()],
     seats: [
-      { name: 'Anna', externalId: 'p-anna' },
-      { name: 'Ben', externalId: 'p-ben' },
+      { name: 'Anna', externalId: 'p-anna', playerId: 'plyr_anna' },
+      { name: 'Ben', externalId: 'p-ben', playerId: 'plyr_ben' },
       { name: 'Clara', externalId: 'p-clara' },
     ],
   });
@@ -112,6 +112,7 @@ test('Programm legt einen K.-o.-Tisch an, der Server setzt die Plätze, Serie en
   assert.equal(made.summary.roundId, 'viertel');
   assert.deepEqual(made.claims.map((claim) => claim.seat), [0, 1, 2]);
   assert.deepEqual(made.claims.map((claim) => claim.externalId), ['p-anna', 'p-ben', 'p-clara']);
+  assert.deepEqual(made.claims.map((claim) => claim.playerId), ['plyr_anna', 'plyr_ben', null]);
   assert.throws(() => hub.join(made.summary.code, 'Noch jemand'), (err) => err.status === 409);
 
   hub.act(made.summary.code, made.claims[0].token, 'start');
@@ -124,6 +125,10 @@ test('Programm legt einen K.-o.-Tisch an, der Server setzt die Plätze, Serie en
     for (const card of hidden) assert.equal(blob.includes('"' + card + '"'), false, 'Skat ' + card);
   }
   assert.equal(opening[0].hand.length, 10);
+  assert.equal(opening[0].seats[0].playerId, 'plyr_anna');
+  assert.equal(opening[0].seats[1].playerId, null);
+  assert.equal(opening[1].seats[0].playerId, null);
+  assert.equal(opening[1].seats[1].playerId, 'plyr_ben');
   const views = drive(hub, made.summary.code, made.claims);
   const end = views[0];
   assert.equal(end.status, 'ended');
@@ -139,6 +144,8 @@ test('Programm legt einen K.-o.-Tisch an, der Server setzt die Plätze, Serie en
   assert.equal(series[0].reason, 'target');
   assert.equal(series[0].winnerSeat, 0);
   assert.equal(series[0].winner.externalId, 'p-anna');
+  assert.equal(series[0].winner.playerId, 'plyr_anna');
+  assert.equal(series[0].seats[2].playerId, null);
   assert.deepEqual(series[0].scores, end.scores);
   assert.equal(series[0].target, 51);
   assert.equal(series[0].access, undefined);
@@ -230,6 +237,7 @@ test('HTTP, WebSocket und Admin-Route', async () => {
 
     const created = await post('/api/tisch/create', {
       name: 'Anna',
+      playerId: 'plyr_spoof',
       tournamentId: 'soll-weg',
       seats: [{ name: 'Fremd' }, { name: 'Auch' }, { name: 'Noch' }],
       decks: [['CJ']],
@@ -239,12 +247,14 @@ test('HTTP, WebSocket und Admin-Route', async () => {
     assert.equal(created.json.ok, true);
     assert.equal(created.json.tournamentId, null);
     assert.equal(created.json.seat, 0);
+    assert.equal(created.json.view.seats[0].playerId, null);
     assert.equal(created.json.view.seats[1].kind, 'empty');
     assert.equal(typeof created.json.token, 'string');
 
-    const joined = await post('/api/tisch/join', { code: created.json.code.toLowerCase(), name: 'Ben' });
+    const joined = await post('/api/tisch/join', { code: created.json.code.toLowerCase(), name: 'Ben', playerId: 'plyr_spoof' });
     assert.equal(joined.status, 200);
     assert.equal(joined.json.seat, 1);
+    assert.equal(joined.json.view.seats[1].playerId, null);
     const polled = await post('/api/tisch/poll', { code: created.json.code, token: created.json.token });
     assert.equal(polled.json.view.seats[1].name, 'Ben');
     assert.equal(JSON.stringify(polled.json).includes(joined.json.token), false);
@@ -253,12 +263,13 @@ test('HTTP, WebSocket und Admin-Route', async () => {
       tournamentId: 'ko-1',
       roundId: 'r1',
       target: 301,
-      seats: [{ name: 'Eva', externalId: 'e1' }, { kind: 'ai', aiId: 'horst' }],
+      seats: [{ name: 'Eva', externalId: 'e1', playerId: 'plyr_eva' }, { kind: 'ai', aiId: 'horst' }],
     }, { Authorization: 'Bearer test-admin-token' });
     assert.equal(opened.status, 200);
     assert.equal(opened.json.tournamentId, 'ko-1');
     assert.equal(opened.json.claims.length, 1);
     assert.equal(opened.json.claims[0].externalId, 'e1');
+    assert.equal(opened.json.claims[0].playerId, 'plyr_eva');
 
     await new Promise((resolve, reject) => {
       const ws = new WebSocket('ws://127.0.0.1:' + port + '/api/tisch/ws');
