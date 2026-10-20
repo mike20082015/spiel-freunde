@@ -284,6 +284,10 @@
       turn: pos.vorhand,
       tricks: [],
       lastTrick: null,
+      kontra: false,
+      re: false,
+      kontraBy: null,
+      doubling: null, // { kind:'kontra'|'re', player } solange vor der ersten Karte gefragt wird
       result: null,
       log: [],
     };
@@ -422,7 +426,62 @@
     state.game = g;
     state.phase = 'play';
     state.leader = state.turn = state.pos.vorhand;
+    state.kontra = false;
+    state.re = false;
+    state.kontraBy = null;
     state.log.push({ type: 'declare', player: state.declarer, game: g });
+    beginDoubling(state);
+  }
+
+  /*
+   * Kontra und Re, wie sie zur Skatordnung am Tisch üblich sind.
+   * Nicht Teil der Turnier-ISkO, aber dieselbe Abrechnung: erst der Spielwert, dann der Faktor.
+   * Gegenspieler dürfen Kontra sagen, der Alleinspieler darauf Re.
+   * Beides nur bevor die erste Karte des ersten Stichs kommt, gefragt in der Reihenfolge
+   * Vorhand, Mittelhand, Hinterhand. Kontra verdoppelt den Spielwert, Re vervierfacht ihn.
+   * Ramsch kennt kein Kontra. Wer 18 gehalten hat, ist keine extra Bedingung.
+   */
+  function defenderOrder(state) {
+    const p = state.pos;
+    return [p.vorhand, p.mittelhand, p.hinterhand].filter((pl) => pl !== state.declarer);
+  }
+  function beginDoubling(state) {
+    state.doubling = null;
+    if (!state.game || state.game.type === 'ramsch' || state.declarer == null) return;
+    const defs = defenderOrder(state);
+    if (!defs.length) return;
+    state.doubling = { kind: 'kontra', player: defs[0] };
+  }
+  function doublingTurn(state) {
+    if (!state || state.phase !== 'play' || !state.doubling) return null;
+    if (state.trick.length || state.tricks.length) return null;
+    return { kind: state.doubling.kind, player: state.doubling.player };
+  }
+  function sayKontra(state, player) {
+    const t = doublingTurn(state);
+    if (!t || t.kind !== 'kontra' || t.player !== player) throw new Error('Kontra ist jetzt nicht dran');
+    if (player === state.declarer) throw new Error('Der Alleinspieler sagt kein Kontra');
+    state.kontra = true;
+    state.kontraBy = player;
+    state.doubling = { kind: 're', player: state.declarer };
+    state.log.push({ type: 'kontra', player });
+  }
+  function sayRe(state, player) {
+    const t = doublingTurn(state);
+    if (!t || t.kind !== 're' || t.player !== player) throw new Error('Re ist jetzt nicht dran');
+    if (!state.kontra) throw new Error('Re nur nach Kontra');
+    state.re = true;
+    state.doubling = null;
+    state.log.push({ type: 're', player });
+  }
+  function declineDouble(state, player) {
+    const t = doublingTurn(state);
+    if (!t || t.player !== player) throw new Error('Keine Ansage offen');
+    state.log.push({ type: t.kind === 're' ? 're-pass' : 'kontra-pass', player });
+    if (t.kind === 're') { state.doubling = null; return; }
+    const defs = defenderOrder(state);
+    const next = defs[defs.indexOf(player) + 1];
+    state.doubling = next == null ? null : { kind: 'kontra', player: next };
   }
 
   function currentTrickCards(state) { return state.trick.map((t) => t.card); }
@@ -434,6 +493,7 @@
 
   function playCard(state, player, card) {
     if (state.phase !== 'play') throw new Error('Es wird gerade nicht gespielt');
+    if (state.doubling) throw new Error('Kontra und Re kommen vor der ersten Karte');
     if (state.turn !== player) throw new Error('Du bist nicht dran');
     const legal = legalFor(state, player);
     if (!legal.includes(card)) throw new Error('Karte nicht erlaubt: ' + card);
@@ -516,6 +576,12 @@
         res.value = Math.ceil(state.bid / base) * base; // nächstes Vielfaches des Grundwerts, das den Reizwert erreicht
       }
     }
+    // Kontra ×2, Re ×4 auf den fertigen Spielwert. Verlust und Bock kommen danach.
+    res.kontra = !!state.kontra;
+    res.re = !!state.re;
+    res.kontraBy = state.kontra ? state.kontraBy : null;
+    res.factor = state.kontra ? (state.re ? 4 : 2) : 1;
+    res.value *= res.factor;
     let s = res.won ? res.value : -2 * res.value; // Seeger-Fabian vereinfacht
     if (res.bock) s *= 2;
     res.scoreChange = s;
@@ -568,6 +634,9 @@
       tricks: state.tricks.map((t) => ({ cards: t.cards.map((x) => ({ player: x.player, card: x.card })), winner: t.winner })),
       handSizes: state.hands.map((h) => h.length),
       special: state.special,
+      kontra: !!state.kontra,
+      re: !!state.re,
+      doubling: state.doubling ? { kind: state.doubling.kind, player: state.doubling.player } : null,
     };
     if (player === state.declarer && state.skatTaken) v.skatKnown = state.skat.slice();
     if (state.game && state.game.type === 'null' && state.game.ouvert && state.phase === 'play' && player !== state.declarer) {
@@ -644,6 +713,7 @@
     effSuit, power, isTrump, trumpOrder, beats, trickWinnerIndex, legalCards, sortHand,
     matadors, baseValue, nullValue, calcGameValue, multiplierParts, nextBid, gameLabel,
     newGame, biddingTurn, bidAction, takeSkat, playHand, discard, declare, validateDeclaration,
+    defenderOrder, doublingTurn, sayKontra, sayRe, declineDouble,
     legalFor, playCard, computeResult, cardsWonBy, viewFor, Match,
     TARGET_MIN, TARGET_MAX, normalizeTarget, sessionWinner, standings,
   };

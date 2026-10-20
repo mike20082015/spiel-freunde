@@ -1,4 +1,4 @@
-# Spiel-Freunde: Skat-Prototyp
+# Spiel-Freunde: Skat
 
 Spielbarer Skat im Browser: Du gegen Horst Kaluppke und Margarethe von Hohenfels, im Stammtisch-Look der Startseite.
 Kein Build-Schritt, keine Abhängigkeiten, läuft offline (Schriften liegen lokal in `assets/fonts`).
@@ -112,12 +112,13 @@ node tests/ai-strength.js 500  # KI gegen Zufall und Stufenvergleich (Turnier >=
 python3 tools/verify_voice.py  # 21 Browser-Checks (headless Chrome)
 ```
 
-## Regeln im Prototyp
+## Regeln
 
 * Offizielle Skatordnung: 32 Karten, Geben 3-Skat-4-3, Vorhand/Mittelhand/Hinterhand rotieren, Reizen 18, 20, 22, 23, 24, 27, 30 ...
 * Hand oder Skat aufnehmen, zwei Karten drücken, Ansage Farbspiel, Grand, Null, Null Hand, Null Ouvert, Null Ouvert Hand.
 * Schneider/Schwarz ansagen bei Handspielen. Spitzen mit/ohne über Hand plus Skat. Überreizt: verloren, Wert = nächstes Vielfaches des Grundwerts.
 * Abrechnung: gewonnen + Spielwert, verloren minus doppelter Spielwert (vereinfachte Seeger-Fabian-Liste ohne 50er-Zuschläge).
+* Kontra und Re vor der ersten Karte: Gegenspieler verdoppeln, der Alleinspieler kann mit Re vervierfachen. Danach gilt die normale Verlustverdopplung. Ramsch ohne Kontra.
 * Kneipenskat (Einstellungen): Passen alle, wird Ramsch gespielt (meiste Augen verliert, Jungfrau verdoppelt, Durchmarsch +120).
   Nach einem verlorenen Grand: 3 Bockspiele (doppelt), danach 3 Ramschspiele.
-* Nicht eingebaut: Kontra/Re, Farb- oder Grand-Ouvert, Schieberamsch, Seeger-Zuschläge.
+* Nicht eingebaut: Farb- oder Grand-Ouvert, Schieberamsch, Seeger-Zuschläge.

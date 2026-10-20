@@ -667,5 +667,89 @@
     return { card: legal.slice().sort((a, b) => power(a, game) - power(b, game))[0], reason: 'Ramsch: so niedrig wie möglich.' };
   }
 
-  return { PERSONAS, LEVELS, suggestGame, scoreGames, evaluateHand, suitStrength, grandStrength, nullAnalysis, maxBid, decideBid, decideSkat, chooseDiscardAndGame, chooseCard, knowledge };
+  function clampChance(x) { return Math.max(0.08, Math.min(0.94, x)); }
+
+  /*
+   * Geschätzte Gewinnchance des Alleinspielers, nur aus der eigenen Sicht.
+   * Unter 2/3 lohnt Kontra, weil ein Verlust hier doppelt zählt: der Erwartungswert
+   * des Alleinspielers wird negativ, Verdoppeln trifft also die andere Seite.
+   */
+  function declarerWinChance(view) {
+    const game = view.game;
+    if (!game || game.type === 'ramsch') return 0.5;
+    if (game.type === 'null') {
+      if (view.openHand) return nullAnalysis(view.openHand).danger === 0 ? 0.93 : 0.18;
+      if (view.me === view.declarer) {
+        const na = nullAnalysis(view.hand);
+        if (na.danger === 0) return game.ouvert ? 0.9 : 0.8;
+        if (na.danger === 1) return 0.42;
+        return 0.18;
+      }
+      const highs = view.hand.filter((c) => ['A', 'K', 'Q', '10', 'J'].includes(rankOf(c))).length;
+      return highs >= 5 ? 0.32 : highs >= 3 ? 0.55 : 0.78;
+    }
+    if (view.me === view.declarer) {
+      const strength = game.type === 'grand' ? grandStrength(view.hand) : suitStrength(view.hand, game.trump);
+      const need = game.type === 'grand' ? T.grand : T.suit;
+      let margin = strength - need + (game.hand ? -0.3 : 0.5);
+      if (game.schneiderAnnounced || game.schwarzAnnounced) margin -= 0.4;
+      return clampChance(0.64 + margin * 0.09);
+    }
+    let threat = 0;
+    const mine = view.hand;
+    if (game.type === 'suit') {
+      const trumps = mine.filter((c) => effSuit(c, game) === 'T');
+      threat += Math.max(0, trumps.length - 2) * 0.07;
+      threat += trumps.filter(isJack).length * 0.06;
+      for (const su of SUITS) {
+        if (su === game.trump) continue;
+        if (mine.includes(su + 'A')) threat += 0.07;
+        if (mine.includes(su + '10') && mine.includes(su + 'A')) threat += 0.04;
+      }
+    } else {
+      threat += mine.filter(isJack).length * 0.1;
+      for (const su of SUITS) if (mine.includes(su + 'A')) threat += 0.06;
+    }
+    const base = E.baseValue(game) || 10;
+    const steps = (view.bid || 18) / base;
+    let p = 0.7 - threat + Math.max(0, steps - 2) * 0.025;
+    if (game.schneiderAnnounced || game.schwarzAnnounced) p += 0.04;
+    if (game.hand) p -= 0.03;
+    return clampChance(p);
+  }
+
+  function decideKontra(view, who) {
+    const t = view && view.doubling;
+    if (!t || t.kind !== 'kontra' || t.player !== view.me || view.me === view.declarer) return false;
+    const c = cfg(who);
+    let cut = c.level === 'anfaenger' ? 0.4 : c.level === 'turnier' ? 0.64 : 0.55;
+    cut += (persona(who).risk || 0) * 0.1;
+    if (c.level === 'anfaenger' && c.rng() < 0.4) return false;
+    return declarerWinChance(view) < cut;
+  }
+
+  function decideRe(view, who) {
+    const t = view && view.doubling;
+    if (!t || t.kind !== 're' || t.player !== view.me) return false;
+    const c = cfg(who);
+    let cut = c.level === 'anfaenger' ? 0.86 : c.level === 'turnier' ? 0.67 : 0.73;
+    cut -= (persona(who).risk || 0) * 0.06;
+    if (c.level === 'anfaenger' && c.rng() < 0.45) return false;
+    return declarerWinChance(view) > cut;
+  }
+
+  // Eine offene Kontra- oder Re-Frage beantworten. who ist eine Sicht-Stufe oder (spieler) => Stufe.
+  function actOnDoubling(state, who) {
+    const t = E.doublingTurn(state);
+    if (!t) return false;
+    const w = typeof who === 'function' ? who(t.player) : who;
+    const view = E.viewFor(state, t.player);
+    const yes = t.kind === 'kontra' ? decideKontra(view, w) : decideRe(view, w);
+    if (yes && t.kind === 'kontra') E.sayKontra(state, t.player);
+    else if (yes) E.sayRe(state, t.player);
+    else E.declineDouble(state, t.player);
+    return true;
+  }
+
+  return { PERSONAS, LEVELS, suggestGame, scoreGames, evaluateHand, suitStrength, grandStrength, nullAnalysis, maxBid, decideBid, decideSkat, chooseDiscardAndGame, chooseCard, knowledge, declarerWinChance, decideKontra, decideRe, actOnDoubling };
 });

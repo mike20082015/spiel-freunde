@@ -25,6 +25,15 @@ function playOne(match, rng) {
       E.discard(st, d.discard);
       E.declare(st, d.game);
     } else if (st.phase === 'play') {
+      const dbl = E.doublingTurn(st);
+      if (dbl) {
+        const v = E.viewFor(st, dbl.player);
+        for (const q of [0, 1, 2]) if (q !== dbl.player) for (const c of st.hands[q]) {
+          if (!(v.openHand && q === st.declarer)) assert(!v.hand.includes(c), 'KI sieht fremde Karte beim Kontra');
+        }
+        AI.actOnDoubling(st, (p) => WHO[p]);
+        continue;
+      }
       const p = st.turn;
       const v = E.viewFor(st, p);
       // Fairness-Check: die Sicht enthält keine fremden verdeckten Karten
