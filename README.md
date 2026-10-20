@@ -148,7 +148,7 @@ Umgebungsvariablen der Komponente `api`, Scope **RUN_AND_BUILD_TIME** (Bau- und 
 | `AVATAR_DAILY_LIMIT` | GENERAL, plain | nein | `30` gezeichnete Gesichter je UTC-Tag in dieser Funktion. Dazu höchstens 4 je IP und Stunde. |
 | `VOICE_MARGARETHE` | GENERAL, plain | nein | `28LWddKi67H2YN9L2PvK` |
 | `VOICE_HORST` | GENERAL, plain | nein | ElevenLabs-Stimmen-ID von Horst. Liegt nicht im Repo. Ohne sie spricht Horst freie Sätze mit der Browserstimme. Die festen MP3s bleiben. |
-| `ELEVEN_MODEL` | GENERAL, plain | nein | `eleven_flash_v2_5` (kurz und auf Deutsch; `eleven_turbo_v2_5` geht auch) |
+| `ELEVEN_MODEL` | GENERAL, plain | nein | `eleven_v3` (höhere Qualität, Deutsch über `language_code`; `eleven_flash_v2_5` bleibt der schnelle Ersatz) |
 | `DAILY_LIMIT` | GENERAL, plain | nein | `400` Aufrufe je Funktion und UTC-Tag, im Speicher der Instanz |
 
 Die leeren SECRET-Zeilen in `.do/app.yaml` sind Platzhalter. Nach dem Eintragen im Dashboard nicht mit einer Spec überschreiben, in der die Schlüssel wieder leer sind. Wer per `doctl apps update --spec` arbeitet, holt vorher `doctl apps spec get` und übernimmt die verschlüsselten Werte. Diesen Export nicht committen.
@@ -167,7 +167,7 @@ Unter `/mein-avatar/` legt jemand den Namen fest und wählt ein echtes Foto (Zus
 
 Die Functions-Komponente kostet **0 Dollar**, solange das Gratis-Kontingent reicht: 90.000 GiB-Sekunden im Monat je Team, geteilt über alle Functions. Diese Funktionen haben 128 MB. Ein Aufruf von etwa 2 Sekunden verbraucht 0,25 GiB-Sekunden. Darüber liegen 0,0000185 Dollar je GiB-Sekunde. Es kommt kein Web-Service-Container dazu.
 
-xAI und ElevenLabs rechnen getrennt. Grok 4.3 kostet 1,25 Dollar je Million Eingabe-Token und 2,50 Dollar je Million Ausgabe-Token. Ein Tischsatz ist ein Bruchteil davon. ElevenLabs hängt an Eurem Tarif. Das Modell `eleven_flash_v2_5` ist die günstige, kurze Stimme.
+xAI und ElevenLabs rechnen getrennt. Grok 4.3 kostet 1,25 Dollar je Million Eingabe-Token und 2,50 Dollar je Million Ausgabe-Token. Ein Tischsatz ist ein Bruchteil davon. ElevenLabs hängt an Eurem Tarif. Das Modell `eleven_v3` spricht die kurzen Sätze auf Deutsch in höherer Qualität. Die Funktion verlangt MP3 mit 44,1 kHz und 192 kbps. Lehnt die Schnittstelle dieses Format ab, bleibt es beim bisherigen MP3 mit 22,05 kHz und 32 kbps.
 
 ### Wenn die API fehlt
 

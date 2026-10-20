@@ -9,7 +9,9 @@
 const CHAT_URL = 'https://api.x.ai/v1/chat/completions';
 const TTS_URL = 'https://api.elevenlabs.io/v1/text-to-speech/';
 const DEFAULT_MODEL = 'grok-4.3';
-const DEFAULT_ELEVEN = 'eleven_flash_v2_5';
+const DEFAULT_ELEVEN = 'eleven_v3';
+const TTS_OUTPUT_FORMAT = 'mp3_44100_192';
+const TTS_OUTPUT_FORMAT_FALLBACK = 'mp3_22050_32';
 const DEFAULT_MARGARETHE = '28LWddKi67H2YN9L2PvK';
 const DEFAULT_URS = 'BfwuiKSWxqDOcSYQr6EC';
 const DEFAULT_VRENI = '4yZGYlR0JpmqiCxBgPi5';
@@ -332,6 +334,27 @@ async function noteUpstream(res, secrets) {
   return upstreamReason(status);
 }
 
+function isFormatRejection(status, snippet) {
+  const n = Number(status);
+  if (n !== 400 && n !== 403 && n !== 422) return false;
+  const text = String(snippet || '');
+  if (!text) return false;
+  if (/invalid_output_format|invalid_audio_format/.test(text)) return true;
+  if (/"param"\s*:\s*"output_format"/.test(text)) return true;
+  if (/"output_format"/.test(text) && /query/.test(text)) return true;
+  if (/output[_\s-]?format/i.test(text) && /not supported|unsupported|not available|invalid|subscription|upgrade|bitrate|creator tier|pro tier/i.test(text)) return true;
+  if (/mp3_44100_192/.test(text) && /not available|not supported|unsupported|subscription|upgrade|feature_not_available|subscription_required|only available/i.test(text)) return true;
+  return false;
+}
+
+function fallbackTtsUrl(url) {
+  const from = 'output_format=' + TTS_OUTPUT_FORMAT;
+  const to = 'output_format=' + TTS_OUTPUT_FORMAT_FALLBACK;
+  const value = String(url || '');
+  if (value.indexOf(from) === -1) return value;
+  return value.split(from).join(to);
+}
+
 function payloadOf(event) {
   if (!event || typeof event !== 'object') return {};
   const http = event.http;
@@ -583,7 +606,7 @@ function buildTtsRequest(value, env) {
   if (!/^[A-Za-z0-9]{10,40}$/.test(voiceId)) return null;
   if (!envStr(env, 'ELEVENLABS_API_KEY', '')) return null;
   return {
-    url: TTS_URL + voiceId + '/stream?output_format=mp3_22050_32',
+    url: TTS_URL + voiceId + '/stream?output_format=' + TTS_OUTPUT_FORMAT,
     init: {
       method: 'POST',
       headers: {
@@ -624,8 +647,19 @@ async function handleTts(event, deps) {
     const prep = await prepareTts(event, deps);
     if (prep.result) return prep.result;
     const fetchImpl = deps.fetch || fetch;
-    const res = await fetchWithTimeout(fetchImpl, prep.request.url, prep.request.init, TTS_TIMEOUT_MS);
     const secrets = [envStr(env, 'ELEVENLABS_API_KEY', ''), envStr(env, 'XAI_API_KEY', '')];
+    let res = await fetchWithTimeout(fetchImpl, prep.request.url, prep.request.init, TTS_TIMEOUT_MS);
+    if (res && !res.ok) {
+      const status = res.status != null ? res.status : 0;
+      const snippet = await errorSnippet(res, secrets);
+      if (isFormatRejection(status, snippet)) {
+        console.error('upstream', status, 'format_fallback');
+        res = await fetchWithTimeout(fetchImpl, fallbackTtsUrl(prep.request.url), prep.request.init, TTS_TIMEOUT_MS);
+      } else {
+        console.error('upstream', status, snippet);
+        return fail(prep.origin, upstreamReason(status));
+      }
+    }
     if (!res || !res.ok) return fail(prep.origin, await noteUpstream(res, secrets));
     if (typeof res.arrayBuffer !== 'function') return fail(prep.origin, 'exception');
     const ctype = res.headers && typeof res.headers.get === 'function' ? String(res.headers.get('content-type') || '') : '';

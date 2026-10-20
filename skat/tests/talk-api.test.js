@@ -10,7 +10,7 @@ const ENV = {
   ELEVENLABS_API_KEY: 'test-eleven',
   VOICE_HORST: 'MockHorstVoice01',
   XAI_MODEL: 'grok-4.3',
-  ELEVEN_MODEL: 'eleven_flash_v2_5',
+  ELEVEN_MODEL: 'eleven_v3',
   DAILY_LIMIT: '50',
 };
 
@@ -230,9 +230,19 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     assert.equal(audio.status, 200);
     assert.equal(audio.headers['Content-Type'], 'audio/mpeg');
     assert.ok(sent.url.indexOf('/' + H.DEFAULT_MARGARETHE + '/stream') !== -1);
+    assert.match(sent.url, /output_format=mp3_44100_192/);
     assert.equal(sent.options.headers['xi-api-key'], 'test-eleven');
-    assert.equal(JSON.parse(sent.options.body).model_id, 'eleven_flash_v2_5');
-    assert.equal(JSON.parse(sent.options.body).language_code, 'de');
+    const spoken = JSON.parse(sent.options.body);
+    assert.equal(spoken.model_id, 'eleven_v3');
+    assert.equal(spoken.language_code, 'de');
+    assert.equal(spoken.text, 'Aber Schätzchen.');
+    assert.deepEqual(Object.keys(spoken).sort(), ['language_code', 'model_id', 'text']);
+    const pinned = H.buildTtsRequest({ character: 'margarethe', text: 'Na.' }, {
+      ELEVENLABS_API_KEY: 'test-eleven',
+      ELEVEN_MODEL: 'eleven_flash_v2_5',
+    });
+    assert.equal(JSON.parse(pinned.init.body).model_id, 'eleven_flash_v2_5');
+    assert.match(pinned.url, /output_format=mp3_44100_192/);
     const wrapped = H.toFunctionResponse(audio);
     assert.equal(wrapped.headers['Content-Type'], 'audio/mpeg');
     assert.equal(Buffer.from(wrapped.body, 'base64')[0], 0xff);
@@ -272,6 +282,107 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     assert.match(logs[0][2], /rejected/);
     assert.equal(String(logs[0][2]).includes('test-eleven'), false);
     assert.equal(JSON.stringify(logs[0]).includes('xi-api-key'), false);
+  });
+
+  test('MP3 192 kbps, bei Ablehnung des Formats das bisherige', async () => {
+    H.resetLimits();
+    const bytes = Uint8Array.from([0xff, 0xfb, 0x90, 0x64]);
+    const urls = [];
+    const audio = await H.handleTts(event('POST', { character: 'margarethe', text: 'Aber Schätzchen.' }), {
+      env: { ELEVENLABS_API_KEY: 'test-eleven', DAILY_LIMIT: '1' },
+      fetch: async (url) => {
+        urls.push(String(url));
+        if (urls.length === 1) {
+          return {
+            ok: false,
+            status: 400,
+            headers: { get: () => 'application/json' },
+            text: async () => JSON.stringify({
+              detail: {
+                type: 'validation_error',
+                code: 'invalid_output_format',
+                message: 'The requested output format is not supported.',
+                param: 'output_format',
+              },
+            }),
+          };
+        }
+        return { ok: true, status: 200, headers: { get: () => 'audio/mpeg' }, arrayBuffer: async () => bytes };
+      },
+      now: () => 1700000000000,
+    });
+    assert.equal(audio.status, 200);
+    assert.equal(audio.headers['Content-Type'], 'audio/mpeg');
+    assert.equal(audio.audio[0], 0xff);
+    assert.equal(urls.length, 2);
+    assert.match(urls[0], /output_format=mp3_44100_192/);
+    assert.match(urls[1], /output_format=mp3_22050_32/);
+    assert.equal(urls[0].replace('mp3_44100_192', 'mp3_22050_32'), urls[1]);
+    const again = await H.handleTts(event('POST', { character: 'margarethe', text: 'Noch einmal.' }), {
+      env: { ELEVENLABS_API_KEY: 'test-eleven', DAILY_LIMIT: '1' },
+      fetch: async () => { urls.push('zu viel'); throw new Error('nicht'); },
+      now: () => 1700000000000,
+    });
+    assert.equal(again.status, 503);
+    assert.equal(again.json.reason, 'rate_limited');
+    assert.equal(urls.length, 2);
+
+    H.resetLimits();
+    let calls = 0;
+    const blocked = await H.handleTts(event('POST', { character: 'margarethe', text: 'Hallo' }), {
+      env: { ELEVENLABS_API_KEY: 'test-eleven' },
+      fetch: async () => {
+        calls += 1;
+        return {
+          ok: false,
+          status: 400,
+          headers: { get: () => 'application/json' },
+          text: async () => JSON.stringify({
+            detail: {
+              type: 'validation_error',
+              code: 'unsupported_model',
+              message: 'The specified model is not supported for this operation.',
+              param: 'model_id',
+            },
+          }),
+        };
+      },
+      now: () => 1700000001000,
+    });
+    assert.equal(blocked.status, 503);
+    assert.equal(blocked.json.reason, 'upstream_400');
+    assert.equal(calls, 1);
+
+    H.resetLimits();
+    const planUrls = [];
+    const plan = await H.handleTts(event('POST', { character: 'vreni', text: 'Hoi.' }), {
+      env: { ELEVENLABS_API_KEY: 'test-eleven' },
+      fetch: async (url, options) => {
+        planUrls.push(String(url));
+        assert.equal(JSON.parse(options.body).language_code, 'de');
+        assert.equal(options.headers['xi-api-key'], 'test-eleven');
+        if (planUrls.length === 1) {
+          return {
+            ok: false,
+            status: 403,
+            headers: { get: () => 'application/json' },
+            json: async () => ({
+              detail: {
+                type: 'authorization_error',
+                code: 'feature_not_available',
+                message: 'mp3_44100_192 is not available on your current plan.',
+                param: 'output_format',
+              },
+            }),
+          };
+        }
+        return { ok: true, status: 200, headers: { get: () => 'audio/mpeg' }, arrayBuffer: async () => bytes };
+      },
+      now: () => 1700000002000,
+    });
+    assert.equal(plan.status, 200);
+    assert.match(planUrls[1], /output_format=mp3_22050_32/);
+    assert.ok(planUrls[1].indexOf(H.DEFAULT_VRENI) !== -1);
   });
 
   test('Avatar: nur erfundene Erwachsene, kleines Bild, kein Schlüssel nach außen', async () => {
