@@ -28,13 +28,13 @@
     if (view.phase === 'ended') {
       return 'Die 14 Tage sind vorbei. ' + roundLine + noAuto;
     }
-    return 'Dein erster Klick startet 14 Tage Premium in diesem Browser: alle Spielpartner. ' + roundLine + noAuto;
+    return 'Dein erster Besuch an einem Spieltisch startet 14 Tage Premium in diesem Browser: alle Spielpartner.' + noAuto;
   }
 
   function buttonText(view) {
-    if (view.phase === 'trial') return 'Test läuft: noch ' + daysLabel(view.daysLeft);
+    if (view.phase === 'trial') return 'Test läuft noch ' + daysLabel(view.daysLeft);
     if (view.phase === 'new') return '14 Tage alle Spielpartner gratis testen';
-    return 'Test beendet';
+    return 'Die 14 Tage sind vorbei';
   }
 
   function paint(view) {
@@ -45,8 +45,9 @@
     buttons.forEach(function (button) {
       var fresh = view.phase === 'new';
       button.textContent = buttonText(view);
-      button.setAttribute('aria-disabled', fresh ? 'false' : 'true');
-      if (button.tagName === 'BUTTON') button.disabled = !fresh;
+      button.setAttribute('aria-disabled', view.phase === 'ended' ? 'true' : 'false');
+      if (button.tagName === 'BUTTON') button.disabled = view.phase === 'ended';
+      if (!fresh) button.removeAttribute('href');
     });
     document.querySelectorAll('.sp-card').forEach(function (card) {
       var tier = card.getAttribute('data-tier');
@@ -68,8 +69,14 @@
   }
 
   function start(event) {
-    if (event) event.preventDefault();
     var view;
+    try { view = currentView(); }
+    catch (err) { view = { phase: 'new' }; }
+    if (view.phase !== 'new') {
+      if (event) event.preventDefault();
+      return;
+    }
+    if (event) event.preventDefault();
     try {
       view = E.startTrial(localStorage, Date.now());
     } catch (err) {

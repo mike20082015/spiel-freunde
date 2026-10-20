@@ -22,9 +22,9 @@
 
   function markup(api) {
     return '<div class="pw">' +
-      '<p class="pw-kicker">Für heute ist Schluss</p>' +
+      '<p class="pw-kicker">Die 14 Tage sind vorbei</p>' +
       '<h3>Drei Runden sind gespielt</h3>' +
-      '<p class="pw-lead">Horst schiebt die Karten zusammen, Margarethe schenkt noch Kaffee nach. Morgen gibt es wieder drei Runden mit den beiden. Wenn Du heute weiterspielen willst, oder die ganze Runde dazuholen magst, such Dir unten einen Zeitraum aus.</p>' +
+      '<p class="pw-lead">Die 14 Tage sind vorbei. Horst schiebt die Karten zusammen, Margarethe schenkt noch Kaffee nach. Ohne Lizenz sind es drei Runden am Tag mit Horst und Margarethe, und die drei für heute sind gespielt. Morgen gibt es wieder drei Runden mit den beiden. Wenn Du heute weiterspielen willst, oder die ganze Runde dazuholen magst, such Dir unten einen Zeitraum aus.</p>' +
       '<div class="sp-offer" data-offer>' +
       '<div class="bill-toggle" role="group" aria-label="Abrechnungszeitraum">' +
       '<button type="button" data-period="monthly" aria-pressed="true">Monatlich</button>' +
