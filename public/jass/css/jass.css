@@ -25,8 +25,6 @@ img{display:block;max-width:100%}
 
 .topbar{flex:none;height:64px;display:flex;align-items:center;gap:16px;padding:0 18px;background:rgba(36,22,13,.95);border-bottom:1px solid rgba(212,168,75,.28);z-index:20}
 .logo img{height:36px;width:auto}
-.preview-badge{flex:none;position:relative;display:inline-flex;align-items:center;margin-left:-4px;padding:5px 10px 5px 13px;border-radius:2px 4px 4px 2px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#3a2a0c;font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;line-height:1}
-.preview-badge::before{content:"";position:absolute;left:-7px;top:0;bottom:0;width:7px;background:linear-gradient(180deg,#a67c2d,#8a6424);clip-path:polygon(100% 0,0 50%,100% 100%)}
 .topbar-title{font-family:var(--serif);font-size:1.12rem;display:flex;align-items:center;gap:8px;white-space:nowrap}
 .topbar-actions{margin-left:auto;display:flex;gap:8px}
 .lbl-short{display:none}
@@ -210,7 +208,6 @@ button.card{padding:0;appearance:none}
   :root{--cw:48px}
   .topbar{height:56px;padding:0 8px;gap:6px}
   .topbar .logo{display:none}
-  .preview-badge{display:inline-flex;flex:none;font-size:.58rem;letter-spacing:.08em;padding:4px 7px 4px 10px;margin-left:0}
   .topbar-actions{margin-left:0;flex:1;min-width:0;justify-content:flex-end;gap:4px}
   .tbtn{padding:6px 7px;font-size:.78rem}
   .lbl-long{display:none}

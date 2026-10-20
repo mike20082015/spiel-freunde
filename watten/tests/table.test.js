@@ -76,7 +76,7 @@ test('Der Tisch ruft Avatar, Rundenzähler, Besetzung und die Rechtstexte', () =
   assert.match(page, /\/spielpartner\/runde\.css/);
   assert.match(page, /id="modal-paywall"/);
   assert.match(page, /Ein Angebot der Interconsult LLC/);
-  assert.match(page, /preview-badge">Vorschau</);
+  assert.doesNotMatch(page, /preview-badge/);
   assert.match(page, /href="\/impressum\.html"/);
   assert.match(page, /href="\/datenschutz\.html"/);
   assert.match(page, /href="\/agb\.html"/);

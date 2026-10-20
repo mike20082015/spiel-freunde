@@ -38,7 +38,7 @@ test('Sprüche bleiben am Tisch und nennen keinen Anbieter', () => {
 
 test('Startseite zeigt Bridge als Neu und verlinkt es im Fuß', () => {
   const html = fs.readFileSync(path.join(root, 'public/index.html'), 'utf8');
-  assert.match(html, /preview-badge">Vorschau</);
+  assert.doesNotMatch(html, /preview-badge/);
   assert.match(html, /<span class="badge">Neu<\/span>\s*<\/div>\s*<h3>Bridge<\/h3>/);
   assert.match(html, /href="\/bridge\/">Bridge spielen/);
   assert.match(html, /href="\/bridge\/">Bridge</);
@@ -67,7 +67,7 @@ test('Der Tisch ruft Rundenzähler, Besetzung und die Rechtstexte', () => {
   assert.match(page, /\/spielpartner\/runde\.css/);
   assert.match(page, /id="modal-paywall"/);
   assert.match(page, /Ein Angebot der Interconsult LLC/);
-  assert.match(page, /preview-badge">Vorschau</);
+  assert.doesNotMatch(page, /preview-badge/);
   assert.match(page, /Kontra/);
   assert.match(app, /Rekontra/);
   assert.match(page, /Strohmann/);

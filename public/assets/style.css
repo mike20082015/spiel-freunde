@@ -55,8 +55,6 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;letter-spacin
 .nav-links a:hover{color:var(--cream)}.nav-links a:hover::after{transform:scaleX(1)}
 .nav-brand{display:flex;align-items:center;gap:12px;min-width:0}
 .nav-cta{display:flex;align-items:center;gap:18px}
-.preview-badge{flex:none;position:relative;display:inline-flex;align-items:center;margin-left:2px;padding:5px 11px 5px 14px;border-radius:2px 4px 4px 2px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#3a2a0c;font-size:.68rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;line-height:1;box-shadow:0 8px 16px -10px rgba(0,0,0,.7)}
-.preview-badge::before{content:"";position:absolute;left:-7px;top:0;bottom:0;width:7px;background:linear-gradient(180deg,#a67c2d,#8a6424);clip-path:polygon(100% 0,0 50%,100% 100%)}
 .link-login{color:rgba(247,241,227,.82);font-size:.95rem}
 
 /* hero */
@@ -330,7 +328,6 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;letter-spacin
   .you-tag{left:auto;right:3%;bottom:4%}.ava-you{width:26px;height:26px;font-size:.62rem}.chat-chip{font-size:.68rem;padding:3px 8px}
   .kicker{font-size:.72rem}
   .logo img{height:30px}
-  .preview-badge{font-size:.58rem;letter-spacing:.08em;padding:4px 8px 4px 10px}
   .games{grid-template-columns:1fr 1fr;gap:12px}.game{padding:16px 14px 14px}.game h3{font-size:1.2rem}.game p{font-size:.84rem}.game .badge{font-size:.6rem;padding:2px 7px}.fl{width:22px;height:15px}.fl.ch{width:15px}
   .game-feature h3{font-size:2.1rem}
   .trial{flex-direction:column;text-align:center;gap:10px}
