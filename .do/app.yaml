@@ -90,18 +90,22 @@ functions:
 # Für ein späteres K.-o. den Token als SECRET nur an dieser Komponente setzen
 # und den ResultStore an eine Datenbank hängen. Nichts davon ins Frontend,
 # nichts in api/project.yml.
+# Image aus tisch/Dockerfile, Kontext ist die Repository-Wurzel.
+# room.js braucht public/skat/js/engine.js und ai.js. Mit source_dir tisch
+# fehlen die Dateien und der Prozess stirbt mit MODULE_NOT_FOUND.
+# Start ist das CMD im Image (node tisch/server.js), Port 8080.
+# Kein Buildpack und kein run_command: der würde das CMD ersetzen.
 services:
   - name: tisch
     github:
       repo: mike20082015/spiel-freunde
       branch: main
       deploy_on_push: true
-    source_dir: tisch
-    environment_slug: node-js
+    source_dir: /
+    dockerfile_path: tisch/Dockerfile
     http_port: 8080
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb
-    run_command: npm start
     routes:
       - path: /api/tisch
     health_check:

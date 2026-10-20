@@ -187,7 +187,7 @@ Gemischt und gegeben wird nur auf dem Server. Jeder Browser bekommt die Sicht au
 
 Der Dienst liegt in `tisch/` und ist eine **Web-Service-Komponente**, nicht eine Function. Functions haben keinen gemeinsamen Speicher und kein WebSocket. Eine Instanz hält die Tische im RAM, schiebt Änderungen über `/api/tisch/ws` und beantwortet zusätzlich `POST /api/tisch/poll`, falls die Leitung kurz weg ist. Nach einem Neuladen gilt derselbe Platz-Token aus `localStorage`. Ohne Aktion (auch ohne offene Seite, die alle 1,5 Sekunden nachfragt) läuft ein Tisch nach 45 Minuten ab.
 
-Lokal steckt derselbe Dienst in `node api/server.js`, auch mit `--mock`. Auf App Platform ist er getrennt, Route `/api/tisch`, Port 8080, `instance_count: 1`, kleinste Instanz `apps-s-1vcpu-0.5gb`. Das steht in `.do/app.yaml`. Die Static Site und die Function `api` bleiben. Es kommt ein bezahlter Container dazu, grob der kleinste Basic-Tarif. Nicht selbst deployen.
+Lokal steckt derselbe Dienst in `node api/server.js`, auch mit `--mock`. Auf App Platform ist er getrennt, Route `/api/tisch`, Port 8080, `instance_count: 1`, kleinste Instanz `apps-s-1vcpu-0.5gb`. Das Image baut `tisch/Dockerfile` mit Kontext `/`, weil der Prozess `public/skat/js/engine.js` und `ai.js` braucht. Das steht in `.do/app.yaml`. Die Static Site und die Function `api` bleiben. Es kommt ein bezahlter Container dazu, grob der kleinste Basic-Tarif. Nicht selbst deployen.
 
 ### Lizenz
 
