@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="spielpartner/offer.css">
+<link rel="stylesheet" href="/spielpartner/intro.css">
 </head>
 <body>
 
@@ -147,7 +148,7 @@
     </div>
     <div class="chars">
       <article class="char">
-        <div class="char-img"><img src="assets/figur-witwe-foto.jpg" alt="Margarethe von Hohenfels, die reiche Witwe"></div>
+        <div class="char-img" data-intro-host data-intro-slug="margarethe" data-intro-name="Margarethe von Hohenfels"><img src="assets/figur-witwe-foto.jpg" alt="Margarethe von Hohenfels, die reiche Witwe"></div>
         <div class="char-body">
           <p class="char-role">Die reiche Witwe</p>
           <h3>Margarethe von Hohenfels</h3>
@@ -157,7 +158,7 @@
         </div>
       </article>
       <article class="char">
-        <div class="char-img"><img src="assets/figur-berliner-foto.jpg" alt="Horst Kaluppke, der Stinkstiefel aus Berlin"></div>
+        <div class="char-img" data-intro-host data-intro-slug="horst" data-intro-name="Horst Kaluppke"><img src="assets/figur-berliner-foto.jpg" alt="Horst Kaluppke, der Stinkstiefel aus Berlin"></div>
         <div class="char-body">
           <p class="char-role">Der Stinkstiefel aus Berlin</p>
           <h3>Horst Kaluppke</h3>
@@ -167,7 +168,7 @@
         </div>
       </article>
       <article class="char">
-        <div class="char-img"><img src="assets/figur-nachbarin-foto.jpg" alt="Uschi Lammert, die lustige Nachbarin"></div>
+        <div class="char-img" data-intro-host data-intro-slug="uschi" data-intro-name="Uschi Lammert"><img src="assets/figur-nachbarin-foto.jpg" alt="Uschi Lammert, die lustige Nachbarin"></div>
         <div class="char-body">
           <p class="char-role">Die lustige Nachbarin</p>
           <h3>Uschi Lammert</h3>
@@ -452,6 +453,7 @@
   </div>
 </footer>
 
+<script src="/spielpartner/intro.js"></script>
 <script src="spielpartner/entitlement.js"></script>
 <script src="spielpartner/offer.js"></script>
 <script src="assets/app.js"></script>

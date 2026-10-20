@@ -3,6 +3,7 @@
  * Im Browser: window.SpielpartnerCards. In Node: require.
  * Ohne Video nur der Hinweis „Video folgt“, kein video-Element.
  * Mit Video: stummer Player mit Poster, Abspielen per Klick.
+ * Liegt ein Clip im Register, sitzt zusätzlich „Vorstellung ansehen“ auf dem Porträt.
  */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -57,8 +58,27 @@
       '</div>';
   }
 
+  function introApi() {
+    if (typeof module === 'object' && module.exports) {
+      try { return require('./intro.js'); } catch (err) { return null; }
+    }
+    var host = typeof globalThis !== 'undefined' ? globalThis : null;
+    return host && host.SpielpartnerIntro ? host.SpielpartnerIntro : null;
+  }
+
   function hasPlayableVideo(avatar) {
     return !!(avatar && avatar.hasVideo === true && avatar.video);
+  }
+
+  function portraitButton(avatar) {
+    var api = introApi();
+    if (!api || typeof api.buttonHtml !== 'function') return '';
+    return api.buttonHtml({
+      slug: avatar && avatar.slug,
+      video: hasPlayableVideo(avatar) ? avatar.video : '',
+      poster: avatar && avatar.portrait,
+      name: avatar && avatar.name
+    });
   }
 
   function mediaHtml(avatar) {
@@ -82,6 +102,7 @@
       '<div class="sp-portrait">' +
         '<span class="sp-initials" aria-hidden="true">' + escapeHtml(initials(avatar && avatar.name)) + '</span>' +
         portrait +
+        portraitButton(avatar) +
       '</div>' +
       '<div class="sp-body">' +
         '<p class="sp-origin">' + escapeHtml(avatar && avatar.origin) + '</p>' +

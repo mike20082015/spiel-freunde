@@ -54,6 +54,29 @@
 }
 .runde-person.is-on { border-color: #b08532; box-shadow: inset 0 0 0 1px #b08532; }
 .runde-person.is-locked { background: #f6f1ea; }
+.runde-layout {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+.runde-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.runde-face-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  display: block;
+  width: 100%;
+}
 .runde-pick {
   appearance: none;
   border: 0;
@@ -69,6 +92,12 @@
   align-items: center;
   position: relative;
 }
+.runde-copy-btn {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+.runde-side .runde-face { margin-inline: auto; }
 .runde-face {
   width: 64px;
   height: 64px;
