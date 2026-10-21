@@ -56,6 +56,14 @@
     if (window.SpielpartnerLineup) SpielpartnerLineup.dress(Seats, 'jass', localStorage);
     for (var i = 0; i < Seats.length; i++) NAMES[i] = Seats[i].name;
     Seats.forEach(function (p) {
+      if (!p || p.id === 'du') return;
+      var node = $('seat-' + p.seat);
+      if (node) {
+        var label = node.querySelector('.seat-name');
+        if (label) label.textContent = p.name;
+        var ini = node.querySelector('.ini');
+        if (ini && p.initials) ini.textContent = p.initials;
+      }
       if (!p.portrait) return;
       var wrap = $('ava-' + p.seat);
       if (!wrap) return;
@@ -76,6 +84,11 @@
       img.alt = p.full;
       if (img.dataset.fallback !== '1' && img.getAttribute('src') !== p.portrait) img.src = p.portrait;
     });
+    var line = $('intro-line');
+    if (line && NAMES[1] && NAMES[2] && NAMES[3]) {
+      line.textContent = 'Schieber zu viert. Du spielst mit ' + NAMES[2] + ' gegen ' + NAMES[1] + ' und ' + NAMES[3] + '. Neun Karten, Trumpf oder schieben, und wer zuerst am Ziel ist, hat gewonnen.';
+    }
+    if (typeof renderScore === 'function') renderScore();
   }
 
   function logLine(html, cls) {
@@ -167,7 +180,7 @@
   function renderScore() {
     var target = table ? table.target : E.normalizeTarget(settings.target, settings.targetCustom);
     $('mode-badge').textContent = String(target);
-    $('target-info').textContent = 'Wir: Du und Urs. Sie: Vreni und Horst. Ziel ' + target + (settings.multipliers ? ', mit Faktoren.' : '.');
+    $('target-info').textContent = 'Wir: Du und ' + NAMES[2] + '. Sie: ' + NAMES[1] + ' und ' + NAMES[3] + '. Ziel ' + target + (settings.multipliers ? ', mit Faktoren.' : '.');
     var rows = table ? table.history : [];
     var html = '<thead><tr><th>Spiel</th><th>Wir</th><th>Sie</th></tr></thead><tbody>';
     if (!rows.length) html += '<tr><td colspan="3">Noch keine Runde.</td></tr>';
@@ -214,7 +227,7 @@
       html += '<button type="button" class="choice" data-choice="obenabe">Obenabe<small>Ass hoch, 8 zählt 8</small></button>';
       html += '<button type="button" class="choice" data-choice="undenufe">Undenufe<small>6 hoch, Ass bleibt 11</small></button>';
     }
-    if (table.phase === 'trump') html += '<button type="button" class="choice push" data-choice="schieben">Schieben<small>Urs muss ansagen</small></button>';
+    if (table.phase === 'trump') html += '<button type="button" class="choice push" data-choice="schieben">Schieben<small>' + esc(NAMES[2]) + ' muss ansagen</small></button>';
     html += '</div>';
     panel.innerHTML = html;
   }
