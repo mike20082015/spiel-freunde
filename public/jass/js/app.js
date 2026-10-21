@@ -706,4 +706,10 @@
     },
     apply: refreshFaces
   });
+
+  window.__jass = {
+    get table() { return table; },
+    get state() { return table; },
+    settings: settings
+  };
 })();

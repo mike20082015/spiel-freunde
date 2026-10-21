@@ -4,6 +4,8 @@
  *
  * Zugang:
  *   Test (14 Tage): alles offen, unbegrenzt.
+ *   Bonus (bestätigter Fehler, entitlement "bonus" oder bonus.active):
+ *   wie Premium, unbegrenzt. Die restlichen Tage kommen aus bonus.daysLeft.
  *   Lizenz Premium, nicht abgelaufen: alle Spielpartner, unbegrenzt.
  *   Lizenz Standard, nicht abgelaufen: nur Horst und Margarethe, unbegrenzt.
  *   Sonst (Test vorbei oder noch nicht gestartet, keine gültige Lizenz):
@@ -160,9 +162,45 @@
     return state;
   }
 
+  function bonusActive(me) {
+    if (!me || typeof me !== 'object') return false;
+    if (me.entitlement === 'bonus') return true;
+    return !!(me.bonus && me.bonus.active === true);
+  }
+
+  function bonusFromMe(me) {
+    if (!bonusActive(me)) return null;
+    var raw = me.bonus && typeof me.bonus === 'object' ? me.bonus : {};
+    var until = parseTime(raw.until);
+    var daysLeft = typeof raw.daysLeft === 'number' && isFinite(raw.daysLeft) ? raw.daysLeft : null;
+    return {
+      active: true,
+      until: until,
+      daysLeft: daysLeft,
+      pending: raw.pending === true
+    };
+  }
+
+  function daysOfBonus(bonus, now) {
+    if (!bonus || !bonus.active) return null;
+    if (typeof bonus.daysLeft === 'number' && isFinite(bonus.daysLeft)) return Math.max(0, Math.ceil(bonus.daysLeft));
+    if (typeof bonus.until === 'number' && isFinite(bonus.until)) {
+      return Math.max(0, Math.ceil((bonus.until - now) / DAY_MS));
+    }
+    return null;
+  }
+
+  function bonusHint(days) {
+    if (days === 1) return 'Premium-Bonus läuft noch 1 Tag.';
+    if (days === 0) return 'Dein Premium-Bonus endet heute.';
+    if (typeof days === 'number' && isFinite(days)) return 'Premium-Bonus läuft noch ' + days + ' Tage.';
+    return 'Dein Premium-Bonus läuft.';
+  }
+
   /*
-   * Ein angemeldetes Konto ersetzt den lokalen Test. trialEndsAt und Lizenz
-   * kommen dann aus dem gespeicherten Profil (GET /me), nur für diese Antwort.
+   * Ein angemeldetes Konto ersetzt den lokalen Test. trialEndsAt, Lizenz
+   * und ein laufender Premium-Bonus kommen aus dem gespeicherten Profil
+   * (GET /me), nur für diese Antwort. Der Bonus wird nicht lokal gespeichert.
    */
   function overlayAccount(storage, state) {
     var raw;
@@ -187,6 +225,8 @@
         state.tier = lic.tier;
       }
     }
+    var bonus = bonusFromMe(raw.me);
+    if (bonus) state.bonus = bonus;
     return state;
   }
 
@@ -254,6 +294,7 @@
    * der Fehler, als Standard immer offen war.
    */
   function isUnlocked(avatarTier, state, now, roundsToday) {
+    if (state && ((state.bonus && state.bonus.active) || state.phase === 'bonus')) return true;
     if (isTrialActive(state, now)) return true;
     var paid = paidTier(state, now);
     if (paid === 'premium') return true;
@@ -264,14 +305,16 @@
   }
 
   function describe(state, now) {
-    var trialActive = isTrialActive(state, now);
+    var bonus = state && state.bonus && state.bonus.active ? state.bonus : null;
+    var trialActive = !bonus && isTrialActive(state, now);
     var paid = paidTier(state, now);
-    var daysLeft = trialActive ? Math.ceil((state.trialEndsAt - now) / DAY_MS) : 0;
+    var daysLeft = bonus ? daysOfBonus(bonus, now) : (trialActive ? Math.ceil((state.trialEndsAt - now) / DAY_MS) : 0);
     var license = paid ? state.license : null;
     var licenseMs = license ? license.expiresAt - now : 0;
     var licenseDaysLeft = license ? Math.max(0, Math.ceil(licenseMs / DAY_MS)) : 0;
     var phase;
-    if (trialActive) phase = 'trial';
+    if (bonus) phase = 'bonus';
+    else if (trialActive) phase = 'trial';
     else if (paid) phase = paid;
     else if (state && state.trialEndsAt != null) phase = 'ended';
     else phase = 'new';
@@ -281,11 +324,12 @@
       tier: paid,
       daysLeft: daysLeft,
       trialActive: trialActive,
-      allUnlocked: trialActive || paid === 'premium',
-      unlimited: trialActive || !!paid,
+      allUnlocked: trialActive || paid === 'premium' || !!bonus,
+      unlimited: trialActive || !!paid || !!bonus,
       license: license,
       licenseDaysLeft: licenseDaysLeft,
-      renewSoon: !!(license && licenseMs > 0 && licenseMs < RENEW_SOON_MS)
+      renewSoon: !!(license && licenseMs > 0 && licenseMs < RENEW_SOON_MS),
+      bonus: bonus
     };
   }
 
@@ -553,6 +597,10 @@
     applyLicense: applyLicense,
     clearLicense: clearLicense,
     isTrialActive: isTrialActive,
+    bonusActive: bonusActive,
+    bonusFromMe: bonusFromMe,
+    daysOfBonus: daysOfBonus,
+    bonusHint: bonusHint,
     paidTier: paidTier,
     isUnlocked: isUnlocked,
     describe: describe,

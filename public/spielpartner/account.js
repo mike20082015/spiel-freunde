@@ -389,12 +389,33 @@
     return done.then(function () { return { ok: true }; });
   }
 
+  function bonusOn(me) {
+    var Ent = entitlement();
+    if (Ent && typeof Ent.bonusActive === 'function') return Ent.bonusActive(me);
+    return !!(me && (me.entitlement === 'bonus' || (me.bonus && me.bonus.active)));
+  }
+
+  function bonusLine(me, now) {
+    var Ent = entitlement();
+    var left = null;
+    if (Ent && typeof Ent.bonusFromMe === 'function' && typeof Ent.daysOfBonus === 'function') {
+      left = Ent.daysOfBonus(Ent.bonusFromMe(me), nowOf(now));
+    } else if (me && me.bonus && typeof me.bonus.daysLeft === 'number') {
+      left = me.bonus.daysLeft;
+    }
+    if (Ent && typeof Ent.bonusHint === 'function') return Ent.bonusHint(left);
+    if (left === 1) return 'Premium-Bonus läuft noch 1 Tag.';
+    if (typeof left === 'number') return 'Premium-Bonus läuft noch ' + left + ' Tage.';
+    return 'Dein Premium-Bonus läuft.';
+  }
+
   function accessFromMe(me) {
     if (!me) return { ok: true, failOpen: true };
     var free = me.freeRounds || {};
     var trialOn = !!(me.trial && me.trial.active) || me.tier === 'trial';
-    if (free.unlimited || trialOn || me.tier === 'premium' || me.tier === 'standard') {
-      return { ok: true, unlimited: true };
+    var bonus = bonusOn(me);
+    if (free.unlimited || trialOn || bonus || me.tier === 'premium' || me.tier === 'standard') {
+      return { ok: true, unlimited: true, bonus: bonus };
     }
     if (typeof free.remaining === 'number') {
       if (free.remaining > 0) return { ok: true, remaining: free.remaining, limit: free.limit };
@@ -541,7 +562,15 @@
       var pending = fetcher
         ? post(fetcher, apiBase() + '/rounds', { roundId: roundId }, session.token).then(function (result) {
           if (result.status === 403 && errorCode(result) === 'free_round_limit') {
-            var next = Object.assign({}, session.me || {}, { freeRounds: result.body && result.body.freeRounds });
+            var reported = result.body || {};
+            var mergedMe = Object.assign({}, session.me || {}, { freeRounds: reported.freeRounds });
+            if (reported.entitlement) mergedMe.entitlement = reported.entitlement;
+            if (reported.bonus) mergedMe.bonus = reported.bonus;
+            if (bonusOn(session.me) || bonusOn(mergedMe)) {
+              saveMe(storage, Object.assign({}, session.me || {}, mergedMe));
+              return { paywall: false, bonus: true, roundId: roundId };
+            }
+            var next = Object.assign({}, session.me || {}, { freeRounds: reported.freeRounds });
             saveMe(storage, next);
             openPaywall();
             return { paywall: true, error: 'free_round_limit', roundId: roundId };
@@ -586,6 +615,7 @@
     var session = readSession(storage, moment);
     if (session && session.me) {
       var me = session.me;
+      if (bonusOn(me)) return bonusLine(me, moment);
       if (me.trial && me.trial.active) {
         var days = typeof me.trial.daysLeft === 'number' ? me.trial.daysLeft : me.daysLeft;
         if (days === 1) return 'Test läuft noch 1 Tag.';
@@ -637,6 +667,11 @@
       if (label) label.textContent = session.player.displayName;
     }
     paintTableName(session.player.displayName);
+    try {
+      if (typeof window !== 'undefined' && window.SpielpartnerReports && typeof window.SpielpartnerReports.mountListEntry === 'function') {
+        window.SpielpartnerReports.mountListEntry();
+      }
+    } catch (err) { /* Liste kommt mit dem nächsten Laden */ }
   }
 
   function paintTableName(name) {
