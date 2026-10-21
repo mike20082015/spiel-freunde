@@ -284,6 +284,9 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;letter-spacin
 .foot-bottom{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;padding-top:20px;padding-bottom:26px;border-top:1px solid rgba(212,168,75,.2);font-size:.84rem}
 .powered{color:var(--gold-2);font-weight:600}
 .powered:hover{text-decoration:underline}
+.foot-en{opacity:.72}
+.foot-en:hover{opacity:1;color:var(--cream)}
+.foot-en[aria-current="page"]{opacity:1;color:var(--gold-2)}
 
 /* reveal on scroll */
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease, transform .7s ease}
