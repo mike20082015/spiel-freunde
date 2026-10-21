@@ -455,11 +455,53 @@
       '<div class="pw-actions"><button type="button" class="btn btn-ghost-dark" data-signup-close>Später</button></div>';
   }
 
-  function sentMarkup(email) {
+  function standaloneNow() {
+    try {
+      var win = typeof window !== 'undefined' ? window : null;
+      if (win && typeof win.matchMedia === 'function') {
+        if (win.matchMedia('(display-mode: standalone)').matches) return true;
+        if (win.matchMedia('(display-mode: fullscreen)').matches) return true;
+      }
+      if (win && win.navigator && win.navigator.standalone === true) return true;
+      return false;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function tokenFrom(value) {
+    var raw = String(value == null ? '' : value).trim();
+    if (!raw || raw.length > 2000) return '';
+    var match = raw.match(/[?&#]token=([^&#\s]+)/i);
+    if (match) {
+      try { raw = decodeURIComponent(match[1]); }
+      catch (err) { raw = match[1]; }
+      raw = String(raw || '').trim();
+    } else if (/^https?:\/\//i.test(raw) || raw.charAt(0) === '/') {
+      return '';
+    }
+    if (!raw || /\s/.test(raw)) return '';
+    return raw;
+  }
+
+  function pasteMarkup() {
+    return '<form data-paste>' +
+      '<p class="pw-lead">Tippe den Link in der Mail nicht an, wenn Du in der App bist. Sonst landet die Anmeldung im Browser. Kopiere den Link und füge ihn hier ein.</p>' +
+      '<label class="pw-field">Anmeldelink' +
+      '<input data-token type="text" autocomplete="off" spellcheck="false" maxlength="2000" placeholder="Link aus der Mail">' +
+      '</label>' +
+      '<button type="submit" class="btn btn-gold">Link einlösen</button>' +
+      '<p class="pw-status" data-paste-status role="status"></p>' +
+      '</form>';
+  }
+
+  function sentMarkup(email, options) {
+    var standalone = !!(options && options.standalone);
     return '<p class="pw-kicker">Postfach</p>' +
       '<h3 id="signup-title">Der Link ist unterwegs</h3>' +
       '<p class="pw-lead">Schau in Dein Postfach' + (email ? ' bei ' + escapeText(email) : '') +
       '. Wir schicken Dir einen Anmeldelink, kein Passwort nötig.</p>' +
+      (standalone ? pasteMarkup() : '') +
       '<div class="pw-actions"><button type="button" class="btn btn-ghost-dark" data-signup-close>Später</button></div>';
   }
 
@@ -506,9 +548,19 @@
       var button = form.querySelector('button[type="submit"]');
       if (button) button.disabled = true;
       requestLink(storage, { email: email, name: name }, Date.now(), fetcher).then(function (result) {
-        root.innerHTML = sentMarkup(result.email);
+        root.innerHTML = sentMarkup(result.email, { standalone: standaloneNow() });
         var later = root.querySelector('[data-signup-close]');
         if (later) later.addEventListener('click', function () { modal.hidden = true; });
+        bindPaste(root, storage, fetcher, function (session) {
+          var name = session && session.player ? session.player.displayName : '';
+          root.innerHTML = '<p class="pw-kicker">Angemeldet</p>' +
+            '<h3 id="signup-title">Willkommen</h3>' +
+            '<p class="pw-lead">' + escapeText(welcomeLine(name)) + '</p>' +
+            '<div class="pw-actions"><button type="button" class="btn btn-ghost-dark" data-signup-close>Weiter</button></div>';
+          var next = root.querySelector('[data-signup-close]');
+          if (next) next.addEventListener('click', function () { modal.hidden = true; });
+          mountHeader(storage);
+        });
       }).catch(function (err) {
         if (button) button.disabled = false;
         if (status) status.textContent = err.userMessage || messageFor(err.code);
@@ -720,21 +772,62 @@
     return session;
   }
 
+  function sessionResult(storage, session) {
+    var name = session && session.player ? session.player.displayName : '';
+    return {
+      kind: 'ok',
+      name: name,
+      line: welcomeLine(name),
+      href: returnPath(storage) || '/skat/'
+    };
+  }
+
   function acceptLink(search, storage, now, fetcher) {
     var token = '';
     try { token = new URLSearchParams(search || '').get('token') || ''; }
     catch (err) { token = ''; }
     if (!token) return Promise.resolve({ kind: 'missing', line: 'Der Anmeldelink fehlt.' });
     return verify(storage, token, now, fetcher).then(function (session) {
-      var name = session && session.player ? session.player.displayName : '';
-      return {
-        kind: 'ok',
-        name: name,
-        line: welcomeLine(name),
-        href: returnPath(storage) || '/skat/'
-      };
+      return sessionResult(storage, session);
     }).catch(function (err) {
       return { kind: 'error', line: err.userMessage || messageFor(err.code) };
+    });
+  }
+
+  function redeem(value, storage, now, fetcher) {
+    var token = tokenFrom(value);
+    if (!token) {
+      return Promise.resolve({ kind: 'invalid', line: 'Das ist kein Anmeldelink. Kopiere den ganzen Link aus der Mail.' });
+    }
+    return verify(storage, token, now, fetcher).then(function (session) {
+      return sessionResult(storage, session);
+    }).catch(function (err) {
+      return { kind: 'error', line: err.userMessage || messageFor(err.code) };
+    });
+  }
+
+  function bindPaste(root, storage, fetcher, onOk) {
+    if (!root) return;
+    var form = root.querySelector('[data-paste]');
+    if (!form || form.getAttribute('data-bound') === '1') return;
+    form.setAttribute('data-bound', '1');
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      var status = root.querySelector('[data-paste-status]');
+      var field = form.querySelector('[data-token]');
+      var button = form.querySelector('button[type="submit"]');
+      var token = tokenFrom(field ? field.value : '');
+      if (!token) {
+        if (status) status.textContent = 'Das ist kein Anmeldelink. Kopiere den ganzen Link aus der Mail.';
+        return;
+      }
+      if (button) button.disabled = true;
+      verify(storage, token, Date.now(), fetcher).then(function (session) {
+        if (typeof onOk === 'function') onOk(session);
+      }).catch(function (err) {
+        if (button) button.disabled = false;
+        if (status) status.textContent = (err && err.userMessage) || messageFor(err && err.code);
+      });
     });
   }
 
@@ -757,6 +850,10 @@
     openSignup: openSignup,
     signupMarkup: signupMarkup,
     sentMarkup: sentMarkup,
+    pasteMarkup: pasteMarkup,
+    tokenFrom: tokenFrom,
+    redeem: redeem,
+    standaloneNow: standaloneNow,
     welcomeLine: welcomeLine,
     headerHtml: headerHtml,
     rememberReturn: rememberReturn,

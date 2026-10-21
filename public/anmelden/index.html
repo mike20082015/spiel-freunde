@@ -43,6 +43,13 @@
     <p class="pw-kicker">Anmeldung</p>
     <h3 id="anmelden-title">Einen Moment</h3>
     <p class="pw-lead" id="anmelden-lead">Wir prüfen Deinen Anmeldelink.</p>
+    <form id="anmelden-paste" data-paste hidden>
+      <label class="pw-field">Anmeldelink
+        <input id="anmelden-token" data-token type="text" autocomplete="off" spellcheck="false" maxlength="2000" placeholder="Link aus der Mail">
+      </label>
+      <button type="submit" class="btn btn-gold">Link einlösen</button>
+      <p class="pw-status" id="anmelden-paste-status" data-paste-status role="status"></p>
+    </form>
     <a class="btn btn-gold" id="anmelden-back" hidden href="/skat/">Weiter spielen</a>
   </div>
 </main>
