@@ -58,6 +58,9 @@
     try { V.onPlayback(phase, text || ''); } catch (e) { /* Zuhörer darf die Schlange nicht stoppen */ }
   }
 
+  function forSpeech(text) {
+    return Talk && typeof Talk.spokenText === 'function' ? Talk.spokenText(text) : text;
+  }
   function speak(character, text, opts) {
     opts = opts || {};
     if (!seatVoice(character) || !enabled() || !text) return false;
@@ -70,7 +73,7 @@
     const maxAge = opts.priority ? 15000 : 7000;
     const item = {
       character: character,
-      text: opts.speech || text,
+      text: forSpeech(opts.speech || text),
       onStart: opts.onStart,
       onEnd: opts.onEnd,
       priority: !!opts.priority,
