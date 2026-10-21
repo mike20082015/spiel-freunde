@@ -170,6 +170,13 @@
     catch (err) { return ''; }
   }
 
+  function inviteCode(storage, now) {
+    var Ent = entitlement();
+    if (!Ent || typeof Ent.readInvite !== 'function') return '';
+    try { return Ent.readInvite(storage, nowOf(now)) || ''; }
+    catch (err) { return ''; }
+  }
+
   function uuid() {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
     var hex = '0123456789abcdef';
@@ -253,6 +260,8 @@
     var body = { email: email, name: name };
     var ref = partnerRef(storage, now);
     if (ref) body.ref = ref;
+    var invite = inviteCode(storage, now);
+    if (invite) body.invite = invite;
     return body;
   }
 

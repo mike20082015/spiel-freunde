@@ -233,12 +233,9 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;letter-spacin
 .plan-hot li::before{content:"♥";color:var(--gold-2)}
 .ribbon{position:absolute;top:18px;right:-8px;background:var(--wine);color:var(--cream);font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 14px;border-radius:6px 0 0 6px;box-shadow:0 4px 10px rgba(0,0,0,.3)}
 .ribbon::after{content:"";position:absolute;right:0;top:100%;border:4px solid var(--wine-3);border-right-color:transparent;border-bottom-color:transparent}
-.shop{max-width:860px;margin:30px auto 0;display:flex;align-items:center;gap:22px;padding:18px 24px;border-radius:var(--r);background:var(--cream-2)}
-.shop p{font-size:.95rem;color:var(--ink-2)}.shop b{color:var(--wine)}
-.shop-cards{position:relative;flex:none;width:70px;height:56px}
-.sc{position:absolute;width:34px;height:48px;border-radius:5px;background:var(--paper);box-shadow:0 4px 10px rgba(0,0,0,.2);display:grid;place-items:center;font-size:20px;transition:transform .35s}
-.sc1{left:0;transform:rotate(-14deg);color:#b3262b}.sc2{left:18px;color:#222;z-index:1}.sc3{left:36px;transform:rotate(14deg);color:#b3262b}
-.shop:hover .sc1{transform:rotate(-24deg) translateX(-6px)}.shop:hover .sc3{transform:rotate(24deg) translateX(6px)}
+.plan > .btn{margin-top:auto;align-self:flex-start}
+#freunde-einladen .sec-head{margin-bottom:0}
+#freunde-einladen .sub .btn{margin-top:10px}
 
 /* who */
 .who{display:grid;grid-template-columns:1fr 1fr;gap:28px;max-width:1000px;margin:0 auto}
@@ -331,7 +328,7 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;letter-spacin
   .games{grid-template-columns:1fr 1fr;gap:12px}.game{padding:16px 14px 14px}.game h3{font-size:1.2rem}.game p{font-size:.84rem}.game .badge{font-size:.6rem;padding:2px 7px}.fl{width:22px;height:15px}.fl.ch{width:15px}
   .game-feature h3{font-size:2.1rem}
   .trial{flex-direction:column;text-align:center;gap:10px}
-  .shop{flex-direction:column;text-align:center}
+  .plan > .btn{width:100%}
   .foot-in{grid-template-columns:1fr}.foot-brand{grid-column:auto}
   .foot-bottom{flex-direction:column;align-items:center;text-align:center}
   .chat-demo{padding:18px}
