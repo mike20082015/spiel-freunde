@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Community-Testing · Spiel-Freunde</title>
 <meta name="description" content="Community-Testing bei Spiel-Freunde: Du meldest einen Fehler, und für jeden bestätigten Fehler gibt es 4 Wochen Premium gratis, zusätzlich nach der Testphase.">
 <meta property="og:type" content="website">
@@ -23,7 +23,7 @@
 <meta name="twitter:image" content="https://spiel-freunde.com/media/promo/spiel-freunde-og.jpg">
 <link rel="icon" href="/assets/variante-a-favicon-dunkel.svg" type="image/svg+xml">
 <link rel="icon" href="/assets/variante-a-favicon-dunkel-32.png" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="/assets/variante-a-icon-dunkel-180.png">
+<link rel="apple-touch-icon" href="/assets/pwa/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -31,6 +31,15 @@
 <link rel="stylesheet" href="/assets/legal.css">
 <link rel="stylesheet" href="/spielpartner/account.css">
 <link rel="stylesheet" href="/spielpartner/reports.css">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#24160c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Spiel-Freunde">
+<link rel="stylesheet" href="/assets/pwa.css">
+<script>(function(){try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.documentElement.classList.add('sf-standalone')}catch(e){}})();</script>
+<script src="/assets/pwa.js" defer></script>
 </head>
 <body class="ct-page">
 <header class="nav">
