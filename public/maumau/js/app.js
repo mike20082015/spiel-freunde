@@ -229,7 +229,7 @@
     const box = $('backs-' + seat);
     if (!box || !S.state) return;
     box.innerHTML = '';
-    const n = Math.min(S.state.hands[seat].length, 6);
+    const n = S.state.hands[seat].length;
     for (let i = 0; i < n; i++) box.appendChild(C.backEl());
   }
   function renderSeats() {
@@ -558,11 +558,18 @@
         const rank = E.rankOf(ev.card);
         if (ev.call === 'maumau') talk(seat, 'maumau', 1, true);
         else if (ev.call === 'mau') talk(seat, 'mau', 1, true);
-        else if (rank === '7' && st.rules.seven) talk(seat, 'seven', 0.8, false);
+        else if (rank === '7' && st.rules.seven) {
+          if ((st.pendingDraw || 0) > 2) sys('Sieben auf Sieben. Wer nicht hält, zieht ' + st.pendingDraw + ' Karten.');
+          else talk(seat, 'seven', 0.8, false);
+        }
         else if (rank === '8' && st.rules.eight) talk(seat, 'eight', 0.7, false);
       } else if (ev.type === 'wish') talk(seat, 'wish', 0.75, false);
       else if (ev.type === 'draw' && seat !== 0) talk(seat, 'draw', 0.3, false);
-      else if (ev.type === 'penaltyDraw' && seat !== 0) talk(seat, 'penalty', 0.45, false);
+      else if (ev.type === 'penaltyDraw') {
+        const n = ev.cards;
+        sys(nameOf(seat) + ' zieht ' + n + (n === 1 ? ' Karte.' : ' Karten.'));
+        if (seat !== 0) talk(seat, 'penalty', 0.45, false);
+      }
       else if (ev.type === 'penalty') talk(ev.by, 'forgot', 1, true);
       else if (ev.type === 'reshuffle') sys('Der Talon ist leer. Die Ablage wird gemischt, die oberste Karte bleibt liegen.');
     });
