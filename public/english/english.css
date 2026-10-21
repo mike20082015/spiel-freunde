@@ -84,9 +84,11 @@
 .en-end .final-ctas{max-width:640px;margin:0 auto}
 .en-end .final-ctas .btn{min-width:min(100%,280px)}
 
-.foot-en{opacity:.72}
-.foot-en:hover{opacity:1;color:var(--cream)}
-.foot-en[aria-current="page"]{opacity:1;color:var(--gold-2)}
+.lang-switch{color:var(--gold-2);font-weight:650;font-size:.9rem;white-space:nowrap;border-bottom:1px solid rgba(233,201,119,.45)}
+.lang-switch:hover{color:var(--cream);border-bottom-color:var(--cream)}
+.foot-en,.foot-tech{opacity:.72}
+.foot-en:hover,.foot-tech:hover{opacity:1;color:var(--cream)}
+.foot-en[aria-current="page"],.foot-tech[aria-current="page"]{opacity:1;color:var(--gold-2)}
 
 @media (max-width:980px){
   .en-hero-in,.en-split,.en-film,.en-grid,.en-app-shots,.en-app-facts{grid-template-columns:1fr}
