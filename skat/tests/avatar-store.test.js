@@ -114,6 +114,12 @@ test('Seiten verlinken Mein Avatar, ohne Schlüssel im Browser', () => {
   for (const text of [home, partners, skat]) assert.match(text, /href="\/mein-avatar\/"/);
   assert.match(page, /Dein Foto bleibt auf deinem Gerät/);
   assert.match(page, /capture="user"/);
+  assert.match(page, /class="crop-zoom"/);
+  assert.doesNotMatch(page, /class="zoom"/);
+  const css = fs.readFileSync(path.join(root, 'mein-avatar/avatar.css'), 'utf8');
+  assert.match(css, /\.crop-wrap\[hidden\]/);
+  assert.match(css, /\.crop-zoom\{/);
+  assert.doesNotMatch(css, /\.zoom\{/);
   assert.match(page, /Echtes Foto/);
   assert.match(page, /KI-Gesicht/);
   assert.match(skat, /id="ava-you"/);

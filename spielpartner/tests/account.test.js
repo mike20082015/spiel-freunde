@@ -100,6 +100,11 @@ test('Proberunde, dann die Anmeldekarte, kein lokaler 14-Tage-Test', () => {
     assert.match(Account.signupMarkup(), /Spielername/);
     assert.match(Account.sentMarkup('helga@example.com'), /Der Link ist unterwegs/);
     assert.match(Account.sentMarkup('helga@example.com'), /helga@example.com/);
+    assert.doesNotMatch(Account.sentMarkup('helga@example.com'), /data-paste/);
+    const inApp = Account.sentMarkup('helga@example.com', { standalone: true });
+    assert.match(inApp, /Link einlösen/);
+    assert.match(inApp, /Tippe den Link in der Mail nicht an/);
+    assert.doesNotMatch(inApp, /—/);
   } finally {
     if (previous === undefined) delete global.window;
     else global.window = previous;
@@ -252,4 +257,46 @@ test('jedes Spiel lädt das Konto neben dem Rundenzähler', () => {
   assert.match(anmelden, /Ein Angebot der Interconsult LLC/);
   const pageJs = fs.readFileSync(path.join(__dirname, '../../public/anmelden/anmelden.js'), 'utf8');
   assert.match(pageJs, /acceptLink/);
+  assert.match(pageJs, /redeem/);
+  assert.match(anmelden, /id="anmelden-paste"/);
+  assert.match(anmelden, /Link einlösen/);
+  assert.doesNotMatch(anmelden, /—/);
+  assert.doesNotMatch(pageJs, /—/);
+});
+
+test('ein eingefügter Anmeldelink gilt in der App, eine fremde Adresse nicht', async () => {
+  const storage = E.memoryStorage();
+  const previous = global.window;
+  global.window = { SpielpartnerEntitlement: E };
+  storage.setItem(Account.RETURN_KEY, '/mein-avatar/');
+  try {
+    assert.strictEqual(Account.tokenFrom(' https://spiel-freunde.com/anmelden/?token=einmal '), 'einmal');
+    assert.strictEqual(Account.tokenFrom('/anmelden/?foo=1&token=abc%2Fdef'), 'abc/def');
+    assert.strictEqual(Account.tokenFrom('roh-token'), 'roh-token');
+    assert.strictEqual(Account.tokenFrom('https://spiel-freunde.com/anmelden/'), '');
+    assert.strictEqual(Account.tokenFrom(''), '');
+    const missing = await Account.redeem('https://example.com/', storage, START, async () => {
+      throw new Error('soll nicht fragen');
+    });
+    assert.strictEqual(missing.kind, 'invalid');
+    const result = await Account.redeem('https://spiel-freunde.com/anmelden/?token=einmal', storage, START, async (url, opts) => {
+      const path = url.slice(E.BILLING_API_BASE.length);
+      if (path === '/verify') {
+        assert.deepStrictEqual(JSON.parse(opts.body), { token: 'einmal' });
+        return jsonResponse(200, {
+          token: 'sf1.session',
+          tokenType: 'Bearer',
+          expiresAt: new Date(Date.now() + 180 * DAY).toISOString(),
+          player: { id: 'p1', email: 'helga@example.com', displayName: 'Helga' }
+        });
+      }
+      return jsonResponse(200, trialMe('Helga', 14));
+    });
+    assert.strictEqual(result.kind, 'ok');
+    assert.strictEqual(result.href, '/mein-avatar/');
+    assert.strictEqual(Account.readSession(storage, START).token, 'sf1.session');
+  } finally {
+    if (previous === undefined) delete global.window;
+    else global.window = previous;
+  }
 });

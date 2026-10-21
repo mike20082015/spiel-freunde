@@ -74,6 +74,14 @@ test('der Service Worker fasst API und Anmeldung nicht an', () => {
   assert.equal(kind(ORIGIN + '/api/sf/chat'), 'bypass');
   assert.equal(kind(ORIGIN + '/api/tisch/poll'), 'bypass');
   assert.equal(kind(ORIGIN + '/api/sf/tts', { method: 'POST' }), 'bypass');
+  assert.equal(kind(ORIGIN + '/api/sf/avatar', { method: 'POST', contentType: 'application/json' }), 'bypass');
+  assert.equal(kind(ORIGIN + '/api/sf/avatar', { method: 'POST', contentType: 'multipart/form-data; boundary=----x' }), 'bypass');
+  assert.equal(kind(ORIGIN + '/mein-avatar/'), 'bypass');
+  assert.equal(kind(ORIGIN + '/mein-avatar/', { mode: 'navigate', destination: 'document', accept: 'text/html' }), 'bypass');
+  assert.equal(kind(ORIGIN + '/mein-avatar/avatar.js'), 'bypass');
+  assert.equal(kind(ORIGIN + '/mein-avatar/avatar.css'), 'bypass');
+  assert.equal(kind(ORIGIN + '/assets/avatar-store.js'), 'bypass');
+  assert.match(sw, /sf-pwa-v2/);
   assert.equal(kind('https://lead-monster.net/api/public/spiel-freunde'), 'bypass');
   assert.equal(kind(ORIGIN + '/skat/', { authorization: 'Bearer geheim' }), 'bypass');
   assert.equal(kind(ORIGIN + '/anmelden/'), 'bypass');

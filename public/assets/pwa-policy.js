@@ -1,7 +1,8 @@
 /* Welche Anfragen der Service Worker anfassen darf.
-   API, Anmeldung und fremde Server gehen immer direkt ins Netz und
-   landen nicht im Cache. HTML kommt aus dem Netz, damit eine neue
-   Fassung sofort ankommt. Statische Dateien dürfen aus dem Cache. */
+   API, Anmeldung, Uploads, der Avatar-Editor und fremde Server gehen
+   immer direkt ins Netz und landen nicht im Cache. HTML kommt aus dem
+   Netz, damit eine neue Fassung sofort ankommt. Statische Dateien
+   dürfen aus dem Cache. */
 (function (root, factory) {
   var api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -15,9 +16,12 @@
     var url = new URL(requestUrl, origin);
     var method = String(opts.method || 'GET').toUpperCase();
     if (method !== 'GET') return 'bypass';
+    if (/multipart\/form-data/i.test(opts.contentType || '')) return 'bypass';
     if (url.origin !== origin) return 'bypass';
     if (opts.authorization) return 'bypass';
     if (url.pathname === '/api' || url.pathname.indexOf('/api/') === 0) return 'bypass';
+    if (url.pathname === '/mein-avatar' || url.pathname.indexOf('/mein-avatar/') === 0) return 'bypass';
+    if (url.pathname === '/assets/avatar-store.js') return 'bypass';
     if (/(^|\/)(auth|session|login|account|anmelden)(\/|$)/i.test(url.pathname)) return 'bypass';
     if (url.searchParams.has('token') || url.searchParams.has('access_token') || url.searchParams.has('code')) return 'bypass';
 

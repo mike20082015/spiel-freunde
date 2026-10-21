@@ -1,10 +1,11 @@
 /* Hülle von Spiel-Freunde.
-   Nur die Seite und statische Dateien. API, Anmeldung und Antworten
-   mit Set-Cookie bleiben außen vor. HTML wird zuerst aus dem Netz
-   geholt, damit ein Update nicht hinter einer alten Fassung hängen bleibt. */
+   Nur die Seite und statische Dateien. API, Anmeldung, Uploads, der
+   Avatar-Editor und Antworten mit Set-Cookie bleiben außen vor. HTML
+   wird zuerst aus dem Netz geholt, damit ein Update nicht hinter einer
+   alten Fassung hängen bleibt. */
 importScripts('/assets/pwa-policy.js');
 
-var VERSION = 'sf-pwa-v1';
+var VERSION = 'sf-pwa-v2';
 var SHELL = VERSION + '-shell';
 var PAGES = VERSION + '-pages';
 var FILES = VERSION + '-files';
@@ -62,7 +63,8 @@ self.addEventListener('fetch', function (event) {
     mode: request.mode,
     destination: request.destination,
     accept: request.headers.get('accept') || '',
-    authorization: request.headers.get('authorization') || ''
+    authorization: request.headers.get('authorization') || '',
+    contentType: request.headers.get('content-type') || ''
   });
   if (decision === 'bypass') return;
 
