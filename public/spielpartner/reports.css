@@ -1,0 +1,91 @@
+/* Fehler melden und Meine Meldungen. Groß, ruhig, dasselbe Holz und Gold.
+   Der Kopf der Tische ist schon voll. Der Meldeknopf liegt fest in der Ecke,
+   Name und Meldungen bekommen eine eigene Zeile. */
+.topbar:has(.sf-report),
+.topbar:has([data-sf-account]){
+  height:auto;
+  flex-wrap:wrap;
+  align-items:center;
+  padding-top:6px;
+  padding-bottom:6px
+}
+.topbar .sf-who{
+  flex:1 0 100%;
+  order:-1;
+  justify-content:flex-end;
+  margin:0 0 4px
+}
+.topbar:has(.sf-report) .topbar-actions{flex-wrap:wrap;row-gap:6px}
+.tbtn.sf-report{
+  position:fixed;
+  z-index:40;
+  right:16px;
+  bottom:46px;
+  border-color:rgba(233,201,119,.9);
+  color:var(--gold-2,#e9c977);
+  background:rgba(36,22,13,.94);
+  box-shadow:0 10px 24px rgba(0,0,0,.45);
+  font-size:1rem;
+  padding:8px 14px;
+  min-height:40px
+}
+.tbtn.sf-report:hover{background:rgba(58,36,20,.96);border-color:var(--gold-2,#e9c977);color:#fff6dc}
+.sf-report-ico{width:16px;height:16px;flex:none;display:block}
+.sf-who [data-sf-reports]{font:inherit;font-weight:700;color:var(--cream,#f7f1e3);background:transparent;border:1.5px solid rgba(233,201,119,.75);border-radius:999px;padding:.4em .85em;cursor:pointer}
+.sf-who [data-sf-reports]:hover{background:rgba(247,241,227,.1)}
+
+#modal-report,#modal-reports{
+  position:fixed;inset:0;z-index:80;display:grid;place-items:center;
+  background:rgba(15,8,4,.62);padding:18px
+}
+#modal-report[hidden],#modal-reports[hidden]{display:none!important}
+#modal-report .modal-card,#modal-reports .modal-card{
+  width:min(680px,100%);max-height:calc(100vh - 28px);overflow:auto;
+  background:linear-gradient(170deg,#fffaf0,#efe5cf);color:#2a2420;
+  border-radius:20px;padding:26px 24px;
+  box-shadow:0 0 0 1px rgba(176,133,50,.5),0 0 0 7px rgba(58,36,20,.7),0 40px 80px -20px rgba(0,0,0,.85)
+}
+.sf-report-dialog h3,.sf-list-dialog h3{
+  font-family:var(--serif,Georgia,serif);font-size:2.05rem;line-height:1.15;color:#1f4d3f;margin:0 0 10px
+}
+.sf-report-dialog .pw-kicker,.sf-list-dialog .pw-kicker{
+  font-size:.95rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8a2f2f;margin:0 0 6px
+}
+.sf-report-dialog .pw-lead,.sf-list-dialog .pw-lead{font-size:1.22rem;line-height:1.45;color:#5a5048;margin:0 0 14px}
+.sf-report-dialog .pw-field{display:block;font-size:1.18rem;font-weight:700;margin:14px 0}
+.sf-report-dialog textarea{
+  display:block;width:100%;margin-top:6px;font:inherit;font-size:1.2rem;line-height:1.4;
+  padding:.7em .85em;border-radius:12px;border:1.5px solid #e3d6b8;background:#fff;color:#2a2420;min-height:7.2em
+}
+.sf-report-dialog .sf-optional textarea{min-height:4.4em}
+.sf-report-dialog .sf-hint{display:block;font-weight:500;font-size:.95rem;color:#5a5048;margin-top:4px}
+.sf-check{display:flex;gap:12px;align-items:flex-start;font-size:1.16rem;font-weight:700;margin:16px 0}
+.sf-check input{width:1.35em;height:1.35em;margin-top:.2em;flex:none}
+.sf-report-dialog .btn,.sf-list-dialog .btn{font-size:1.15rem;padding:.85em 1.2em}
+.sf-report-dialog .pw-actions,.sf-list-dialog .pw-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;margin-top:8px}
+.sf-report-dialog .pw-status,.sf-list-dialog .pw-status{font-size:1.05rem;min-height:1.3em;margin:8px 0}
+.sf-more{font-size:1.05rem;margin:0 0 8px}
+.sf-more a{color:#8a2f2f;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.sf-report-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.sf-report-item{background:#fffaf0;border:1px solid #e3d6b8;border-radius:14px;padding:12px 14px}
+.sf-report-meta{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-bottom:4px;font-size:1.02rem}
+.sf-report-meta b{font-family:var(--serif,Georgia,serif);font-size:1.15rem}
+.sf-report-status{display:inline-block;font-weight:800;font-size:1rem;border-radius:999px;padding:.2em .75em;background:#efe5cf;color:#2a2420}
+.sf-report-status[data-status="new"]{background:#d4a84b;color:#3a2a0c}
+.sf-report-status[data-status="confirmed"],.sf-report-status[data-status="fixed"]{background:#1f4d3f;color:#f7f1e3}
+.sf-report-status[data-status="rejected"]{background:#8a2f2f;color:#f7f1e3}
+.sf-report-status[data-status="duplicate"]{background:#5a5048;color:#f7f1e3}
+.sf-report-item p{margin:6px 0 0;font-size:1.08rem;line-height:1.4;font-weight:500}
+.sf-inline-list{max-width:760px;margin:8px auto 0}
+.ct-page .ct-steps{margin:0 0 18px 1.2em;font-size:1.12rem;color:#5a5048}
+.ct-page .ct-steps li{margin:0 0 8px}
+
+@media (max-width:760px){
+  .tbtn.sf-report{right:10px;bottom:58px;font-size:1rem;padding:8px 12px;min-height:44px}
+  .sf-report-dialog h3,.sf-list-dialog h3{font-size:1.7rem}
+  .sf-report-dialog .pw-lead,.sf-list-dialog .pw-lead,.sf-report-dialog .pw-field,.sf-report-dialog textarea,.sf-check{font-size:1.08rem}
+  .sf-who [data-sf-reports]{padding:.35em .7em}
+}
+@media (max-width:560px){
+  .topbar .sf-who [data-sf-reports]{padding:.3em .65em}
+}

@@ -13,6 +13,10 @@
 
   function statusText(view, rounds) {
     var noAuto = ' Kein Abo, keine automatische Verlängerung.';
+    if (view.phase === 'bonus') {
+      var bonusLine = E.bonusHint ? E.bonusHint(view.daysLeft) : 'Dein Premium-Bonus läuft.';
+      return 'Dein ' + bonusLine + ' Alle Spielpartner sind frei.' + noAuto;
+    }
     if (view.phase === 'trial') {
       return 'Dein Test läuft noch ' + daysLabel(view.daysLeft) + '. Alle Spielpartner sind frei.' + noAuto;
     }
@@ -32,6 +36,10 @@
   }
 
   function buttonText(view) {
+    if (view.phase === 'bonus') {
+      var bonusButton = E.bonusHint ? E.bonusHint(view.daysLeft) : 'Premium-Bonus läuft';
+      return bonusButton.replace(/\.$/, '');
+    }
     if (view.phase === 'trial') return 'Test läuft noch ' + daysLabel(view.daysLeft);
     if (view.phase === 'new') return '14 Tage alle Spielpartner gratis testen';
     return 'Die 14 Tage sind vorbei';
@@ -55,7 +63,8 @@
       card.classList.toggle('is-locked', !open);
       var access = card.querySelector('[data-access]');
       if (!access) return;
-      if (view.trialActive) access.textContent = 'Frei in Deinem Test';
+      if (view.phase === 'bonus') access.textContent = 'Frei mit Deinem Premium-Bonus';
+      else if (view.trialActive) access.textContent = 'Frei in Deinem Test';
       else if (view.phase === 'premium') access.textContent = 'Frei mit Premium';
       else if (view.phase === 'standard' && open) access.textContent = 'Frei mit Standard';
       else if (open) access.textContent = 'Frei in den heutigen Runden';

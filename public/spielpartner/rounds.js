@@ -141,6 +141,12 @@
     try {
       if (typeof Ent.describe === 'function' && typeof Ent.load === 'function') {
         var state = Ent.describe(Ent.load(store), moment);
+        if (state && state.phase === 'bonus') {
+          el.textContent = typeof Ent.bonusHint === 'function'
+            ? Ent.bonusHint(state.daysLeft)
+            : 'Dein Premium-Bonus läuft.';
+          return;
+        }
         if (state && state.phase === 'trial') {
           el.textContent = state.daysLeft === 1
             ? 'Test läuft noch 1 Tag.'

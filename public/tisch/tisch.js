@@ -909,6 +909,11 @@
     }, 20000);
   }
 
+  window.__tisch = {
+    get view() { return S.view; },
+    get state() { return S.view; }
+  };
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();
