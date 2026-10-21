@@ -18,8 +18,10 @@ const FALLBACK_HREF = SITE + '/';
 const POSTER_PATH = '/media/promo/spiel-freunde-promo-v1-poster.jpg';
 const VIDEO_WIDE = '/media/promo/promo-web.mp4';
 const VIDEO_TALL = '/media/promo/promo-web-vertical.mp4';
-const POSTER_WIDTH = 1280;
-const POSTER_HEIGHT = 720;
+const OG_IMAGE_PATH = '/media/promo/spiel-freunde-og.jpg';
+const OG_IMAGE_WIDTH = 1200;
+const OG_IMAGE_HEIGHT = 630;
+const OG_IMAGE_ALT = 'Spiel-Freunde. Die schönsten Kartenspiele aus Deutschland, Österreich und der Schweiz digital neu interpretiert';
 
 const HEADLINE = 'Die schönsten Kartenspiele aus Deutschland, Österreich und der Schweiz: digital neu interpretiert.';
 const SUBLINE = 'Spiel Skat, Jass und Canasta mit Spielpartnern, die mit Dir reden.';
@@ -191,7 +193,7 @@ function renderPage(opts) {
   const ref = opts.ref || '';
   const canonical = SITE + '/' + slug + '/';
   const refAttr = ref ? ' data-partner-ref="' + escapeHtml(ref) + '"' : '';
-  const image = SITE + POSTER_PATH;
+  const image = SITE + OG_IMAGE_PATH;
   return [
     '<!DOCTYPE html>',
     '<html lang="de">',
@@ -210,9 +212,9 @@ function renderPage(opts) {
     '<meta property="og:image" content="' + image + '">',
     '<meta property="og:image:secure_url" content="' + image + '">',
     '<meta property="og:image:type" content="image/jpeg">',
-    '<meta property="og:image:width" content="' + POSTER_WIDTH + '">',
-    '<meta property="og:image:height" content="' + POSTER_HEIGHT + '">',
-    '<meta property="og:image:alt" content="Spiel-Freunde: eine Runde Karten am Tisch">',
+    '<meta property="og:image:width" content="' + OG_IMAGE_WIDTH + '">',
+    '<meta property="og:image:height" content="' + OG_IMAGE_HEIGHT + '">',
+    '<meta property="og:image:alt" content="' + escapeHtml(OG_IMAGE_ALT) + '">',
     '<meta name="twitter:card" content="summary_large_image">',
     '<meta name="twitter:title" content="' + escapeHtml(OG_TITLE) + '">',
     '<meta name="twitter:description" content="' + escapeHtml(DESCRIPTION) + '">',

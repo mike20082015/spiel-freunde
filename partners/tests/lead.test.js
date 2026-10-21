@@ -80,9 +80,10 @@ test('die Seite nennt den Satz, den Film und die Rechtstexte, ohne Ton von allei
   assert.match(html, /data-partner-ref="anna42"/);
   assert.match(html, /property="og:title"/);
   assert.match(html, /property="og:description"/);
-  assert.match(html, /property="og:image" content="https:\/\/spiel-freunde.com\/media\/promo\/spiel-freunde-promo-v1-poster.jpg"/);
-  assert.match(html, /og:image:width" content="1280"/);
-  assert.match(html, /og:image:height" content="720"/);
+  assert.match(html, /property="og:image" content="https:\/\/spiel-freunde.com\/media\/promo\/spiel-freunde-og.jpg"/);
+  assert.match(html, /og:image:width" content="1200"/);
+  assert.match(html, /og:image:height" content="630"/);
+  assert.match(html, /og:image:alt" content="Spiel-Freunde\. Die schönsten Kartenspiele aus Deutschland, Österreich und der Schweiz digital neu interpretiert"/);
   assert.match(html, /summary_large_image/);
   assert.match(html, /rel="canonical" href="https:\/\/spiel-freunde.com\/anna\/"/);
   const video = html.match(/<video\b[^>]*>/)[0];
@@ -178,4 +179,68 @@ test('die ausgelieferten Dateien entsprechen partners.json', () => {
     const file = path.join(publicDir, 'media/promo', name);
     assert.ok(fs.statSync(file).size > 10000, name);
   });
+});
+
+function jpegSize(file) {
+  const buf = fs.readFileSync(file);
+  let i = 2;
+  while (i + 9 < buf.length) {
+    if (buf[i] !== 0xff) break;
+    const marker = buf[i + 1];
+    if (marker === 0xd8 || marker === 0xd9) { i += 2; continue; }
+    const len = buf.readUInt16BE(i + 2);
+    if (marker === 0xc0 || marker === 0xc1 || marker === 0xc2) {
+      return { height: buf.readUInt16BE(i + 5), width: buf.readUInt16BE(i + 7) };
+    }
+    i += 2 + len;
+  }
+  throw new Error('jpeg');
+}
+
+function assertPreview(html, url) {
+  const image = html.match(/property="og:image" content="([^"]+)"/);
+  assert.ok(image, url);
+  assert.match(image[1], /^https:\/\/spiel-freunde\.com\/media\/promo\/spiel-freunde-og\.jpg$/);
+  assert.match(html, new RegExp('property="og:url" content="' + url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '"'));
+  assert.match(html, /property="og:type" content="website"/);
+  assert.match(html, /property="og:title" content="[^"]+"/);
+  assert.match(html, /property="og:description" content="[^"]+"/);
+  assert.match(html, /og:image:width" content="1200"/);
+  assert.match(html, /og:image:height" content="630"/);
+  assert.match(html, /property="og:image:alt" content="[^"]*Spiel-Freunde/);
+  assert.match(html, /name="twitter:card" content="summary_large_image"/);
+}
+
+test('jede Partnerseite hat ein absolutes Vorschaubild', () => {
+  const config = lead.readConfig(configPath);
+  const slugs = Object.keys(config.partners);
+  assert.ok(slugs.length >= 1);
+  slugs.forEach((slug) => {
+    const html = fs.readFileSync(path.join(publicDir, slug, 'index.html'), 'utf8');
+    assert.equal(html, lead.pageFor(slug, config));
+    assertPreview(html, 'https://spiel-freunde.com/' + slug + '/');
+  });
+  const other = lead.renderPage({
+    slug: 'anna',
+    href: 'https://spiel-freunde.com/?ref=anna42',
+    ref: 'anna42'
+  });
+  assertPreview(other, 'https://spiel-freunde.com/anna/');
+  assert.notEqual(
+    other.match(/property="og:url" content="([^"]+)"/)[1],
+    lead.pageFor('michael', config).match(/property="og:url" content="([^"]+)"/)[1]
+  );
+  [
+    ['index.html', 'https://spiel-freunde.com/'],
+    ['partnerprogramm/index.html', 'https://spiel-freunde.com/partnerprogramm/'],
+    ['community-testing/index.html', 'https://spiel-freunde.com/community-testing/']
+  ].forEach((entry) => {
+    assertPreview(fs.readFileSync(path.join(publicDir, entry[0]), 'utf8'), entry[1]);
+  });
+  const file = path.join(publicDir, 'media/promo/spiel-freunde-og.jpg');
+  const stat = fs.statSync(file);
+  assert.ok(stat.size > 20000 && stat.size < 300 * 1024, String(stat.size));
+  const size = jpegSize(file);
+  assert.equal(size.width, 1200);
+  assert.equal(size.height, 630);
 });

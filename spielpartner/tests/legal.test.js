@@ -126,6 +126,28 @@ test('Partnerprogramm nennt 20 Prozent und verspricht kein Einkommen', () => {
   assert.match(html, /target="_blank"/);
   assert.match(html, /Kostenlos anmelden/);
   assert.match(html, /Deinen Link teilen/);
+  assert.match(html, /href="\/michael\/"/);
+  assert.match(html, /spiel-freunde\.com\/michael\//);
+  assert.match(html, /spiel-freunde-promo-v1-poster\.jpg/);
+  assert.match(html, /Social-Media-Paket/);
+  assert.match(html, /\[DEIN-LINK\]/);
+  assert.match(html, /Alle herunterladen/);
+  assert.match(html, /spiel-freunde-memes\.zip/);
+  assert.match(html, /Du brauchst weitere Werbemittel\?/);
+  assert.match(html, /Animierte oder statische Banner erstellen wir Dir gern auf Anfrage kostenlos\./);
+  assert.match(html, /mailto:admin@lead-monster\.net\?subject=Werbemittel%20f%C3%BCr%20Spiel-Freunde/);
+  assert.equal((html.match(/data-kit-copy/g) || []).length, 7);
+  ['01-kontra', '02-skat-wie-frueher', '03-jass-genfer-see', '04-mama-canasta', '05-dritter-mann', '06-rayong', '07-gute-runde'].forEach((name) => {
+    assert.match(html, new RegExp('/media/memes/thumbs/' + name + '\\.jpg'));
+    assert.match(html, new RegExp('/media/memes/full/' + name + '_1080x1080\\.png'));
+    assert.match(html, new RegExp('/media/memes/full/' + name + '_1080x1350\\.png'));
+    const thumb = fs.statSync(path.join(root, 'media/memes/thumbs', name + '.jpg'));
+    assert.ok(thumb.size > 8000 && thumb.size < 200000, name);
+    assert.ok(fs.statSync(path.join(root, 'media/memes/full', name + '_1080x1080.png')).size > 100000, name);
+    assert.ok(fs.statSync(path.join(root, 'media/memes/full', name + '_1080x1350.png')).size > 100000, name);
+  });
+  assert.ok(fs.statSync(path.join(root, 'media/memes/spiel-freunde-memes.zip')).size > 100000);
+  assert.match(fs.readFileSync(path.join(root, 'partnerprogramm/kit.js'), 'utf8'), /data-kit-copy/);
   assert.equal(lower.includes('passiv'), false);
   assert.equal(lower.includes('garantiert'), false);
   assert.equal(/\d[\d.]*\s*€/.test(html), false);
