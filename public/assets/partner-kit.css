@@ -1,0 +1,60 @@
+/* Starterpaket auf der Partnerseite. Ruhig, groß, dasselbe Holz und Gold. */
+.kit-social{background:var(--cream-2)}
+.kit-poster{
+  display:block;
+  max-width:860px;
+  margin:0 auto;
+  border-radius:22px;
+  overflow:hidden;
+  box-shadow:
+    0 0 0 1px rgba(233,201,119,.45),
+    0 0 0 8px rgba(58,36,20,.88),
+    0 0 0 9px rgba(233,201,119,.28),
+    0 28px 60px -24px rgba(20,12,4,.55);
+  transition:transform .25s
+}
+.kit-poster:hover{transform:translateY(-3px)}
+.kit-poster img{width:100%;height:auto}
+.kit-zip{display:flex;justify-content:center;margin:-18px 0 28px}
+.kit-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.kit-card{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column
+}
+.kit-card > img{width:100%;height:auto;aspect-ratio:1;object-fit:cover;background:var(--cream-2)}
+.kit-body{display:flex;flex-direction:column;gap:12px;padding:16px 18px 18px;flex:1}
+.kit-card h3{font-size:1.45rem;color:var(--felt)}
+.kit-caption{color:var(--ink-2);font-size:1.05rem;line-height:1.55}
+.kit-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto}
+.kit-actions .btn{font-size:1rem;min-height:44px;padding:.65em 1em;white-space:normal;text-align:center}
+.kit-actions .btn:focus-visible,.kit-poster:focus-visible,.kit-more .btn:focus-visible,.kit-zip .btn:focus-visible{
+  outline:3px solid var(--gold);
+  outline-offset:3px
+}
+.kit-more{
+  max-width:760px;
+  margin:36px auto 0;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:26px 24px;
+  text-align:center;
+  box-shadow:var(--shadow)
+}
+.kit-more h3{font-family:var(--serif);font-size:clamp(1.45rem,2.4vw,1.8rem);color:var(--felt);margin-bottom:8px}
+.kit-more p{color:var(--ink-2);font-size:1.08rem;margin-bottom:16px}
+@media (max-width:860px){
+  .kit-grid{grid-template-columns:1fr;max-width:560px;margin:0 auto}
+  .kit-poster{border-radius:16px;box-shadow:0 0 0 1px rgba(233,201,119,.45),0 0 0 5px rgba(58,36,20,.88),0 0 0 6px rgba(233,201,119,.28),0 18px 40px -18px rgba(20,12,4,.5)}
+}
+@media (max-width:520px){
+  .kit-actions{flex-direction:column}
+  .kit-actions .btn,.kit-zip .btn,.kit-more .btn{width:100%}
+  .kit-card h3{font-size:1.35rem}
+  .kit-caption,.kit-more p{font-size:1.05rem}
+}
