@@ -368,6 +368,12 @@
     return body;
   }
 
+  function fetcherOf(fetcher) {
+    if (fetcher) return fetcher;
+    if (typeof window !== 'undefined' && typeof window.fetch === 'function') return window.fetch.bind(window);
+    return null;
+  }
+
   function submitReport(storage, input, fetcher, now) {
     var store = storageOf(storage);
     var session = sessionOf(store, now);
@@ -375,8 +381,7 @@
     var body;
     try { body = buildPayload(input); }
     catch (err) { return Promise.reject(err.code ? err : fail('invalid_request')); }
-    var fetchFn = fetcher;
-    return post(fetchFn, apiBase() + '/bug-reports', body, session.token).then(function (result) {
+    return post(fetcherOf(fetcher), apiBase() + '/bug-reports', body, session.token).then(function (result) {
       if (result.ok && result.body && result.body.id) return { id: result.body.id };
       throw fail(codeFrom(result));
     });
@@ -401,7 +406,7 @@
     var store = storageOf(storage);
     var session = sessionOf(store, now);
     if (!session || !session.token) return Promise.reject(fail('unauthorized'));
-    return get(fetcher, apiBase() + '/bug-reports/mine', session.token).then(function (result) {
+    return get(fetcherOf(fetcher), apiBase() + '/bug-reports/mine', session.token).then(function (result) {
       if (!result.ok) throw fail(codeFrom(result));
       var items = result.body && result.body.items;
       if (!Array.isArray(items)) return { items: [] };
@@ -792,19 +797,36 @@
     }).catch(function () { return null; });
   }
 
+  function within(promise, ms) {
+    return new Promise(function (resolve) {
+      var settled = false;
+      var timer = setTimeout(function () {
+        if (settled) return;
+        settled = true;
+        resolve(null);
+      }, ms);
+      Promise.resolve(promise).then(function (value) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(value);
+      }, function () {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(null);
+      });
+    });
+  }
+
   function captureGame() {
     var modal = document.getElementById('modal-report');
     var wasHidden = !modal || modal.hidden;
     if (modal) modal.hidden = true;
     var area = gameArea();
-    return Promise.resolve().then(function () {
-      return shotOf(area);
-    }).then(function (url) {
+    return within(shotOf(area), 8000).then(function (url) {
       if (modal && !wasHidden) modal.hidden = false;
-      return url;
-    }, function () {
-      if (modal && !wasHidden) modal.hidden = false;
-      return null;
+      return url || null;
     });
   }
 
