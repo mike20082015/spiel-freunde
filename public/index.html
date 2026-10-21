@@ -147,7 +147,7 @@
           <h3>Premium</h3>
           <div class="sp-tease-price"><span class="amt" data-amt>14,95 €</span><span class="per" data-per>/Monat</span></div>
           <div class="bill-eff" data-eff hidden></div>
-          <div class="sp-tease-who">alle Spielpartner</div>
+          <div class="sp-tease-who">ganze Runde, alle Spiele</div>
         </article>
       </div>
     </div>
@@ -352,41 +352,67 @@
     <div class="sec-head">
       <p class="eyebrow">Preise</p>
       <h2>Erst ausprobieren, dann entscheiden</h2>
-      <p class="sub">14 Tage kostenlos und mit allen Funktionen. Danach Standard oder Premium, für 1, 6 oder 12 Monate im Voraus. Kein Abo, keine automatische Verlängerung. Es gibt keine Einsätze und keine Geldgewinne.</p>
+      <p class="sub">14 Tage kostenlos und mit allen Funktionen. Danach Standard oder Premium, für 1, 6 oder 12 Monate im Voraus. Kein Abo, keine automatische Verlängerung. Einen Shop gibt es nicht: Kartendecks, Tischdesigns, Orte und Avatare kaufst Du nicht einzeln. Mit Premium ist das alles dabei. Es gibt keine Einsätze und keine Geldgewinne.</p>
     </div>
     <div class="trial">
       <span class="trial-big">14 Tage</span>
       <span class="trial-txt"><b>kostenlos testen</b> Alle Spiele, alle Orte, alle Mitspieler</span>
       <a class="btn btn-wine" href="/skat/">Jetzt starten</a>
     </div>
-    <div class="plans">
-      <article class="plan">
-        <h3>Skat</h3>
-        <p class="price"><span class="amt">9,95 €</span><span class="per">pro Monat</span></p>
-        <ul>
-          <li>Skat ohne Einschränkung</li>
-          <li>Offizielle Skatordnung und Kneipenskat</li>
-          <li>Alle drei Mitspieler und Orte</li>
-          <li>Mau-Mau gratis dazu</li>
-        </ul>
-        <a class="btn btn-outline" href="/skat/">Skat wählen</a>
-      </article>
-      <article class="plan plan-hot">
-        <span class="ribbon">Beliebt</span>
-        <h3>Alle Spiele</h3>
-        <p class="price"><span class="amt">19,95 €</span><span class="per">pro Monat</span></p>
-        <ul>
-          <li>Skat, Doppelkopf, Rommé, Canasta</li>
-          <li>Schafkopf, Schnapsen, Watten, Jass</li>
-          <li>Leichte Spiele und Bridge</li>
-          <li>Ranglisten und Turniere</li>
-        </ul>
-        <a class="btn btn-gold" href="/skat/">Alle Spiele wählen</a>
-      </article>
+    <div class="sp-offer" data-offer>
+      <div class="bill-toggle" role="group" aria-label="Abrechnungszeitraum">
+        <button type="button" data-period="monthly" aria-pressed="true">Monatlich</button>
+        <button type="button" data-period="6" aria-pressed="false">6 Monate</button>
+        <button type="button" data-period="12" aria-pressed="false">12 Monate</button>
+      </div>
+      <div class="plans">
+        <article class="plan" data-tier="standard">
+          <div class="bill-notes">
+            <span class="free-badge" data-badge hidden></span>
+            <span class="popular-note" data-popular hidden></span>
+          </div>
+          <h3>Standard</h3>
+          <p class="price"><span class="amt" data-amt>9,95 €</span><span class="per" data-per>/Monat</span></p>
+          <p class="bill-eff" data-eff hidden></p>
+          <ul>
+            <li>Horst und Margarethe, ohne Rundenlimit</li>
+            <li>1, 6 oder 12 Monate im Voraus</li>
+            <li>Keine automatische Verlängerung</li>
+          </ul>
+          <a class="btn btn-outline" href="/spielpartner/#mitgliedschaft">Standard ansehen</a>
+        </article>
+        <article class="plan plan-hot" data-tier="premium">
+          <span class="ribbon">Alles</span>
+          <h3>Premium</h3>
+          <div class="bill-notes">
+            <span class="free-badge" data-badge hidden></span>
+            <span class="popular-note" data-popular hidden></span>
+          </div>
+          <p class="price"><span class="amt" data-amt>14,95 €</span><span class="per" data-per>/Monat</span></p>
+          <p class="bill-eff" data-eff hidden></p>
+          <ul>
+            <li>Alle Spielpartner, ohne Rundenlimit</li>
+            <li>Alle Spiele, von Skat bis Bridge</li>
+            <li>Alle Orte, auch die neuen, sobald sie da sind</li>
+            <li>Besondere Kartendecks und Tischdesigns</li>
+            <li>Dein Avatar am Tisch</li>
+            <li>Keine automatische Verlängerung</li>
+          </ul>
+          <a class="btn btn-gold" href="/spielpartner/#mitgliedschaft">Premium ansehen</a>
+        </article>
+      </div>
     </div>
-    <div class="shop">
-      <div class="shop-cards"><span class="sc sc1">♦</span><span class="sc sc2">♣</span><span class="sc sc3">♥</span></div>
-      <p><b>Im Shop:</b> Premium-Avatare, neue Orte, besondere Kartendecks und Tischdesigns. Zahlung per Karte, SEPA, Apple Pay, Google Pay oder Krypto über unseren Zahlungsdienstleister.</p>
+    <p class="more-places">Es gibt keinen Shop. Was am Tisch dazugehört, steckt in Premium.</p>
+  </div>
+</section>
+
+<section class="sec wine" id="freunde-einladen">
+  <div class="wrap">
+    <div class="sec-head light">
+      <p class="eyebrow">Spieler empfehlen Spieler</p>
+      <h2>Spiel mit Deinen Freunden und sichere Dir bis zu 20 Wochen Premium gratis</h2>
+      <p class="sub">Du lädst bis zu 5 Freundinnen und Freunde ein. Legt jemand über Deine Einladung ein Konto an und startet danach eine bezahlte Premium-Mitgliedschaft, bekommst Du 4 Wochen Premium obendrauf. Das stapelt sich, auch mit dem Community-Testing. Es ist Spielzeit, kein Geld.</p>
+      <p class="sub"><a class="btn btn-gold" href="/freunde/">Freunde einladen</a></p>
     </div>
   </div>
 </section>
@@ -445,7 +471,8 @@
       <details><summary>Schummelt die KI?</summary><p>Niemals. Ein festes Regelwerk entscheidet, was erlaubt ist, gemischt wird mit einem sicheren Zufallsgenerator, und die Spiel-KI kennt nur die Karten, die auch ein echter Spieler kennen würde. Die Persönlichkeit sorgt nur für die Sprüche.</p></details>
       <details><summary>Ich kenne die Regeln nicht so gut. Geht das trotzdem?</summary><p>Na klar! Auf der Einsteiger-Stufe bekommst Du Tipps, und Deine Mitspieler erklären Dir jede Regel geduldig. Mau-Mau ist der perfekte Anfang.</p></details>
       <details><summary>Werden die Sprüche nicht zu frech?</summary><p>Das bestimmst Du. Wähle zwischen gemütlich, ehrlich und Stammtisch. Selbst am Stammtisch bleibt es humorvoll und nie verletzend.</p></details>
-      <details><summary>Was passiert nach den 14 Tagen?</summary><p>Du entscheidest Dich für Standard oder Premium, für einen Monat oder für 6 oder 12 Monate im Voraus. Kein Abo, keine automatische Verlängerung. Ohne Lizenz bleiben drei Runden am Tag mit Horst und Margarethe.</p></details>
+      <details><summary>Was passiert nach den 14 Tagen?</summary><p>Du entscheidest Dich für Standard oder Premium, für einen Monat oder für 6 oder 12 Monate im Voraus. Premium enthält die ganze Runde, alle Spiele, alle Orte, besondere Kartendecks und Tischdesigns. Einen Shop gibt es nicht. Kein Abo, keine automatische Verlängerung. Ohne Lizenz bleiben drei Runden am Tag mit Horst und Margarethe.</p></details>
+      <details><summary>Kann ich Freunde einladen?</summary><p>Ja. Als angemeldete Spielerin oder angemeldeter Spieler lädst Du bis zu 5 Freundinnen und Freunde ein. Startet jemand über Deine Einladung eine bezahlte Premium-Mitgliedschaft, bekommst Du 4 Wochen Premium obendrauf. Das ist Spielzeit, kein Geld. <a href="/freunde/">Freunde einladen</a></p></details>
     </div>
   </div>
 </section>
@@ -472,7 +499,7 @@
       <p>Die besten Kartenspiele aus Deutschland, Österreich und der Schweiz.</p>
     </div>
     <div class="foot-col"><b>Spiele</b><a href="/skat/">Skat ausprobieren</a><a href="/tisch/">Privater Tisch</a><a href="/maumau/">Mau-Mau</a><a href="/doppelkopf/">Doppelkopf</a><a href="/canasta/">Canasta</a><a href="/schafkopf/">Schafkopf</a><a href="/schnapsen/">Schnapsen</a><a href="/watten/">Watten</a><a href="/jass/">Jass</a><a href="/romme/">Rommé</a><a href="/schwimmen/">Schwimmen</a><a href="/elfer-raus/">Elfer raus</a><a href="/bridge/">Bridge</a></div>
-    <div class="foot-col"><b>Portal</b><a href="/spielpartner/">Spielpartner</a><a href="/mein-avatar/">Mein Avatar</a><a href="/community-testing/">Community-Testing</a><a href="#mitspieler">Mitspieler</a><a href="#orte">Orte</a><a href="#preise">Preise</a><a href="#faq">Fragen</a></div>
+    <div class="foot-col"><b>Portal</b><a href="/spielpartner/">Spielpartner</a><a href="/mein-avatar/">Mein Avatar</a><a href="/freunde/">Freunde einladen</a><a href="/community-testing/">Community-Testing</a><a href="#mitspieler">Mitspieler</a><a href="#orte">Orte</a><a href="#preise">Preise</a><a href="#faq">Fragen</a></div>
     <div class="foot-col"><b>Rechtliches</b><a href="/impressum.html">Impressum</a><a href="/datenschutz.html">Datenschutz</a><a href="/agb.html">AGB</a><a href="/widerruf.html">Widerruf</a><a href="/partnerprogramm/">Partnerprogramm</a></div>
   </div>
   <div class="wrap foot-bottom">

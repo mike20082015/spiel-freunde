@@ -25,6 +25,10 @@
  * Empfehlungscode: ?ref= wird unter REF_KEY gespeichert, der erste gilt,
  * 90 Tage lang. Er geht an den Checkout und an die Konto-Anmeldung,
  * und er wird nirgends angezeigt.
+ *
+ * Einladungscode: ?invite= wird unter INVITE_KEY gespeichert, der erste gilt,
+ * 90 Tage lang. Er geht an die Konto-Anmeldung und an den Checkout,
+ * und er wird nirgends angezeigt. Die Einladung selbst liegt beim Konto-Server.
  */
 (function (root, factory) {
   var api = factory();
@@ -37,11 +41,13 @@
   var STORAGE_KEY = 'sf-spielpartner-entitlement';
   var ROUNDS_KEY = 'sf-spielpartner-rounds';
   var REF_KEY = 'sf-ref';
+  var INVITE_KEY = 'sf-invite';
   var TRIAL_DAYS = 14;
   var DAY_MS = 24 * 60 * 60 * 1000;
   var TRIAL_MS = TRIAL_DAYS * DAY_MS;
   var FREE_DAILY_ROUNDS = 3;
   var REF_MS = 90 * DAY_MS;
+  var INVITE_MS = 90 * DAY_MS;
   var RENEW_SOON_MS = 8 * DAY_MS;
   var BILLING_API_BASE = 'https://lead-monster.net/api/public/spiel-freunde';
 
@@ -450,6 +456,49 @@
     return code;
   }
 
+  function cleanInvite(value) {
+    if (value == null) return '';
+    var code = String(value).trim();
+    if (!code || code.length < 16 || code.length > 80) return '';
+    if (!/^[A-Za-z0-9_-]+$/.test(code)) return '';
+    return code;
+  }
+
+  function readInvite(storage, now) {
+    try {
+      var raw = JSON.parse(storage.getItem(INVITE_KEY));
+      if (!raw || typeof raw.code !== 'string' || typeof raw.at !== 'number') return null;
+      if (now >= raw.at + INVITE_MS) {
+        storage.removeItem(INVITE_KEY);
+        return null;
+      }
+      var code = cleanInvite(raw.code);
+      return code || null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function inviteFromSearch(search) {
+    var params;
+    try { params = new URLSearchParams(search || ''); }
+    catch (err) { return ''; }
+    return cleanInvite(params.get('invite'));
+  }
+
+  function captureInvite(storage, now, search) {
+    var current = readInvite(storage, now);
+    if (current) return current;
+    var code = inviteFromSearch(search);
+    if (!code) return null;
+    try {
+      storage.setItem(INVITE_KEY, JSON.stringify({ code: code, at: now }));
+    } catch (err) {
+      return null;
+    }
+    return code;
+  }
+
   function validEmail(value) {
     var email = String(value || '').trim();
     if (!email) return '';
@@ -473,6 +522,8 @@
     if (renew) body.renewCode = renew;
     var ref = input.ref ? String(input.ref).trim() : '';
     if (ref) body.ref = ref;
+    var invite = input.invite ? cleanInvite(input.invite) : '';
+    if (invite) body.invite = invite;
     return body;
   }
 
@@ -510,7 +561,8 @@
       months: input.months,
       email: email,
       renewCode: renew,
-      ref: readRef(storage, now) || ''
+      ref: readRef(storage, now) || '',
+      invite: readInvite(storage, now) || ''
     });
     return postJson(fetcher, BILLING_API_BASE + '/checkout', body).then(function (res) {
       if (!res || !res.ok) throw new Error('checkout');
@@ -586,6 +638,7 @@
     STORAGE_KEY: STORAGE_KEY,
     ROUNDS_KEY: ROUNDS_KEY,
     REF_KEY: REF_KEY,
+    INVITE_KEY: INVITE_KEY,
     TRIAL_DAYS: TRIAL_DAYS,
     TRIAL_MS: TRIAL_MS,
     FREE_DAILY_ROUNDS: FREE_DAILY_ROUNDS,
@@ -610,6 +663,8 @@
     recordRound: recordRound,
     captureRef: captureRef,
     readRef: readRef,
+    captureInvite: captureInvite,
+    readInvite: readInvite,
     validEmail: validEmail,
     checkoutBody: checkoutBody,
     startCheckout: startCheckout,
@@ -627,6 +682,8 @@
 
 function boot(api) {
   try { api.captureRef(window.localStorage, Date.now(), window.location.search || ''); }
+  catch (err) { /* Speicher gesperrt */ }
+  try { api.captureInvite(window.localStorage, Date.now(), window.location.search || ''); }
   catch (err) { /* Speicher gesperrt */ }
   function run() {
     if (!window.fetch) return;

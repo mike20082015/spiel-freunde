@@ -5,3 +5,4 @@ require('./lineup.test.js');
 require('./intro.test.js');
 require('./account.test.js');
 require('./reports.test.js');
+require('./invites.test.js');

@@ -10,7 +10,8 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 |---|---|
 | `/` | Startseite |
 | `/mein-avatar/` | Name und Gesicht für den Tisch. Das Bild bleibt auf dem Gerät |
-| `/spielpartner/` | Deine Spielpartner: Horst, Margarethe und die Premium-Runde. Eine Proberunde ohne Konto, danach 14 Testtage ab der ersten Anmeldung |
+| `/spielpartner/` | Deine Spielpartner: Horst, Margarethe und die Premium-Runde. Eine Proberunde ohne Konto, danach 14 Testtage ab der ersten Anmeldung. Premium enthält die ganze Runde, alle Spiele, alle Orte, Kartendecks und Tischdesigns. Einen Shop gibt es nicht |
+| `/freunde/` | Spieler empfehlen Spieler: bis zu 5 Einladungen, 4 Wochen Premium je bezahlter Premium-Mitgliedschaft |
 | `/anmelden/` | Anmeldelink aus der Mail. Der Zugangsschlüssel bleibt im Browser |
 | `/skat/` | Spielbares Skat: Du gegen Horst und Margarethe |
 | `/tisch/` | Privater Skat-Tisch für bis zu drei Freunde, mit Einladungscode |
@@ -27,7 +28,7 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 | `/bridge/` | Spielbares Rubber Bridge: Du und Margarethe gegen Jonas und Rüdiger. Chicago als Schalter |
 | `/<partner>/` | Kurze Seite zum Teilen, zum Beispiel `/michael/`. Film, ein Satz, Button auf den Partnerlink. Unbekannte Slugs bleiben auf der Fehlerseite und der Button führt auf die Startseite |
 
-Die großen Buttons auf der Startseite führen nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`.
+Die großen Buttons auf der Startseite führen nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“ und „Jetzt starten“. „Standard ansehen“ und „Premium ansehen“ führen nach `/spielpartner/#mitgliedschaft`. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. „Freunde einladen“ führt nach `/freunde/`. Einen Shop und Einzelkäufe von Spielen, Avataren, Orten, Kartendecks oder Tischdesigns gibt es nicht. Das steckt in Premium.
 
 Veröffentlicht wird nur der Ordner `public/`. Tests, Werkzeuge und die Startskripte bleiben außerhalb.
 
@@ -118,7 +119,17 @@ Falls später ein eigener Proxy davor steht, passen diese Header:
 
 `https://spiel-freunde.com/michael/` ist die Seite des Inhabers. Dieselbe Vorlage gilt für jeden Slug aus [`partners/partners.json`](partners/partners.json). Oben der Film (16:9, auf schmalen Hochkant-Bildschirmen die senkrechte Fassung), darunter der Satz und der Button „Jetzt kostenlos spielen“. Geteilt wird die Seite mit Titel, Beschreibung und dem Poster unter `/media/promo/`.
 
-Der Empfehlungscode steckt in `?ref=` an der Startseite. `public/spielpartner/entitlement.js` merkt sich den ersten Code 90 Tage (`sf-ref`) und schickt ihn bei der Anmeldung und an der Kasse mit. Die Basis dafür ist `https://lead-monster.net/api/public/spiel-freunde` (`/checkout`, `/license/verify`, `/signup-or-login`). Eine öffentliche Abfrage, die aus einem Slug den Code macht, gibt es dort nicht. Deshalb steht die Zuordnung in der JSON-Datei, nicht in einer neuen Umgebungsvariable und nicht in `.do/app.yaml`.
+Der Empfehlungscode steckt in `?ref=` an der Startseite. `public/spielpartner/entitlement.js` merkt sich den ersten Code 90 Tage (`sf-ref`) und schickt ihn bei der Anmeldung und an der Kasse mit. Ein Freundschaftslink steckt in `?invite=`. Der erste Code gilt ebenfalls 90 Tage (`sf-invite`) und geht an `/signup-or-login` und `/checkout` mit. Auf der Seite wird er nicht angezeigt. Die Basis dafür ist `https://lead-monster.net/api/public/spiel-freunde` (`/checkout`, `/license/verify`, `/signup-or-login`, `/invites`). Eine öffentliche Abfrage, die aus einem Slug den Code macht, gibt es dort nicht. Deshalb steht die Zuordnung in der JSON-Datei, nicht in einer neuen Umgebungsvariable und nicht in `.do/app.yaml`.
+
+### Spieler empfehlen Spieler
+
+Die Seite `/freunde/` spricht nur die bestehende Konto-API an. Die Mail, die Gutschrift und die Prüfungen liegen in LeadMonster, Branch `homepage-redesign`, unter `/api/public/spiel-freunde`. Keine neuen `${...}`-Einträge in `api/project.yml`, keine `VITE_`-Variablen, keine neuen Mail-Schlüssel. Dieselbe Mail-Konfiguration wie beim Anmeldelink.
+
+Ein angemeldeter Spieler schickt `POST /invites` mit Bearer-Token und `{ "name", "email", "game" }`. `GET /invites` liefert `{ "invites": [...], "limit": 5 }`. Jede Einladung hat `id`, `name`, `email`, `game`, `status` (`invited`, `signed_up`, `premium`), `createdAt`, `bonusGranted`, `bonusWeeks`. Fehlercodes: `unauthorized`, `invalid_request`, `self_invite`, `duplicate_email`, `already_registered`, `invite_limit`, `player_inactive`, `rate_limited`, `mail_failed`, `mail_unavailable`.
+
+Regeln auf dem Server: höchstens 5 Einladungen je Spieler, keine Selbst-Einladung (E-Mail, bei Gmail und Googlemail auch Punkte und Plus-Alias), keine zweite Einladung derselben E-Mail, kein Konto, das es schon gibt. Der Token ist mindestens 16 Zeichen aus `A-Za-z0-9_-`, gespeichert nur als Hash. Die Mail nutzt den Anzeigenamen: „Michael lädt Dich zum Skat ein“. Der Link ist `https://spiel-freunde.com/?invite=<token>` und gilt 90 Tage. Bei der Anmeldung muss die E-Mail zur Einladung passen, sonst wird sie nicht verknüpft. Der Partnercode `ref` bleibt davon unabhängig.
+
+Die 4 Wochen gibt es nur für eine bezahlte Premium-Mitgliedschaft (Betrag über 0, Status bezahlt, keine Standard-Stufe, kein Test, kein Community-Bonus, keine manuelle Freigabe), einmal je Bestellnummer, auch bei einer späteren Verlängerung. Die Tage landen im bestehenden Premium-Bonus und stapeln sich. Läuft Test oder eine bezahlte Premium-Zeit, bleiben sie vorgemerkt und beginnen danach. Eine Erstattung zieht die 28 Tage wieder ab, nicht unter den aktuellen Tag. Eine Übersicht für die Verwaltung, falls es schon eine Admin-Anmeldung für Spieler oder Fehlermeldungen gibt: Liste mit Einladendem, Eingeladenem, Stand, Bestellnummern und gutgeschriebenen Wochen. Keine neue öffentliche Admin-Seite und kein neues Geheimnis.
 
 `michael` hat kein `ref`. Sein Button ist `https://spiel-freunde.com/`. Bei jedem anderen Partner wird aus `ref` der Link `https://spiel-freunde.com/?ref=<code>`. Ein unbekannter Slug, also eine Adresse ohne Ordner und ohne Eintrag, zeigt dieselbe Seite über `404.html`. Der Button führt dann auf `https://spiel-freunde.com/`. Bestehende Ordner (`/skat/`, `/tisch/`, `/anmelden/`, `/spielpartner/` und die übrigen) sind reserviert. Ein Catch-all ist nicht gesetzt, die Fehlerseite bleibt `404.html`.
 

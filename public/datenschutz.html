@@ -53,7 +53,7 @@
     <h2>Konto</h2>
     <p>Wenn Du einen Anmeldelink anforderst, speichern wir E-Mail, Spielername und den ersten noch gültigen Empfehlungscode eines Vertriebspartners. Pro E-Mail-Adresse gibt es ein Konto. Den Hash des Links speichern wir 30 Minuten. Der Beginn der 14 Testtage wird bei der ersten Anmeldung gespeichert.</p>
     <p>Der Zugangsschlüssel (Bearer-Token) bleibt in Deinem Browser, im localStorage, und wird nicht als Cookie gesetzt. Abgeschlossene Runden speichern wir mit Uhrzeit und dem Kalendertag in Berlin. Nach den Testtagen, ohne Mitgliedschaft, sind drei Runden an einem Berliner Tag frei. Eine Mitgliedschaft mit derselben E-Mail zeigen wir in Deinem Konto.</p>
-    <p>Wenn Du Dein Konto löschen lässt, entfernen wir den Spieler, die Anmeldelinks, die Sitzungen und die gespeicherten Runden. Rechnungen und Lizenzcodes bleiben.</p>
+    <p>Wenn Du Dein Konto löschen lässt, entfernen wir den Spieler, die Anmeldelinks, die Sitzungen, die gespeicherten Runden und offene Einladungen. Rechnungen und Lizenzcodes bleiben.</p>
 
     <h2>localStorage auf Deinem Gerät</h2>
     <p>Einiges bleibt nur in Deinem Browser, unter localStorage:</p>
@@ -63,8 +63,13 @@
       <li>eine eingelöste Lizenz: Code, Stufe und Ablauf</li>
       <li>der Tag, an dem der Code zuletzt geprüft wurde</li>
       <li>Einstellungen am Spieltisch und, wenn Du es so wählst, Name und Bild Deines Avatars</li>
+      <li>ein Einladungscode aus einem Freundschaftslink, 90 Tage, der erste gilt</li>
     </ul>
     <p>Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, soweit der Test oder die Lizenz den Vertrag vorbereitet oder erfüllt, sonst Art. 6 Abs. 1 lit. f DSGVO. Du kannst die Einträge in den Browser-Einstellungen löschen.</p>
+
+    <h2>Spieler empfehlen Spieler</h2>
+    <p>Wenn Du Freundinnen oder Freunde einlädst, speichern wir deren Namen und E-Mail-Adresse, das gewählte Spiel, den Hash eines Einladungslinks und den Stand (eingeladen, angemeldet, Premium). Die E-Mail schicken wir nur, um diese eine Einladung zuzustellen. Wir nutzen sie nicht für Werbung. Startet die eingeladene Person eine bezahlte Premium-Mitgliedschaft, speichern wir die Zuordnung, damit wir Dir 4 Wochen Premium gutschreiben können. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO für die Mitgliedschaft und Art. 6 Abs. 1 lit. f DSGVO für die Einladung. Die eingeladene Person kann die Mail ignorieren. Eine Bitte, keine weiteren Einladungen zu bekommen, geht an <a href="mailto:admin@lead-monster.net">admin@lead-monster.net</a>.</p>
+    <p>Öffnest Du einen Freundschaftslink, speichern wir den Einladungscode lokal in Deinem Browser, 90 Tage lang. Der erste Code gilt. Er geht mit der Anmeldung und, solange er noch gilt, mit der Zahlungsanfrage mit. Er wird auf der Seite nicht angezeigt. Du kannst den Eintrag im Browser löschen.</p>
 
     <h2>Empfehlungscode eines Vertriebspartners</h2>
     <p>Wenn Du die Seite über einen Partnerlink mit einem Empfehlungscode öffnest, speichern wir diesen Code lokal in Deinem Browser, damit ein späterer Kauf diesem Vertriebspartner zugeordnet werden kann. Der erste Code gilt, ein späterer wird ignoriert. Wir behalten ihn 90 Tage. Er geht mit der Zahlungsanfrage mit und, wenn Du einen Anmeldelink anforderst, mit dem Konto, solange er noch gilt. Er wird auf der Seite nicht angezeigt. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO. Du kannst den Eintrag jederzeit im Browser löschen.</p>
