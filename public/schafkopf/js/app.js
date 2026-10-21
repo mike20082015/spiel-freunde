@@ -318,19 +318,40 @@
     if (E.canRetour(st, 0)) add('Retour', 'retour');
     if (E.canSupra(st, 0)) add('Noch mal doppelt', 'supra');
   }
+  function noteToken() {
+    const st = S.state;
+    if (!st) return '0';
+    return [
+      match.handNo,
+      st.phase,
+      st.turn,
+      (st.hands || []).map((h) => h.join('.')).join('/'),
+      (st.trick || []).length,
+      st.handNo || 0,
+    ].join('|');
+  }
+  const notes = window.HintNote.create({
+    box: () => $('hint-box'),
+    token: () => noteToken(),
+    onExpire: () => renderHint(),
+  });
+  function commitNote() {
+    if (!notes.active()) return;
+    notes.clear();
+    renderHint();
+  }
   function note(text) {
-    const box = $('hint-box');
-    box.hidden = false;
-    box.textContent = text;
-    box.classList.remove('shake');
-    void box.offsetWidth;
-    box.classList.add('shake');
+    notes.show(text);
   }
   function renderHint() {
     const box = $('hint-box');
+    notes.sync();
+    if (notes.hold(box)) return;
+    box.classList.remove('shake');
     const st = S.state;
     if (!settings.hints || !st || st.turn !== 0 || st.phase === 'done') {
-      if (box.textContent.indexOf('nicht') < 0) box.hidden = true;
+      box.hidden = true;
+      box.textContent = '';
       return;
     }
     let text = '';
@@ -406,6 +427,7 @@
   }
 
   function releaseHuman() {
+    commitNote();
     const fn = S.humanWait;
     S.humanWait = null;
     if (fn) fn();
@@ -441,6 +463,7 @@
     else if (act === 'supra') res = E.actSupra(st, 0);
     if (!res || !res.ok) { if (res) note(res.reason); return; }
     if (act === 'stoss' || act === 'retour' || act === 'supra') {
+      commitNote();
       talk(0, act === 'stoss' ? 'stoss' : 'retour', null, true);
       render();
       if (S.kontraWait) S.kontraWait();

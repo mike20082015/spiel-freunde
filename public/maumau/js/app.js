@@ -293,6 +293,7 @@
     return !!(st && st.turn === 0 && st.phase !== 'done' && !S.watch);
   }
   function releaseHuman(move) {
+    commitNote();
     clearTimeout(S.humanTimer);
     const wait = S.humanWait;
     S.humanWait = null;
@@ -421,19 +422,43 @@
     }
   }
 
+  function noteToken() {
+    const st = S.state;
+    if (!st) return '0';
+    return [
+      match.handNo,
+      st.phase,
+      st.turn,
+      (st.hands || []).map((h) => h.join('.')).join('/'),
+      (st.discard || []).length,
+      E.topCard(st) || '',
+      st.pendingDraw || 0,
+      st.activeSuit || '',
+      st.drawnCard || '',
+    ].join('|');
+  }
+  const notes = window.HintNote.create({
+    box: () => $('hint-box'),
+    token: () => noteToken(),
+    onExpire: () => renderHint(),
+  });
+  function commitNote() {
+    if (!notes.active()) return;
+    notes.clear();
+    renderHint();
+  }
   function note(text) {
-    const box = $('hint-box');
-    box.hidden = false;
-    box.textContent = text;
-    box.classList.remove('shake');
-    void box.offsetWidth;
-    box.classList.add('shake');
+    notes.show(text);
   }
   function renderHint() {
     const box = $('hint-box');
+    notes.sync();
+    if (notes.hold(box)) return;
+    box.classList.remove('shake');
     const st = S.state;
     if (!settings.hints || !st || st.turn !== 0 || st.phase === 'done') {
-      if (!box.classList.contains('shake')) box.hidden = true;
+      box.hidden = true;
+      box.textContent = '';
       return;
     }
     let text = 'Leg Farbe oder denselben Wert. Sonst ziehst du eine Karte.';

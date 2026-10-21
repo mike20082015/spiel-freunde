@@ -2,3 +2,4 @@
 require('./engine.test.js');
 require('./ai.test.js');
 require('./talk.test.js');
+require('./hint-note.test.js');

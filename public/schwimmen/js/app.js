@@ -209,6 +209,7 @@
     return !!(st && st.turn === 0 && st.phase !== 'done' && !S.watch);
   }
   function releaseHuman(move) {
+    commitNote();
     clearTimeout(S.humanTimer);
     const wait = S.humanWait;
     S.humanWait = null;
@@ -324,19 +325,40 @@
     if (moves.some((m) => m.type === 'schieben')) box.appendChild(actionButton('Schieben', { type: 'schieben' }));
     if (moves.some((m) => m.type === 'knock')) box.appendChild(actionButton('Klopfen', { type: 'knock' }, true));
   }
+  function noteToken() {
+    const st = S.state;
+    if (!st) return '0';
+    return [
+      match.handNo,
+      st.phase,
+      st.turn,
+      (st.hands || []).map((h) => h.join('.')).join('/'),
+      (st.middle || []).join('.'),
+      st.knocker == null ? '' : st.knocker,
+    ].join('|');
+  }
+  const notes = window.HintNote.create({
+    box: () => $('hint-box'),
+    token: () => noteToken(),
+    onExpire: () => renderHint(),
+  });
+  function commitNote() {
+    if (!notes.active()) return;
+    notes.clear();
+    renderHint();
+  }
   function note(text) {
-    const box = $('hint-box');
-    box.hidden = false;
-    box.textContent = text;
-    box.classList.remove('shake');
-    void box.offsetWidth;
-    box.classList.add('shake');
+    notes.show(text);
   }
   function renderHint() {
     const box = $('hint-box');
+    notes.sync();
+    if (notes.hold(box)) return;
+    box.classList.remove('shake');
     const st = S.state;
     if (!settings.hints || !humanTurn()) {
-      if (!box.classList.contains('shake')) box.hidden = true;
+      box.hidden = true;
+      box.textContent = '';
       return;
     }
     const score = E.handScore(st.hands[0]);

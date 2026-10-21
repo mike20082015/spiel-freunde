@@ -187,6 +187,7 @@
       winReason: null,
       lastCard: null,
       doubled: false,
+      outOrder: [],
       points: null,
       handSize: normalizeRules(rules).handSize,
       log: [],
@@ -264,7 +265,6 @@
     if (state.phase !== 'play') return [];
     const moves = [];
     const hand = state.hands[seat];
-    if (state.rules.threeAces && aceCount(hand) >= 3) moves.push({ type: 'aces' });
     if (state.pendingDraw > 0) {
       if (state.rules.seven && state.rules.sevenStack) {
         for (let i = 0; i < hand.length; i++) {
@@ -274,6 +274,7 @@
       moves.push({ type: 'drawPenalty' });
       return moves;
     }
+    if (state.rules.threeAces && aceCount(hand) >= 3) moves.push({ type: 'aces' });
     for (let i = 0; i < hand.length; i++) {
       if (canPlay(state, hand[i])) moves.push({ type: 'play', card: hand[i] });
     }
@@ -296,6 +297,8 @@
     state.pendingCall = null;
     state.drawnCard = null;
     state.doubled = !!(state.rules.jackDouble && state.lastCard && rankOf(state.lastCard) === 'J' && state.winReason === 'out');
+    state.pendingDraw = 0;
+    state.outOrder = [];
     state.points = state.hands.map(function (hand, i) {
       return i === seat ? 0 : handPoints(hand, state.doubled);
     });
@@ -329,6 +332,27 @@
     return { ok: true };
   }
 
+  function rememberOut(state, seat) {
+    if (!state.outOrder) state.outOrder = [];
+    if (state.hands[seat].length === 0 && state.outOrder.indexOf(seat) < 0) state.outOrder.push(seat);
+  }
+
+  function finishIfOut(state) {
+    if (state.pendingDraw > 0 || !state.outOrder || !state.outOrder.length) return null;
+    while (state.outOrder.length && state.hands[state.outOrder[0]].length !== 0) state.outOrder.shift();
+    if (!state.outOrder.length) return null;
+    return finishWin(state, state.outOrder[0], 'out');
+  }
+
+  // Eine 7 als letzte Karte gewinnt erst, wenn jemand den Stapel zieht.
+  function deferSevenWin(state, seat, plan) {
+    if (!(state.pendingDraw > 0 && state.hands[seat].length === 0)) return null;
+    rememberOut(state, seat);
+    const resume = plan || { skip: false, extra: false };
+    goNext(state, seat, !!resume.skip, false);
+    return { ok: true };
+  }
+
   function afterPlay(state, seat, plan) {
     if (plan.needCall && !plan.calledOk) return openCall(state, seat, plan.kind, { skip: plan.skip, extra: plan.extra });
     if (plan.jumpTo != null) {
@@ -338,6 +362,8 @@
       state.resume = null;
       return { ok: true };
     }
+    const deferred = deferSevenWin(state, seat, plan);
+    if (deferred) return deferred;
     goNext(state, seat, plan.skip, plan.extra);
     return { ok: true };
   }
@@ -384,7 +410,11 @@
       type: 'play', seat: seat, card: card, left: left,
       pendingDraw: state.pendingDraw, call: call || null, forgot: plan.needCall && !plan.calledOk,
     });
-    if (left === 0 && plan.calledOk) return finishWin(state, seat, 'out');
+    if (left === 0 && plan.calledOk) {
+      const deferred = deferSevenWin(state, seat, plan);
+      if (deferred) return deferred;
+      return finishWin(state, seat, 'out');
+    }
     if (rank === 'J' && rules.jackWish && left > 0) {
       state.phase = 'suit';
       state.afterSuit = plan;
@@ -420,7 +450,11 @@
       const pending = state.pendingCall;
       const resume = state.resume || { skip: false, extra: false };
       emit(state, { type: 'called', seat: seat, kind: pending.kind });
-      if (pending.kind === 'maumau') return finishWin(state, seat, 'out');
+      if (pending.kind === 'maumau') {
+        const deferred = deferSevenWin(state, seat, resume);
+        if (deferred) return deferred;
+        return finishWin(state, seat, 'out');
+      }
       goNext(state, seat, resume.skip, resume.extra);
       return { ok: true };
     }
@@ -441,7 +475,11 @@
       const pending = state.pendingCall;
       const resume = state.resume || { skip: false, extra: false };
       emit(state, { type: 'forgive', seat: pending.seat, kind: pending.kind });
-      if (pending.kind === 'maumau') return finishWin(state, pending.seat, 'out');
+      if (pending.kind === 'maumau') {
+        const deferred = deferSevenWin(state, pending.seat, resume);
+        if (deferred) return deferred;
+        return finishWin(state, pending.seat, 'out');
+      }
       goNext(state, pending.seat, resume.skip, resume.extra);
       return { ok: true };
     }
@@ -456,7 +494,7 @@
       state.log.push({ seat: seat, type: 'penaltyDraw', cards: drawn.length, suit: state.activeSuit });
       emit(state, { type: 'penaltyDraw', seat: seat, cards: drawn.length });
       goNext(state, seat, !!state.rules.sevenSkip, false);
-      return { ok: true };
+      return finishIfOut(state) || { ok: true };
     }
 
     if (move.type === 'draw') {
@@ -603,6 +641,7 @@
     state.drawnCard = (partial && partial.drawnCard) || null;
     state.pendingCall = (partial && partial.pendingCall) || null;
     state.resume = (partial && partial.resume) || null;
+    state.outOrder = (partial && partial.outOrder) ? partial.outOrder.slice() : [];
     return state;
   }
 
