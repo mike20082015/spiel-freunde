@@ -1,8 +1,8 @@
 /* Welche Anfragen der Service Worker anfassen darf.
    API, Anmeldung, Uploads, der Avatar-Editor und fremde Server gehen
-   immer direkt ins Netz und landen nicht im Cache. HTML kommt aus dem
-   Netz, damit eine neue Fassung sofort ankommt. Statische Dateien
-   dürfen aus dem Cache. */
+   immer direkt ins Netz und landen nicht im Cache. HTML und Skripte
+   kommen aus dem Netz, damit eine installierte App die neue Fassung
+   beim Öffnen lädt. Bilder und CSS dürfen aus dem Cache. */
 (function (root, factory) {
   var api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -33,6 +33,7 @@
       || /\.html?$/i.test(url.pathname)
       || /\/$/.test(url.pathname);
     if (html) return 'network-first';
+    if (/\.(?:js|mjs)$/i.test(url.pathname)) return 'network-first';
     if (url.pathname === '/manifest.json') return 'cache-first';
     if (STATIC.test(url.pathname)) return 'cache-first';
     return 'bypass';
