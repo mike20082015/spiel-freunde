@@ -25,6 +25,7 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 | `/schnapsen/` | Spielbares Schnapsen: Du gegen Sepp, Bummerl bis 7 |
 | `/watten/` | Spielbares Watten: Du und Sepp gegen Horst und Oma Hilde |
 | `/bridge/` | Spielbares Rubber Bridge: Du und Margarethe gegen Jonas und Rüdiger. Chicago als Schalter |
+| `/<partner>/` | Kurze Seite zum Teilen, zum Beispiel `/michael/`. Film, ein Satz, Button auf den Partnerlink. Unbekannte Slugs bleiben auf der Fehlerseite und der Button führt auf die Startseite |
 
 Die großen Buttons auf der Startseite führen nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“, „Jetzt starten“, „Skat wählen“ und „Alle Spiele wählen“. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`.
 
@@ -68,6 +69,7 @@ cd ../elfer-raus && node --test tests/
 cd ../schnapsen && node --test tests/
 cd ../watten && node --test tests/
 cd ../bridge && node --test tests/
+node --test ../partners/tests
 ```
 
 Die Spiellogik liegt in `public/skat/js/`. Details zum Skat stehen in `skat/README.md`.
@@ -111,6 +113,30 @@ Falls später ein eigener Proxy davor steht, passen diese Header:
 | `*.html` | `public, max-age=60` |
 | `/skat/assets/voice/` | `public, max-age=31536000, immutable` |
 | übrige Dateien unter `assets/` und `css/` und `js/` | `public, max-age=86400` |
+
+## Partnerseiten
+
+`https://spiel-freunde.com/michael/` ist die Seite des Inhabers. Dieselbe Vorlage gilt für jeden Slug aus [`partners/partners.json`](partners/partners.json). Oben der Film (16:9, auf schmalen Hochkant-Bildschirmen die senkrechte Fassung), darunter der Satz und der Button „Jetzt kostenlos spielen“. Geteilt wird die Seite mit Titel, Beschreibung und dem Poster unter `/media/promo/`.
+
+Der Empfehlungscode steckt in `?ref=` an der Startseite. `public/spielpartner/entitlement.js` merkt sich den ersten Code 90 Tage (`sf-ref`) und schickt ihn bei der Anmeldung und an der Kasse mit. Die Basis dafür ist `https://lead-monster.net/api/public/spiel-freunde` (`/checkout`, `/license/verify`, `/signup-or-login`). Eine öffentliche Abfrage, die aus einem Slug den Code macht, gibt es dort nicht. Deshalb steht die Zuordnung in der JSON-Datei, nicht in einer neuen Umgebungsvariable und nicht in `.do/app.yaml`.
+
+`michael` hat kein `ref`. Sein Button ist `https://spiel-freunde.com/`. Bei jedem anderen Partner wird aus `ref` der Link `https://spiel-freunde.com/?ref=<code>`. Ein unbekannter Slug, also eine Adresse ohne Ordner und ohne Eintrag, zeigt dieselbe Seite über `404.html`. Der Button führt dann auf `https://spiel-freunde.com/`. Bestehende Ordner (`/skat/`, `/tisch/`, `/anmelden/`, `/spielpartner/` und die übrigen) sind reserviert. Ein Catch-all ist nicht gesetzt, die Fehlerseite bleibt `404.html`.
+
+### Neue Partnerseite anlegen
+
+1. Die Person meldet sich kostenlos im [Partnerprogramm](https://lead-monster.net/partner) an und bekommt einen persönlichen Spiel-Freunde-Link. Der Code ist der Wert hinter `?ref=`.
+2. In `partners/partners.json` einen Slug eintragen. Kleinbuchstaben, Ziffern, Bindestriche. Kein vorhandener Routenname.
+
+```json
+"anna": { "ref": "anna42" }
+```
+
+Daraus wird der Button `https://spiel-freunde.com/?ref=anna42`. Wer keinen Code haben soll, bekommt statt `ref` ein `href` auf `https://spiel-freunde.com/…`. Beides zugleich lehnt das Skript ab.
+
+3. `node partners/build.js` ausführen. Das schreibt `public/<slug>/index.html`, aktualisiert `public/assets/partner-map.js` und den versteckten Block in `404.html`.
+4. JSON, erzeugte Seite und Karte committen und auf `main` mergen. App Platform veröffentlicht den Ordner `public/` ohne Build. Danach gilt `https://spiel-freunde.com/<slug>/`.
+
+Wer einen Slug wieder löscht, nimmt den Eintrag aus der JSON und führt das Skript erneut aus. Der Ordner verschwindet, die Adresse fällt auf die Startseite zurück.
 
 ## Freies Tischgespräch
 
