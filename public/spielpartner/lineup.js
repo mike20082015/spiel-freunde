@@ -266,6 +266,53 @@
     return now.join('|') === base.join('|');
   }
 
+  // Klickreihenfolge, aber gesperrte Standard-Figuren bleiben auf ihrem Platz.
+  // Eine zu kurze Reihe ist eine Vorschau. Genau die Spiellänge ist fertig.
+  function previewLineup(ids, game, count, opts) {
+    var asked = count == null ? (Array.isArray(ids) ? ids.length : 0) : count;
+    var n = countOf(game, asked);
+    if (!n) return null;
+    var base = defaults(game, n);
+    var ent = opts && opts.entitlement;
+    var now = opts && opts.now != null ? opts.now : Date.now();
+    var store = opts && opts.storage;
+    var seen = {};
+    var clean = [];
+    var list = Array.isArray(ids) ? ids : [];
+    for (var i = 0; i < list.length; i++) {
+      var id = canonical(list[i]);
+      if (!avatar(id) || seen[id]) continue;
+      seen[id] = 1;
+      clean.push(id);
+    }
+    if (clean.length > n) return null;
+    var slots = [];
+    for (var s = 0; s < n; s++) slots.push(null);
+    var flex = [];
+    for (var j = 0; j < clean.length; j++) {
+      var person = avatar(clean[j]);
+      var unlocked = !ent || maySit(person, ent, store, now);
+      if (!unlocked) {
+        var home = base.indexOf(clean[j]);
+        if (home < 0 || slots[home]) return null;
+        slots[home] = clean[j];
+      } else flex.push(clean[j]);
+    }
+    for (var k = 0; k < flex.length; k++) {
+      var spot = -1;
+      for (var t = 0; t < n; t++) {
+        if (!slots[t]) { spot = t; break; }
+      }
+      if (spot < 0) return null;
+      slots[spot] = flex[k];
+    }
+    var picks = [];
+    for (var p = 0; p < n; p++) {
+      if (slots[p]) picks.push({ id: slots[p], seat: p });
+    }
+    return { count: n, slots: slots, picks: picks, ready: clean.length === n };
+  }
+
   function assignSeat(seat, game, id) {
     var person = avatar(id);
     if (!seat || !person) return null;
@@ -344,6 +391,7 @@
     save: save,
     reset: reset,
     isDefault: isDefault,
+    previewLineup: previewLineup,
     maySit: maySit,
     assignSeat: assignSeat,
     dress: dress,

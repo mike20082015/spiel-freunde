@@ -1,15 +1,17 @@
 /*
- * „Runde wechseln“ an jedem Tisch.
- * Der Knopf und das Fenster kommen von hier. Das Spiel liefert nur,
- * wie viele Gegner sitzen, ob eine Runde läuft, und wie es neu malt.
+ * Spielpartner an jedem Tisch.
+ * Der Knopf und das Fenster kommen von hier. Das Spiel sagt, wie viele
+ * Gegner sitzen, ob eine Runde läuft, und wie es neu malt.
+ * Die Auswahl startet leer. Übernehmen setzt genau diese Anzahl an den Tisch.
  */
 (function (root) {
   'use strict';
 
   var hook = null;
   var draft = [];
-  var active = 0;
   var pendingHref = '';
+  var ORD = ['erste', 'zweite', 'dritte', 'vierte'];
+  var WORD = { 1: 'einen', 2: 'zwei', 3: 'drei', 4: 'vier' };
 
   function $(id) { return document.getElementById(id); }
 
@@ -32,11 +34,32 @@
     catch (err) { return false; }
   }
 
+  function gateOpts() {
+    return { entitlement: entitlement(), storage: storage(), now: Date.now() };
+  }
+
   function currentIds() {
     var L = lineup();
     var store = storage();
     if (!L || !hook) return [];
-    return L.resolveIds(store, hook.game, count(), { entitlement: entitlement(), storage: store, now: Date.now() });
+    return L.resolveIds(store, hook.game, count(), gateOpts());
+  }
+
+  function preview() {
+    var L = lineup();
+    if (!L || !hook) return null;
+    return L.previewLineup(draft, hook.game, count(), gateOpts());
+  }
+
+  function arrangedIds() {
+    var view = preview();
+    if (!view || !view.ready) return null;
+    var ids = [];
+    for (var i = 0; i < view.slots.length; i++) {
+      if (!view.slots[i]) return null;
+      ids.push(view.slots[i]);
+    }
+    return ids;
   }
 
   function esc(value) {
@@ -45,18 +68,56 @@
     });
   }
 
-  function allowed(person, seatIndex) {
+  function word(n) { return WORD[n] || String(n); }
+
+  function joinNames(ids) {
     var L = lineup();
-    if (!L || !person) return false;
-    var base = L.defaults(hook.game, count());
-    if (person.id === base[seatIndex]) return true;
-    return L.maySit(person, entitlement(), storage(), Date.now());
+    var names = [];
+    for (var i = 0; i < ids.length; i++) {
+      var person = L && L.avatar(ids[i]);
+      if (person) names.push(person.name);
+    }
+    if (names.length < 2) return names.join('');
+    if (names.length === 2) return names[0] + ' und ' + names[1];
+    return names.slice(0, -1).join(', ') + ' und ' + names[names.length - 1];
+  }
+
+  function leadText(n) {
+    var L = lineup();
+    var labels = L.places(n).map(function (label) { return label.toLocaleLowerCase('de-DE'); });
+    if (n === 1) return 'Tippe genau einen Spielpartner an. Der Platz ist ' + labels[0] + '.';
+    var bits = labels.map(function (label, i) {
+      var head = i === 0 ? 'Der ' : 'der ';
+      return head + (ORD[i] || (i + 1) + '.') + ' sitzt ' + label;
+    });
+    return 'Tippe genau ' + word(n) + ' Spielpartner an. ' + bits.join(', ') + '.';
+  }
+
+  function seatIndex(personId, view) {
+    if (!view) return -1;
+    for (var i = 0; i < view.picks.length; i++) {
+      if (view.picks[i].id === personId) return view.picks[i].seat;
+    }
+    return -1;
+  }
+
+  function locked(person) {
+    if (!person || draft.indexOf(person.id) >= 0) return false;
+    var L = lineup();
+    if (!L) return true;
+    if (L.maySit(person, entitlement(), storage(), Date.now())) return false;
+    return L.defaults(hook.game, count()).indexOf(person.id) < 0;
   }
 
   function stopPreview() {
     var api = voices();
     if (api && typeof api.stopPreview === 'function') api.stopPreview();
     try { if (root.speechSynthesis) root.speechSynthesis.cancel(); } catch (err) { /* fehlt */ }
+  }
+
+  function openPaywall() {
+    var wall = root.SpielpartnerPaywall;
+    if (wall && typeof wall.open === 'function') wall.open();
   }
 
   function ensure() {
@@ -67,8 +128,8 @@
       btn.className = 'tbtn';
       btn.id = 'btn-runde';
       btn.type = 'button';
-      btn.title = 'Runde wechseln';
-      btn.innerHTML = '<span class="lbl-long">Runde wechseln</span><span class="lbl-short">Runde</span>';
+      btn.title = 'Spielpartner wählen';
+      btn.innerHTML = '<span class="lbl-long">Spielpartner</span><span class="lbl-short">Partner</span>';
       nav.insertBefore(btn, nav.firstChild);
       btn.addEventListener('click', open);
     }
@@ -78,13 +139,17 @@
     modal.hidden = true;
     modal.innerHTML = '' +
       '<div class="modal-card runde-sheet" role="dialog" aria-modal="true" aria-labelledby="runde-title">' +
-      '<h3 id="runde-title">Runde wechseln</h3>' +
-      '<p class="runde-lead">Such dir für jeden Platz eine andere Stimme, oder geh an einen anderen Tisch.</p>' +
-      '<div class="runde-seats" id="runde-seats"></div>' +
-      '<div class="runde-grid" id="runde-grid"></div>' +
+      '<div class="runde-head">' +
+      '<h3 id="runde-title">Spielpartner</h3>' +
+      '<p class="runde-lead" id="runde-lead"></p>' +
+      '<p class="runde-count" id="runde-count"></p>' +
       '<p class="runde-note" id="runde-note"></p>' +
+      '</div>' +
+      '<div class="runde-scroll">' +
+      '<div class="runde-grid" id="runde-grid"></div>' +
       '<h4 class="runde-next">Anderes Spiel</h4>' +
       '<div class="runde-games" id="runde-games"></div>' +
+      '</div>' +
       '<div class="runde-warn" id="runde-warn" hidden>' +
       '<p>Die laufende Runde wird abgebrochen.</p>' +
       '<div class="runde-warn-actions">' +
@@ -92,15 +157,17 @@
       '<button type="button" class="btn btn-gold" id="runde-anyway">Trotzdem wechseln</button>' +
       '</div></div>' +
       '<div class="modal-actions runde-actions">' +
+      '<button type="button" class="btn btn-ghost-dark" id="runde-clear">Auswahl löschen</button>' +
       '<button type="button" class="btn btn-ghost-dark" id="runde-standard">Standard-Besetzung</button>' +
       '<button type="button" class="btn btn-ghost-dark" id="runde-close">Schließen</button>' +
-      '<button type="button" class="btn btn-gold" id="runde-apply">Übernehmen</button>' +
+      '<button type="button" class="btn btn-gold" id="runde-apply" disabled>Übernehmen</button>' +
       '</div></div>';
     document.body.appendChild(modal);
     modal.addEventListener('click', function (event) {
       if (event.target === modal) close();
     });
     $('runde-close').addEventListener('click', close);
+    $('runde-clear').addEventListener('click', clearDraft);
     $('runde-standard').addEventListener('click', useDefaults);
     $('runde-apply').addEventListener('click', requestApply);
     $('runde-keep').addEventListener('click', hideWarn);
@@ -108,25 +175,17 @@
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape' && $('modal-runde') && !$('modal-runde').hidden) close();
     });
+    bindPartnerLinks();
   }
 
-  function renderSeats() {
-    var L = lineup();
-    var box = $('runde-seats');
-    if (!box || !L) return;
-    var labels = L.places(draft.length);
-    box.innerHTML = draft.map(function (id, index) {
-      var person = L.avatar(id);
-      var on = index === active ? ' is-on' : '';
-      return '<button type="button" class="runde-seat' + on + '" data-seat="' + index + '">' +
-        '<span class="runde-where">' + esc(labels[index] || '') + '</span>' +
-        '<b>' + esc(person ? person.name : '') + '</b></button>';
-    }).join('');
-    var buttons = box.querySelectorAll('[data-seat]');
-    for (var i = 0; i < buttons.length; i++) {
-      buttons[i].addEventListener('click', function (event) {
-        active = +event.currentTarget.getAttribute('data-seat');
-        render();
+  function bindPartnerLinks() {
+    var links = document.querySelectorAll('.intro-partners a[href="/spielpartner/"], .partner-foot a[href="/spielpartner/"]');
+    for (var i = 0; i < links.length; i++) {
+      if (links[i].getAttribute('data-runde-bound')) continue;
+      links[i].setAttribute('data-runde-bound', '1');
+      links[i].addEventListener('click', function (event) {
+        event.preventDefault();
+        open();
       });
     }
   }
@@ -135,11 +194,15 @@
     var L = lineup();
     var box = $('runde-grid');
     if (!box || !L) return;
-    var chosen = draft[active];
+    var view = preview();
+    var labels = L.places(count());
     var intros = root.SpielpartnerIntro;
+    var full = view && view.ready;
     box.innerHTML = L.AVATARS.map(function (person) {
-      var on = person.id === chosen ? ' is-on' : '';
-      var locked = !allowed(person, active);
+      var seat = seatIndex(person.id, view);
+      var on = seat >= 0;
+      var isLocked = locked(person);
+      var place = on ? (labels[seat] || '') : '';
       var face = '<img src="' + esc(L.portrait(person)) + '" alt="">';
       var introBtn = intros && typeof intros.buttonHtml === 'function'
         ? intros.buttonHtml({
@@ -148,17 +211,20 @@
           name: person.full
         })
         : '';
-      return '<article class="runde-person' + on + (locked ? ' is-locked' : '') + '" data-id="' + esc(person.id) + '">' +
+      var order = on ? '<span class="runde-order">' + (seat + 1) + '</span>' : '';
+      var pressed = on ? 'true' : 'false';
+      var wait = full && !on && !isLocked ? ' is-full' : '';
+      return '<article class="runde-person' + (on ? ' is-on' : '') + (isLocked ? ' is-locked' : '') + wait + '" data-id="' + esc(person.id) + '">' +
         '<div class="runde-layout">' +
         '<div class="runde-side">' +
-        '<button type="button" class="runde-face-btn" data-pick="' + esc(person.id) + '">' +
-        '<span class="runde-face">' + face + '<span class="runde-ini">' + esc(L.initials(person.full)) + '</span></span>' +
+        '<button type="button" class="runde-face-btn" data-pick="' + esc(person.id) + '" aria-pressed="' + pressed + '">' +
+        '<span class="runde-face">' + face + order + '<span class="runde-ini">' + esc(L.initials(person.full)) + '</span></span>' +
         '</button>' +
         introBtn +
         '</div>' +
-        '<button type="button" class="runde-pick runde-copy-btn" data-pick="' + esc(person.id) + '">' +
-        '<span class="runde-copy"><b>' + esc(person.name) + '</b><small>' + esc(person.line) + '</small></span>' +
-        (locked ? '<span class="runde-lock">Premium</span>' : '') +
+        '<button type="button" class="runde-pick runde-copy-btn" data-pick="' + esc(person.id) + '" aria-pressed="' + pressed + '">' +
+        '<span class="runde-copy"><b>' + esc(person.name) + '</b><small>' + esc(place ? place + '. ' + person.line : person.line) + '</small></span>' +
+        (isLocked ? '<span class="runde-lock">Premium</span>' : '') +
         '</button>' +
         '</div>' +
         '<button type="button" class="runde-hear" data-hear="' + esc(person.id) + '">Stimme hören</button>' +
@@ -201,17 +267,39 @@
 
   function renderNote() {
     var note = $('runde-note');
+    var lead = $('runde-lead');
+    var counter = $('runde-count');
+    var apply = $('runde-apply');
+    var n = count();
+    var view = preview();
+    var ready = !!(view && view.ready);
+    if (lead) lead.textContent = leadText(n);
+    if (counter) counter.textContent = draft.length + ' von ' + n + ' gewählt';
+    if (apply) apply.disabled = !ready;
     if (!note) return;
     var L = lineup();
-    var base = L.defaults(hook.game, count());
-    note.textContent = draft.join('|') === base.join('|')
-      ? 'Das ist die Standard-Besetzung.'
-      : 'Die Wahl gilt für dieses Spiel auf diesem Gerät.';
+    if (ready && view) {
+      var labels = L.places(n);
+      var line = view.slots.map(function (id, index) {
+        var person = L.avatar(id);
+        return (labels[index] || '') + ': ' + (person ? person.name : '');
+      }).join(' · ');
+      var base = L.defaults(hook.game, n);
+      note.textContent = (view.slots.join('|') === base.join('|') ? 'Das ist die Standard-Besetzung. ' : '') + line;
+      return;
+    }
+    var sitting = joinNames(currentIds());
+    var now = sitting ? ' Gerade sitzen ' + sitting + '.' : '';
+    if (!draft.length) {
+      note.textContent = 'Die Auswahl ist leer.' + now;
+      return;
+    }
+    var left = n - draft.length;
+    note.textContent = (left === 1 ? 'Wähl noch einen.' : 'Wähl noch ' + word(left) + '.') + now;
   }
 
   function render() {
     hideWarn();
-    renderSeats();
     renderGrid();
     renderGames();
     renderNote();
@@ -221,8 +309,7 @@
     ensure();
     var L = lineup();
     if (!L || !hook) return;
-    draft = currentIds();
-    active = 0;
+    draft = [];
     pendingHref = '';
     render();
     $('modal-runde').hidden = false;
@@ -241,17 +328,20 @@
     var L = lineup();
     var person = L.avatar(id);
     if (!person) return;
-    if (!allowed(person, active)) {
-      var wall = root.SpielpartnerPaywall;
-      if (wall && typeof wall.open === 'function') wall.open();
+    var at = draft.indexOf(person.id);
+    if (at >= 0) {
+      draft.splice(at, 1);
+      render();
       return;
     }
-    var other = draft.indexOf(person.id);
-    if (other >= 0 && other !== active) {
-      var swap = draft[active];
-      draft[active] = person.id;
-      draft[other] = swap;
-    } else draft[active] = person.id;
+    if (draft.length >= count()) return;
+    var next = draft.concat([person.id]);
+    var view = L.previewLineup(next, hook.game, count(), gateOpts());
+    if (!view) {
+      if (person.tier === 'premium') openPaywall();
+      return;
+    }
+    draft = next;
     render();
   }
 
@@ -272,19 +362,21 @@
     });
   }
 
-  function useDefaults() {
-    var L = lineup();
-    draft = L.defaults(hook.game, count());
-    active = 0;
+  function clearDraft() {
+    draft = [];
     render();
   }
 
-  function sameAsNow() {
-    return draft.join('|') === currentIds().join('|');
+  function useDefaults() {
+    var L = lineup();
+    draft = L.defaults(hook.game, count()).slice();
+    render();
   }
 
   function requestApply() {
-    if (sameAsNow()) { close(); return; }
+    var ids = arrangedIds();
+    if (!ids) return;
+    if (ids.join('|') === currentIds().join('|')) { close(); return; }
     if (inHand()) {
       pendingHref = '';
       $('runde-warn').hidden = false;
@@ -312,13 +404,14 @@
   }
 
   function persist() {
+    var ids = arrangedIds();
+    if (!ids) return false;
+    if (ids.join('|') === currentIds().join('|')) return true;
     var L = lineup();
     var store = storage();
-    if (sameAsNow()) return true;
-    var saved = L.save(store, hook.game, draft, { entitlement: entitlement(), storage: store, now: Date.now() });
+    var saved = L.save(store, hook.game, ids, gateOpts());
     if (!saved) {
-      var wall = root.SpielpartnerPaywall;
-      if (wall && typeof wall.open === 'function') wall.open();
+      openPaywall();
       return false;
     }
     return true;
@@ -327,7 +420,10 @@
   function confirmAnyway() {
     var href = pendingHref;
     pendingHref = '';
-    if (!persist()) return;
+    var ids = arrangedIds();
+    if (ids && ids.join('|') !== currentIds().join('|')) {
+      if (!persist()) return;
+    }
     close();
     if (href) {
       root.location.href = href;

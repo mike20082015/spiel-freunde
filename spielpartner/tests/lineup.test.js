@@ -135,13 +135,68 @@ test('Chat und TTS kennen jede Stimme am Tisch', () => {
   assert.doesNotMatch(JSON.stringify(H.PERSONA), /grok|elevenlabs|openai|x\.?ai/i);
 });
 
+test('die Auswahl setzt genau so viele Partner, wie das Spiel braucht', () => {
+  assert.equal(L.countOf('skat', 2), 2);
+  assert.equal(L.countOf('doppelkopf', 3), 3);
+  assert.equal(L.countOf('canasta', 3), 3);
+  assert.equal(L.countOf('romme', 3), 3);
+  assert.equal(L.countOf('schnapsen', 1), 1);
+  assert.equal(L.countOf('maumau', 1), 2);
+  assert.equal(L.countOf('maumau', 2), 2);
+  assert.equal(L.countOf('maumau', 3), 3);
+  assert.equal(L.countOf('maumau', 4), 4);
+  assert.deepEqual(Object.keys(L.gameById('maumau').byCount).sort(), ['2', '3', '4']);
+  assert.equal(L.countOf('schwimmen', 1), 1);
+  assert.equal(L.countOf('schwimmen', 4), 4);
+  assert.equal(L.countOf('elfer-raus', 4), 4);
+
+  const empty = L.previewLineup([], 'skat', 2);
+  assert.equal(empty.ready, false);
+  assert.equal(empty.count, 2);
+
+  const swapped = L.previewLineup(['margarethe', 'horst'], 'skat', 2);
+  assert.equal(swapped.ready, true);
+  assert.deepEqual(swapped.slots, ['margarethe', 'horst']);
+
+  const store = E.memoryStorage();
+  const later = START + 20 * 24 * 60 * 60 * 1000;
+  assert.equal(L.previewLineup(['sepp', 'lena'], 'skat', 2, { entitlement: E, storage: store, now: later }), null);
+  E.startTrial(store, START);
+  const picked = L.previewLineup(['sepp', 'lena'], 'skat', 2, { entitlement: E, storage: store, now: START });
+  assert.deepEqual(picked.slots, ['sepp', 'lena']);
+  assert.equal(L.save(store, 'skat', picked.slots, { entitlement: E, storage: store, now: START }).join('|'), 'sepp|lena');
+
+  const pinned = L.previewLineup(['horst', 'vreni', 'urs'], 'jass', 3, { entitlement: E, storage: E.memoryStorage(), now: later });
+  assert.deepEqual(pinned.slots, ['vreni', 'urs', 'horst']);
+  const partial = L.previewLineup(['ruediger'], 'doppelkopf', 3, { entitlement: E, storage: E.memoryStorage(), now: later });
+  assert.equal(partial.ready, false);
+  assert.deepEqual(partial.picks, [{ id: 'ruediger', seat: 1 }]);
+  assert.deepEqual(L.previewLineup(['sepp'], 'schnapsen', 1, { entitlement: E, storage: E.memoryStorage(), now: later }).slots, ['sepp']);
+  assert.equal(L.previewLineup(['lena', 'horst', 'sepp', 'hilde'], 'maumau', 3, { entitlement: E, storage: store, now: START }), null);
+  const three = L.previewLineup(['lena', 'horst', 'sepp'], 'maumau', 3, { entitlement: E, storage: store, now: START });
+  assert.equal(three.ready, true);
+  assert.deepEqual(three.slots, ['lena', 'horst', 'sepp']);
+});
+
 test('alle Tische laden dasselbe Fenster', () => {
   const runde = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/runde.js'), 'utf8');
-  assert.match(runde, /Runde wechseln/);
+  assert.match(runde, /Spielpartner/);
+  assert.match(runde, /Auswahl löschen/);
+  assert.match(runde, /draft = \[\]/);
+  assert.match(runde, /Übernehmen/);
+  assert.match(runde, /apply\.disabled/);
+  assert.match(runde, /intro-partners/);
+  assert.match(runde, /partner-foot/);
+  assert.match(runde, /previewLineup/);
   assert.match(runde, /Standard-Besetzung/);
   assert.match(runde, /Stimme hören/);
   assert.match(runde, /laufende Runde wird abgebrochen/);
   assert.match(runde, /SpielpartnerPaywall/);
+  assert.doesNotMatch(runde, /data-seat/);
+  const skat = fs.readFileSync(path.join(__dirname, '../../public/skat/js/app.js'), 'utf8');
+  assert.match(skat, /intro-line/);
+  assert.match(skat, /esc\(NAMES\[1\]\)/);
+  assert.doesNotMatch(skat, /<th>Horst<\/th>/);
   GAMES.forEach((game) => {
     const page = fs.readFileSync(path.join(__dirname, '../../public', game, 'index.html'), 'utf8');
     assert.match(page, /\/spielpartner\/lineup\.js/, game);

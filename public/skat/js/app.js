@@ -50,6 +50,11 @@
       }
     }
     if (window.SpielpartnerStimmen) SpielpartnerStimmen.setSeated([WHO[1], WHO[2]]);
+    const line = document.getElementById('intro-line');
+    if (line && NAMES[1] && NAMES[2]) {
+      line.textContent = NAMES[1] + ' und ' + NAMES[2] + ' haben schon gemischt. Mit Ton reden die beiden auch mit Dir.';
+    }
+    if (typeof renderScore === 'function') renderScore();
   }
   let playerSeatCache = { name: 'Du', initial: 'Du', imageUrl: null, kind: 'none', presetId: '' };
 
@@ -838,7 +843,7 @@
   function renderScore() {
     const tb = $('score-table');
     const rows = match.rows;
-    let html = '<thead><tr><th>Nr.</th><th>Spiel</th><th>Du</th><th>Horst</th><th>Marg.</th></tr></thead><tbody>';
+    let html = '<thead><tr><th>Nr.</th><th>Spiel</th><th>Du</th><th>' + esc(NAMES[1]) + '</th><th>' + esc(NAMES[2]) + '</th></tr></thead><tbody>';
     if (!rows.length) html += '<tr class="empty"><td colspan="5">Noch keine Spiele. Gut Blatt!</td></tr>';
     for (const r of rows.slice(-60)) {
       html += '<tr><td>' + r.no + '</td><td class="game" title="' + esc(r.label) + '">' + esc(r.label) + '</td>' + r.change.map((c) => '<td class="' + (c > 0 ? 'pos' : c < 0 ? 'neg' : '') + '">' + (c ? (c > 0 ? '+' : '') + c : '') + '</td>').join('') + '</tr>';
@@ -866,7 +871,7 @@
     for (const p of [0, 1, 2]) {
       const sc = match.scores[p];
       const pct = Math.max(0, Math.min(100, (sc / target) * 100));
-      html += '<div class="ti-row' + (sc === lead && sc > 0 ? ' lead' : '') + '"><span class="ti-name">' + ['Du', 'Horst', 'Marg.'][p] + '</span><span class="ti-bar"><i style="width:' + pct.toFixed(1) + '%"></i></span><span class="ti-val">' + sc + '</span></div>';
+      html += '<div class="ti-row' + (sc === lead && sc > 0 ? ' lead' : '') + '"><span class="ti-name">' + esc(p === 0 ? 'Du' : NAMES[p]) + '</span><span class="ti-bar"><i style="width:' + pct.toFixed(1) + '%"></i></span><span class="ti-val">' + sc + '</span></div>';
     }
     box.innerHTML = html;
     box.hidden = false;
@@ -879,7 +884,9 @@
     const order = E.standings(sc);
     const target = targetValue();
     const title = winner === 0 ? 'Du gewinnst die Runde!' : NAMES[winner] + ' gewinnt die Runde!';
-    const ava = winner === 0 ? youFaceHtml(true) : '<img src="' + AVATARS[winner] + '" alt="">';
+    const seatImg = winner === 0 ? null : document.querySelector('#seat-' + winner + ' img.ava');
+    const src = seatImg && seatImg.getAttribute('src') ? seatImg.getAttribute('src') : AVATARS[winner];
+    const ava = winner === 0 ? youFaceHtml(true) : '<img src="' + src + '" alt="">';
     const quotes = [];
     const speakers = winner === 2 ? [2, 1] : [1, 2];
     for (const p of speakers) {
