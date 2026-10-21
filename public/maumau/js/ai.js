@@ -74,6 +74,13 @@
     return false;
   }
 
+  // Anfänger und Turnier halten eine 7, Kneipe nur bei kleinem Nachbarn oder hohem Stapel.
+  function continueSeven(state, seat, strength) {
+    if (strength === 'anfaenger' || strength === 'turnier') return true;
+    const nextN = lengths(state)[nextSeat(state, seat)];
+    return nextN <= 3 || state.pendingDraw >= 4;
+  }
+
   function withCall(move, hand, level, rng) {
     const left = hand.length - 1;
     if (left !== 0 && left !== 1) return move;
@@ -139,6 +146,12 @@
 
     if (state.phase === 'drawn') {
       const play = moves.filter(function (m) { return m.type === 'play'; })[0];
+      if (state.pendingDraw > 0) {
+        if (play && continueSeven(state, seat, strength)) {
+          return withCall({ type: 'play', card: play.card }, state.hands[seat], strength, rng);
+        }
+        return { type: 'drawPenalty' };
+      }
       if (!play) return { type: 'keep' };
       if (strength !== 'anfaenger' && rank(play.card) === 'J' && state.hands[seat].length > 4) return { type: 'keep' };
       return withCall({ type: 'play', card: play.card }, state.hands[seat], strength, rng);
@@ -148,12 +161,8 @@
     if (aces && strength !== 'anfaenger') return aces;
     const plays = moves.filter(function (m) { return m.type === 'play'; });
     if (state.pendingDraw > 0) {
-      if (plays.length && (strength !== 'anfaenger' || true)) {
-        if (strength === 'anfaenger') return withCall({ type: 'play', card: plays[0].card }, state.hands[seat], strength, rng);
-        const nextN = lengths(state)[nextSeat(state, seat)];
-        if (nextN <= 3 || state.pendingDraw >= 4 || strength === 'turnier') {
-          return withCall({ type: 'play', card: plays[0].card }, state.hands[seat], strength, rng);
-        }
+      if (plays.length && continueSeven(state, seat, strength)) {
+        return withCall({ type: 'play', card: plays[0].card }, state.hands[seat], strength, rng);
       }
       return { type: 'drawPenalty' };
     }

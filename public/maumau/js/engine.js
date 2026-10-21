@@ -258,6 +258,12 @@
     }
     if (seat !== state.turn) return [];
     if (state.phase === 'drawn') {
+      if (state.pendingDraw > 0) {
+        const moves = [];
+        if (state.drawnCard && canPlay(state, state.drawnCard)) moves.push({ type: 'play', card: state.drawnCard });
+        moves.push({ type: 'drawPenalty' });
+        return moves;
+      }
       const moves = [{ type: 'keep' }];
       if (state.drawnCard && canPlay(state, state.drawnCard)) moves.push({ type: 'play', card: state.drawnCard });
       return moves;
@@ -425,9 +431,23 @@
     return afterPlay(state, seat, plan);
   }
 
+  function payPenalty(state, seat) {
+    const n = state.pendingDraw;
+    const drawn = take(state, n);
+    for (let i = 0; i < drawn.length; i++) state.hands[seat].push(drawn[i]);
+    state.pendingDraw = 0;
+    state.drawnCard = null;
+    state.log.push({ seat: seat, type: 'penaltyDraw', cards: drawn.length, suit: state.activeSuit });
+    emit(state, { type: 'penaltyDraw', seat: seat, cards: drawn.length });
+    goNext(state, seat, !!state.rules.sevenSkip, false);
+    return finishIfOut(state) || { ok: true };
+  }
+
   function apply(state, seat, move) {
     if (!state || state.phase === 'done') return fail('done');
     move = move || {};
+    // Ziehen oder Behalten bei offenem Stapel zahlt die ganze Strafe, nicht nur zwei.
+    if (state.pendingDraw > 0 && (move.type === 'draw' || move.type === 'keep')) move = { type: 'drawPenalty' };
     const legal = legalMoves(state, seat);
     const allowed = legal.some(function (m) {
       if (m.type !== move.type) return false;
@@ -486,16 +506,7 @@
 
     if (move.type === 'aces') return finishWin(state, seat, 'aces');
 
-    if (move.type === 'drawPenalty') {
-      const n = state.pendingDraw;
-      const drawn = take(state, n);
-      for (let i = 0; i < drawn.length; i++) state.hands[seat].push(drawn[i]);
-      state.pendingDraw = 0;
-      state.log.push({ seat: seat, type: 'penaltyDraw', cards: drawn.length, suit: state.activeSuit });
-      emit(state, { type: 'penaltyDraw', seat: seat, cards: drawn.length });
-      goNext(state, seat, !!state.rules.sevenSkip, false);
-      return finishIfOut(state) || { ok: true };
-    }
+    if (move.type === 'drawPenalty') return payPenalty(state, seat);
 
     if (move.type === 'draw') {
       const drawn = take(state, 1);

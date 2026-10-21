@@ -210,8 +210,8 @@ test('nach dem Ziehen ist der Stapel leer und der Nächste dran', () => {
             direction: dir,
             turn: seat,
           });
-          assert.equal(E.apply(st, seat, { type: 'draw' }).ok, false);
-          assert.equal(E.apply(st, seat, { type: 'drawPenalty' }).ok, true);
+          assert.equal(E.legalMoves(st, seat).some((m) => m.type === 'draw'), false);
+          assert.equal(E.apply(st, seat, { type: 'draw' }).ok, true);
           assert.equal(st.pendingDraw, 0);
           assert.equal(st.hands[seat].length, 3);
           assert.equal(st.phase, 'play');
