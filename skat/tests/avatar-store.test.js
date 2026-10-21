@@ -120,6 +120,10 @@ test('Seiten verlinken Mein Avatar, ohne Schlüssel im Browser', () => {
   assert.match(css, /\.crop-wrap\[hidden\]/);
   assert.match(css, /\.crop-zoom\{/);
   assert.doesNotMatch(css, /\.zoom\{/);
+  assert.match(css, /\.ava-hero\{[\s\S]*?#2b1a0f/);
+  assert.doesNotMatch(css, /220px/);
+  assert.match(css, /\.privacy\{[^}]*#24160c/);
+  assert.match(css, /\.privacy\{[^}]*#f7f1e3/);
   assert.match(page, /Echtes Foto/);
   assert.match(page, /KI-Gesicht/);
   assert.match(skat, /id="ava-you"/);
