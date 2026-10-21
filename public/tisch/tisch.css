@@ -1,6 +1,6 @@
 /* Privater Tisch: Ergänzung zum Stammtisch-Look. */
 body.tisch-home{overflow:auto}
-body.tisch-home .app{height:auto;min-height:100vh}
+body.tisch-home .app{height:auto;min-height:100vh;min-height:100dvh}
 .gate{padding:28px 16px 64px}
 .gate-grid{max-width:980px;margin:0 auto;display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:start}
 .gate-card{background:linear-gradient(170deg,var(--paper),var(--cream-2));color:var(--ink);border-radius:22px;padding:26px 26px 22px;box-shadow:0 0 0 1px rgba(176,133,50,.45),0 0 0 7px rgba(58,36,20,.45),0 30px 60px -20px rgba(0,0,0,.75)}
@@ -48,7 +48,7 @@ body.tisch-home .app{height:auto;min-height:100vh}
 }
 @media (max-width:1000px){
   body.in-play{overflow:auto}
-  body.in-play .app{height:auto;min-height:100vh}
+  body.in-play .app{height:auto;min-height:100vh;min-height:100dvh}
 }
 
 /* Der Holztisch liegt absolut im Raum. Auf der Startseite darf die Seite
@@ -61,7 +61,7 @@ body.tisch-home .app{height:auto;min-height:100vh}
   body[data-screen="ended"]{overflow:hidden}
   body[data-screen="lobby"] .app,
   body[data-screen="game"] .app,
-  body[data-screen="ended"] .app{height:calc(100vh - 46px);min-height:0}
+  body[data-screen="ended"] .app{height:calc(100vh - 46px);height:calc(100dvh - 46px);min-height:0}
   body[data-screen="lobby"] .table-legal,
   body[data-screen="game"] .table-legal,
   body[data-screen="ended"] .table-legal{padding:8px 16px}
