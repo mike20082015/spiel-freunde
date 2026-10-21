@@ -1,42 +1,42 @@
-/* Gemeinsames Fenster „Runde wechseln“. Liegt über dem Tisch, unabhängig vom Spiel. */
+/* Gemeinsames Fenster „Spielpartner“. Liegt über dem Tisch, unabhängig vom Spiel. */
 #modal-runde { z-index: 80; }
 #modal-paywall { z-index: 90; }
 .ava-fallback{display:grid;place-items:center;background:#6b2d3c;color:#f7f1e3;font-weight:700;font-size:.95rem}
 #modal-runde[hidden] { display: none !important; }
+#modal-runde.modal {
+  padding:
+    max(12px, env(safe-area-inset-top, 0px))
+    max(12px, env(safe-area-inset-right, 0px))
+    max(12px, env(safe-area-inset-bottom, 0px))
+    max(12px, env(safe-area-inset-left, 0px));
+}
 .runde-sheet {
   width: min(920px, 100%);
   max-height: min(92vh, 900px);
+  max-height: min(92dvh, 900px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+.runde-head { padding: 20px 22px 0; flex: none; }
+.runde-scroll {
   overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 22px 12px;
 }
 .runde-lead, .runde-note {
   margin: 0 0 14px;
   color: #5c4a3a;
   line-height: 1.45;
 }
-.runde-seats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 14px;
+.runde-count {
+  margin: -6px 0 12px;
+  font-weight: 800;
+  color: #6b2d3c;
+  letter-spacing: .02em;
 }
-.runde-seat {
-  appearance: none;
-  border: 1.5px solid rgba(92, 58, 28, .25);
-  background: #fffaf2;
-  color: #3a2414;
-  border-radius: 999px;
-  padding: 8px 14px;
-  display: inline-flex;
-  gap: 8px;
-  align-items: baseline;
-  cursor: pointer;
-  font: inherit;
-}
-.runde-seat.is-on {
-  border-color: #b08532;
-  background: #fff3d4;
-}
-.runde-where { font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; color: #8a6a3b; }
 .runde-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -52,8 +52,9 @@
   gap: 8px;
   min-width: 0;
 }
-.runde-person.is-on { border-color: #b08532; box-shadow: inset 0 0 0 1px #b08532; }
+.runde-person.is-on { border-color: #b08532; background: #fff8ea; box-shadow: inset 0 0 0 1px #b08532; }
 .runde-person.is-locked { background: #f6f1ea; }
+.runde-person.is-full { opacity: .72; }
 .runde-layout {
   display: grid;
   grid-template-columns: 96px minmax(0, 1fr);
@@ -116,6 +117,22 @@
   position: relative;
   z-index: 1;
 }
+.runde-order {
+  position: absolute;
+  z-index: 2;
+  right: -4px;
+  bottom: -4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #b08532;
+  color: #3a2a0c;
+  font-weight: 800;
+  font-size: .85rem;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fffdf8;
+}
 .runde-ini { font-weight: 700; letter-spacing: .04em; }
 .runde-copy { min-width: 0; }
 .runde-copy b { display: block; }
@@ -177,10 +194,39 @@
 }
 .runde-warn p { margin: 0 0 10px; }
 .runde-warn-actions, .runde-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
-.runde-actions { margin-top: 16px; }
-@media (max-width: 720px) {
+.runde-actions {
+  flex: none;
+  margin: 0;
+  padding: 12px 22px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: #fbf6ee;
+  box-shadow: 0 -10px 18px rgba(58, 36, 20, .08);
+}
+.runde-warn { margin: 0 22px; }
+#runde-apply:disabled { opacity: .45; cursor: not-allowed; }
+.runde-face-btn, .runde-pick, .runde-hear, .runde-actions .btn { min-height: 44px; }
+#modal-runde .runde-actions .btn {
+  white-space: normal;
+  line-height: 1.15;
+  min-width: 0;
+  text-align: center;
+}
+@media (max-width: 980px) {
+  .runde-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
   .runde-grid { grid-template-columns: 1fr; }
-  .runde-sheet { padding: 16px; }
   .runde-actions, .runde-warn-actions { justify-content: stretch; }
-  .runde-actions .btn, .runde-warn-actions .btn { flex: 1 1 auto; }
+  .runde-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .runde-actions .btn, .runde-warn-actions .btn { width: 100%; min-height: 44px; }
+}
+@media (max-height: 520px) {
+  .runde-head { padding-top: 12px; }
+  .runde-sheet h3 { margin-bottom: 4px; font-size: 1.2rem; }
+  .runde-lead, .runde-note { margin-bottom: 6px; font-size: .88rem; }
+  .runde-count { margin-bottom: 6px; }
+  .runde-actions { padding-top: 8px; padding-bottom: 8px; }
+  .runde-actions .btn { min-height: 40px; padding: .45em .8em; }
 }
