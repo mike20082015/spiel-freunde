@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Spiel-Freunde: a live technology reference for business owners</title>
-<meta name="description" content="What Interconsult LLC built in Spiel-Freunde, shown live: speaking partners with a separate rules engine, magic-link accounts, referrals, an operator desk, and a responsive website. A LeadMonster reference for owners evaluating an AI project.">
+<meta name="description" content="What Interconsult LLC built in Spiel-Freunde, shown live: an app installed from the browser with no store, speaking partners with a separate rules engine, magic-link accounts, referrals and an operator desk. A LeadMonster reference for owners evaluating an AI project.">
 <link rel="canonical" href="https://spiel-freunde.com/english/">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="en_US">
 <meta property="og:site_name" content="Spiel-Freunde">
 <meta property="og:url" content="https://spiel-freunde.com/english/">
 <meta property="og:title" content="Spiel-Freunde: a live technology reference for business owners">
-<meta property="og:description" content="Speaking partners, a separate rules engine, accounts, referrals and an operator desk. A LeadMonster reference you can open.">
+<meta property="og:description" content="An app installed from the browser, with no store. Speaking partners, a separate rules engine, accounts, referrals and an operator desk.">
 <meta property="og:image" content="https://spiel-freunde.com/media/promo/spiel-freunde-og.jpg">
 <meta property="og:image:secure_url" content="https://spiel-freunde.com/media/promo/spiel-freunde-og.jpg">
 <meta property="og:image:type" content="image/jpeg">
@@ -20,16 +20,25 @@
 <meta property="og:image:alt" content="Spiel-Freunde. The classic card games of Germany, Austria and Switzerland, reimagined digitally.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Spiel-Freunde: a live technology reference for business owners">
-<meta name="twitter:description" content="Speaking partners, a separate rules engine, accounts, referrals and an operator desk. A LeadMonster reference you can open.">
+<meta name="twitter:description" content="An app installed from the browser, with no store. Speaking partners, a separate rules engine, accounts, referrals and an operator desk.">
 <meta name="twitter:image" content="https://spiel-freunde.com/media/promo/spiel-freunde-og.jpg">
 <link rel="icon" href="/assets/variante-a-favicon-dunkel.svg" type="image/svg+xml">
 <link rel="icon" href="/assets/variante-a-favicon-dunkel-32.png" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="/assets/variante-a-icon-dunkel-180.png">
+<link rel="apple-touch-icon" href="/assets/pwa/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <link rel="stylesheet" href="/english/english.css">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#24160c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Spiel-Freunde">
+<link rel="stylesheet" href="/assets/pwa.css">
+<script>(function(){try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.documentElement.classList.add('sf-standalone')}catch(e){}})();</script>
+<script src="/assets/pwa.js" defer></script>
 </head>
 <body class="en-page">
 
@@ -39,9 +48,10 @@
       <a class="logo" href="/" aria-label="Spiel-Freunde home"><img src="/assets/variante-a-lockup-dunkel-web.svg" alt="Spiel-Freunde" width="796" height="175"></a>
     </div>
     <nav class="nav-links" aria-label="Page">
+      <a href="#app">The app</a>
       <a href="#capabilities">Capabilities</a>
       <a href="#how">How the AI works</a>
-      <a href="#operator">Operator desk</a>
+      <a href="#operator">The desk</a>
       <a href="#pictures">On screen</a>
     </nav>
     <div class="nav-cta">
@@ -55,7 +65,7 @@
     <div>
       <p class="kicker"><span class="dot"></span> Technology reference · LeadMonster</p>
       <h1>A speaking product you can open today.</h1>
-      <p class="lead">Spiel-Freunde, from Interconsult LLC, is a live website where people sit down to the classic cards of Germany, Austria and Switzerland with partners who talk. This page is the machinery behind that table, for an owner abroad who is weighing an AI project and does not need the games.</p>
+      <p class="lead">Spiel-Freunde, from Interconsult LLC, is a live website where people sit down to the classic cards of Germany, Austria and Switzerland with partners who talk. This page is the machinery behind that table, for an owner abroad who is weighing an AI project and does not need the games. The piece a guest meets first is the app: it installs from the browser, full screen, with no store in between.</p>
       <div class="en-hero-ctas">
         <a class="btn btn-gold btn-lg" href="https://lead-monster.net/#kontakt" target="_blank" rel="noopener">Want something like this for your business?</a>
         <a class="btn btn-ghost btn-lg" href="/skat/">Try Spiel-Freunde</a>
@@ -70,7 +80,47 @@
 </section>
 
 <main>
-  <section class="sec cream" id="partners-cast" aria-label="Speaking partners">
+  <section class="sec cream" id="app">
+    <div class="wrap">
+      <div class="sec-head en-app-head">
+        <img class="en-app-icon" src="/assets/pwa/apple-touch-icon.png" width="72" height="72" alt="Home-screen icon: a cream rounded square, the letters SF, and a small gold spade.">
+        <div>
+          <p class="eyebrow">App without an app store</p>
+          <h2>Installed from the browser. Full screen. No review queue.</h2>
+          <p class="sub">Windows, Android, iPad and iPhone install this site from the browser they already have. There is no store listing, so there is no store fee and no wait for a review. A restaurant can put ordering or booking on the home screen the day the service is ready, and every installed copy is the same site.</p>
+        </div>
+      </div>
+
+      <div class="en-app-shots">
+        <figure class="en-shot">
+          <img src="/english/ipad-install.jpg" width="360" height="203" alt="The one-time iPad hint: share, then add Spiel-Freunde to the Home Screen.">
+          <figcaption>On iPad and iPhone, Safari does not offer an install button. The page shows this hint once. It names the device, and the steps are Share, then Add to Home Screen. Closing it is remembered on that browser.</figcaption>
+        </figure>
+        <figure class="en-shot">
+          <img src="/english/standalone-table.jpg" width="1180" height="820" alt="The table running as an installed app, with no address bar. The player's cards are face up. The partners' cards are face down.">
+          <figcaption>Opened from the icon, the window is standalone: no address bar. The player's own cards stay on the screen. Partners still show only the backs.</figcaption>
+        </figure>
+      </div>
+
+      <div class="en-app-facts">
+        <article>
+          <h3>Who sees which install</h3>
+          <p>Chrome and Edge on Windows and Android fire an install prompt. The site holds that prompt and shows a button, "Als App installieren". iPad, iPhone and iPadOS do not fire it, including an iPad that reports itself as a Mac with a touch screen, so they get the hint above instead. The hint is skipped when the app is already open full screen, and after the guest dismisses it. Firefox on the desktop, and Safari on a Mac, are not given a button this site cannot honour.</p>
+        </article>
+        <article>
+          <h3>What full screen changes</h3>
+          <p>The manifest asks for a standalone window, any orientation, and this whole site as the scope. The icon starts at the home page. Once installed, the page pads for the notch and the home indicator, keeps the top bar to one line of short labels, and sizes the table to the visible height so the hand is not tucked under the fold. The same fit already runs in the browser on iPad and on Android tablets, on every table. Sign-in, payments and the live conversation never enter the app cache.</p>
+        </article>
+        <article>
+          <h3>A new page on the next open</h3>
+          <p>Pages are fetched from the network first. If the network is down, the last cached page is used, or the home page. The new shell takes over at once: it does not wait for every old tab to close. Styles, scripts and pictures are served from cache and refreshed in the background, so a visual change can need one further open. There is no package to submit and no review board in the way. Staff at a hotel open the icon and have the page that was published.</p>
+        </article>
+      </div>
+      <p class="for"><b>For your business</b> A restaurant's ordering or booking app, or a hotel's guest guide, lives on the tablet by the door. No developer account, no store fee, no week in a review queue. Publish, and the next open is the new version.</p>
+    </div>
+  </section>
+
+  <section class="sec" id="partners-cast" aria-label="Speaking partners">
     <div class="wrap">
       <div class="en-cast">
         <article class="en-person">
@@ -125,7 +175,7 @@
         <article class="en-card" id="referrals">
           <h3>Referral and partner systems</h3>
           <p>A partner signs up free on LeadMonster and receives a personal link. The first code a browser sees is remembered for 90 days, later codes are ignored, and the code travels with sign-up and checkout. It is not shown on the page. The guest pays the listed price. The partner receives 20 percent of the membership price that was actually paid, for Standard and Premium, for one, six or twelve months, and again when that membership is renewed, for as long as the attribution holds. Each partner can have a short address of their own: the film, one sentence, and a button onto their link. A social kit ships seven pictures, square and portrait, with a caption and a place for that link, as separate files and as one zip.</p>
-          <p>A second programme, players recommending players, is tracked on the operator desk. When an invited person pays for Premium, the inviter is credited four weeks of Premium. Those weeks sit in the same bonus as a confirmed fault report. The reward is membership time.</p>
+          <p>A signed-in player can invite up to five people, each by name and email. Each person receives their own message and a link that belongs only to them. The first invite a browser sees is remembered for 90 days. A later one is ignored. The code is sent with sign-up and checkout, and it is not shown on the page. When that person creates an account from the link and then starts a paid Premium membership, the inviter is credited four weeks of Premium. Five such memberships are twenty weeks. A later renewal counts again. The weeks stack with the bonus from a confirmed fault report, and they work like Premium. The reward is play time, not money. A Standard membership, the trial, and an existing bonus do not count. Inviting one's own email is refused, including the dotted and plus-alias forms of Gmail and Googlemail, and the same email can be invited only once. The list shows three states: invited, signed up, and Premium. The link token is at least 16 characters and is stored only as a hash. The message uses the name on the account. Those rules run on the operator's server.</p>
           <p class="for"><b>For your business</b> A neighbouring hotel can have its own page and a tracked link. A regular who brings a paying guest, or who reports a real fault, is thanked automatically with time, not with a spreadsheet.</p>
         </article>
 
@@ -143,8 +193,8 @@
 
         <article class="en-card" id="responsive">
           <h3>A responsive website</h3>
-          <p>The same pages rearrange for a phone, a tablet and a desktop browser. Game tables keep the hand reachable with a thumb and collapse the side column on a narrow screen. Guests open the site in the browser. There is no separate store install.</p>
-          <p class="for"><b>For your business</b> One service on the phone at the pass and on a tablet by the door, without a second product to maintain.</p>
+          <p>The same pages rearrange for a phone, a tablet and a desktop browser. On a tablet the top bar stays one line, the table uses the visible screen height, and the player's own cards stay large enough to read the rank and suit and to tap. That is the layout the installed app uses as well. How the icon gets onto the home screen is the section <a href="#app">App without an app store</a>.</p>
+          <p class="for"><b>For your business</b> One service on the phone at the pass and on a tablet by the door. The same address is the app.</p>
         </article>
 
       </div>
@@ -278,7 +328,7 @@
       <a class="logo logo-foot" href="/"><img src="/assets/variante-a-lockup-dunkel-web.svg" alt="Spiel-Freunde" width="796" height="175"></a>
       <p>A technology reference from Interconsult LLC, for LeadMonster.</p>
     </div>
-    <div class="foot-col"><b>On this page</b><a href="#capabilities">Capabilities</a><a href="#how">How the AI works</a><a href="#operator">Operator desk</a><a href="#pictures">On screen</a></div>
+    <div class="foot-col"><b>On this page</b><a href="#app">The app</a><a href="#capabilities">Capabilities</a><a href="#how">How the AI works</a><a href="#operator">Operator desk</a><a href="#pictures">On screen</a></div>
     <div class="foot-col"><b>The product</b><a href="/">Home</a><a href="/skat/">Try the table</a><a href="/spielpartner/">Partners and prices</a><a href="https://lead-monster.net/#kontakt" target="_blank" rel="noopener">Contact LeadMonster</a></div>
     <div class="foot-col"><b>Legal</b><a href="/impressum.html">Impressum</a><a href="/datenschutz.html">Datenschutz</a><a href="/agb.html">AGB</a><a href="/widerruf.html">Widerruf</a><a href="/partnerprogramm/">Partnerprogramm</a></div>
   </div>
