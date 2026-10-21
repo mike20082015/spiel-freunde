@@ -3,7 +3,8 @@
 # error_document und catchall_document dürfen nicht gleichzeitig gesetzt sein.
 # Eigene Cache-Control-Header unterstützt die Static-Site-Komponente nicht
 # (CDN etwa 24 Stunden, Browser etwa 10 Sekunden, geleert bei jedem Redeploy).
-# Die Skat-Stimmen cachen sich zusätzlich im Browser (Cache Storage).
+# Der Service Worker holt HTML und JS zuerst aus dem Netz. Bilder und CSS
+# dürfen aus dem Cache. Die Skat-Stimmen cachen sich zusätzlich im Browser.
 #
 # Functions-Komponente api: Quelle api/, Route /api.
 # Paket sf (benannt, damit project.yml Umgebungsvariablen tragen darf).

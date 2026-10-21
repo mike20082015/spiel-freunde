@@ -81,7 +81,10 @@ test('der Service Worker fasst API und Anmeldung nicht an', () => {
   assert.equal(kind(ORIGIN + '/mein-avatar/avatar.js'), 'bypass');
   assert.equal(kind(ORIGIN + '/mein-avatar/avatar.css'), 'bypass');
   assert.equal(kind(ORIGIN + '/assets/avatar-store.js'), 'bypass');
-  assert.match(sw, /sf-pwa-v2/);
+  assert.match(sw, /sf-pwa-v3/);
+  assert.match(sw, /client\.navigate\(client\.url\)/);
+  assert.doesNotMatch(sw, /return Promise\.all\(clients\.map/);
+  assert.match(sw, /cache: 'no-cache'/);
   assert.equal(kind('https://lead-monster.net/api/public/spiel-freunde'), 'bypass');
   assert.equal(kind(ORIGIN + '/skat/', { authorization: 'Bearer geheim' }), 'bypass');
   assert.equal(kind(ORIGIN + '/anmelden/'), 'bypass');
@@ -90,7 +93,11 @@ test('der Service Worker fasst API und Anmeldung nicht an', () => {
   assert.equal(kind(ORIGIN + '/skat/', { destination: 'document' }), 'network-first');
   assert.equal(kind(ORIGIN + '/impressum.html', { accept: 'text/html' }), 'network-first');
   assert.equal(kind(ORIGIN + '/assets/style.css'), 'cache-first');
-  assert.equal(kind(ORIGIN + '/skat/js/app.js'), 'cache-first');
+  assert.equal(kind(ORIGIN + '/skat/js/app.js'), 'network-first');
+  assert.equal(kind(ORIGIN + '/skat/js/voice.js'), 'network-first');
+  assert.equal(kind(ORIGIN + '/skat/js/talk.js'), 'network-first');
+  assert.equal(kind(ORIGIN + '/sw.js'), 'network-first');
+  assert.equal(kind(ORIGIN + '/assets/pwa.js'), 'network-first');
   assert.equal(kind(ORIGIN + '/manifest.json'), 'cache-first');
   assert.equal(kind(ORIGIN + '/skat/assets/voice/horst.mp3'), 'bypass');
   assert.equal(kind(ORIGIN + '/spielpartner/avatare.json'), 'bypass');

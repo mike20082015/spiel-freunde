@@ -1,11 +1,11 @@
 /* Hülle von Spiel-Freunde.
    Nur die Seite und statische Dateien. API, Anmeldung, Uploads, der
    Avatar-Editor und Antworten mit Set-Cookie bleiben außen vor. HTML
-   wird zuerst aus dem Netz geholt, damit ein Update nicht hinter einer
-   alten Fassung hängen bleibt. */
+   und Skripte werden zuerst aus dem Netz geholt, damit ein Update nicht
+   hinter einer alten Fassung hängen bleibt. */
 importScripts('/assets/pwa-policy.js');
 
-var VERSION = 'sf-pwa-v2';
+var VERSION = 'sf-pwa-v3';
 var SHELL = VERSION + '-shell';
 var PAGES = VERSION + '-pages';
 var FILES = VERSION + '-files';
@@ -33,13 +33,25 @@ self.addEventListener('install', function (event) {
 
 self.addEventListener('activate', function (event) {
   event.waitUntil(caches.keys().then(function (keys) {
-    return Promise.all(keys.filter(function (key) {
+    var stale = keys.filter(function (key) {
       return key.indexOf(VERSION) !== 0;
-    }).map(function (key) {
+    });
+    return Promise.all(stale.map(function (key) {
       return caches.delete(key);
-    }));
-  }).then(function () {
-    return self.clients.claim();
+    })).then(function () {
+      return self.clients.claim();
+    }).then(function () {
+      if (!stale.length) return null;
+      return self.clients.matchAll({ type: 'window' });
+    }).then(function (clients) {
+      if (!clients) return null;
+      // Die Navigation nicht abwarten. Sonst wartet activate auf die neue
+      // Seite, und die Seite wartet auf activate.
+      clients.forEach(function (client) {
+        if (!client.url || typeof client.navigate !== 'function') return;
+        client.navigate(client.url).catch(function () {});
+      });
+    });
   }));
 });
 
@@ -69,7 +81,12 @@ self.addEventListener('fetch', function (event) {
   if (decision === 'bypass') return;
 
   if (decision === 'network-first') {
-    event.respondWith(fetch(request).then(function (response) {
+    var freshRequest = request;
+    if (/\.(?:js|mjs)$/i.test(new URL(request.url).pathname)) {
+      try { freshRequest = new Request(request, { cache: 'no-cache' }); }
+      catch (err) { freshRequest = request; }
+    }
+    event.respondWith(fetch(freshRequest).then(function (response) {
       return store(PAGES, request, response);
     }).catch(function () {
       return caches.match(request).then(function (cached) {
