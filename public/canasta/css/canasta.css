@@ -190,7 +190,7 @@ button.card{padding:0;text-align:left}
 .intro a{color:var(--wine);font-weight:700}
 
 .sidebar{display:flex;flex-direction:column;gap:14px;min-height:0}
-.side-card{background:linear-gradient(170deg,#3a2414,#24160c);border:1px solid rgba(212,168,75,.3);border-radius:16px;padding:14px 16px;box-shadow:0 18px 40px -18px rgba(0,0,0,.6)}
+.side-card{min-width:0;background:linear-gradient(170deg,#3a2414,#24160c);border:1px solid rgba(212,168,75,.3);border-radius:16px;padding:14px 16px;box-shadow:0 18px 40px -18px rgba(0,0,0,.6)}
 .side-card h2{font-family:var(--serif);font-size:1.1rem;color:var(--gold-2);display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .mode-badge{margin-left:auto;font-family:var(--sans);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;background:rgba(247,241,227,.1);padding:2px 8px;border-radius:999px}
 .score-card{flex:none}
