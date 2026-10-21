@@ -1,6 +1,11 @@
 /* Partner-Lead: großer Film, ein Satz, ein Button. Mobil zuerst. */
-.lead{
+html:has(body.partner-page),
+html:has(body.miss.is-partner){background:#1c120b}
+.partner-page{
   min-height:100vh;
+  min-height:100dvh;
+  max-width:none;
+  width:100%;
   display:flex;
   flex-direction:column;
   color:var(--cream);
@@ -22,7 +27,7 @@
 }
 .lead-frame{
   position:relative;
-  width:min(100%,calc(52vh * 16 / 9),1040px);
+  width:min(100%,calc(16 / 9 * min(52dvh,100dvh - 420px)),1040px);
   margin:0 auto;
   aspect-ratio:16/9;
   border-radius:18px;
@@ -35,7 +40,7 @@
     0 28px 60px -18px rgba(0,0,0,.75);
 }
 .lead-frame.is-tall{
-  width:min(92%,calc(54vh * 9 / 16),420px);
+  width:min(100%,calc(9 / 16 * min(56dvh,100dvh - 400px)),420px);
   aspect-ratio:9/16;
 }
 .lead-frame video{
@@ -75,18 +80,18 @@
 .lead-page h1{
   font-family:var(--serif);
   font-weight:700;
-  font-size:clamp(1.7rem,4.8vw,2.65rem);
-  line-height:1.22;
+  font-size:clamp(1.45rem,4.4vw,2.45rem);
+  line-height:1.2;
   letter-spacing:-.015em;
   color:var(--cream);
-  margin:22px 0 14px;
+  margin:16px 0 10px;
   text-wrap:balance;
 }
 .lead-sub{
-  font-size:1.22rem;
-  line-height:1.45;
+  font-size:1.15rem;
+  line-height:1.4;
   color:rgba(247,241,227,.92);
-  margin:0 auto 22px;
+  margin:0 auto 16px;
 }
 .lead-play{
   font-size:1.4rem;
@@ -99,9 +104,9 @@
   padding:.95em 1.4em;
   box-shadow:0 14px 32px -8px rgba(212,168,75,.9),inset 0 1px 0 rgba(255,255,255,.5);
 }
-.lead .foot{padding-top:18px;margin-top:auto}
-.lead .foot-bottom{font-size:1rem;gap:12px 18px}
-.lead .foot-bottom a{padding:8px 2px}
+.partner-page .foot{padding-top:18px;margin-top:auto}
+.partner-page .foot-bottom{font-size:1rem;gap:12px 18px}
+.partner-page .foot-bottom a{padding:8px 2px}
 body.miss.is-partner .nav{background:transparent;border-bottom:0}
 body.miss.is-partner .nav-cta,
 body.miss.is-partner .miss-main,

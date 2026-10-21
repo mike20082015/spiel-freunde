@@ -228,7 +228,7 @@ function renderPage(opts) {
     '<link rel="stylesheet" href="/assets/style.css">',
     '<link rel="stylesheet" href="/assets/partner-lead.css">',
     '</head>',
-    '<body class="lead" ' + MARKER + ' data-partner-slug="' + escapeHtml(slug) + '"' + refAttr + '>',
+    '<body class="partner-page" ' + MARKER + ' data-partner-slug="' + escapeHtml(slug) + '"' + refAttr + '>',
     '<header class="lead-bar">',
     '  <a class="logo lead-go" href="' + escapeHtml(href) + '" aria-label="Spiel-Freunde Startseite"><img src="/assets/variante-a-lockup-dunkel-web.svg" alt="Spiel-Freunde" width="796" height="175"></a>',
     '</header>',
