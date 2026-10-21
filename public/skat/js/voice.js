@@ -200,11 +200,15 @@
    * opts.priority: Antwort auf den Spieler, wird vorgezogen und nicht verworfen.
    * opts.kind 'bid': kurze Ansage, wird bei voller Warteschlange verworfen statt hinterherzuhinken.
    * opts.speech: abweichender Sprechtext (z. B. "Achtzehn." statt "18").
+   * Talk.spokenText schreibt nur die Aussprache um ("Re." wird "Reh."), die Blase bleibt beim Aufrufer.
    */
+  function forSpeech(text) {
+    return Talk && typeof Talk.spokenText === 'function' ? Talk.spokenText(text) : text;
+  }
   function speak(character, text, opts) {
     opts = opts || {};
     if (!enabled() || !text) return false;
-    const spoken = opts.speech || text;
+    const spoken = forSpeech(opts.speech || text);
     if (opts.kind === 'bid' && V.queue.length >= 1) { V.log.push({ character, text: spoken, mode: 'skipped' }); return false; }
     while (V.queue.length >= 3) {
       let i = V.queue.findIndex((x) => !x.priority);

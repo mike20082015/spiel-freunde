@@ -139,6 +139,14 @@
     if (GAME_CALLS.includes(token)) return token + '!';
     return null;
   }
+  /*
+   * "Re" sind zwei Buchstaben. ElevenLabs und die Browserstimme lesen sie als R und E.
+   * "Reh" ist dasselbe deutsche Wort (wie das Tier). Nur der Sprechtext wird ersetzt.
+   * Anzeige, Chat und Punkte bleiben "Re". Kontra, Rekontra, Schneider, Bock, Retour bleiben Wörter.
+   */
+  function spokenText(text) {
+    return String(text == null ? '' : text).replace(/(^|[^\p{L}\p{N}])Re(?=$|[^\p{L}\p{N}])/gu, '$1Reh');
+  }
   function allCalls(character) {
     const out = [];
     for (const k of Object.keys(CALL_STYLE[character])) out.push({ id: 'c-' + k, text: CALL_STYLE[character][k] });
@@ -343,7 +351,7 @@
   }
 
   root.SkatTalk = {
-    CHARACTERS, LINES, REPLIES, line, cannedReply, classify, askAI, speakAI, responders, callText, allLines, NUMBER_WORDS, GAME_CALLS,
+    CHARACTERS, LINES, REPLIES, line, cannedReply, classify, askAI, speakAI, responders, callText, spokenText, allLines, NUMBER_WORDS, GAME_CALLS,
     probe, disableLive, resetForTests,
   };
 })(typeof self !== 'undefined' ? self : this);

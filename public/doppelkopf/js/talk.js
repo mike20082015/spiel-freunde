@@ -332,6 +332,13 @@
       return null;
     }
   }
+  /*
+   * "Re" sind zwei Buchstaben. Die Stimme liest sie als R und E.
+   * "Reh" spricht das Wort. Blase, Log und Ansagenamen bleiben "Re".
+   */
+  function spokenText(text) {
+    return String(text == null ? '' : text).replace(/(^|[^\p{L}\p{N}])Re(?=$|[^\p{L}\p{N}])/gu, '$1Reh');
+  }
   function responders(text, rng) {
     const t = String(text || '').toLowerCase();
     const kind = classify(text);
@@ -353,6 +360,7 @@
     classify: classify,
     askAI: askAI,
     speakAI: speakAI,
+    spokenText: spokenText,
     responders: responders,
     probe: probe,
     disableLive: disableLive,

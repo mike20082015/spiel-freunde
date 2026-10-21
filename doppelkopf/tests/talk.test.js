@@ -38,6 +38,28 @@ test('Rüdiger hat mindestens 30 feste Sätze und eine Stimme in der Runde', asy
   }
 });
 
+test('Re bleibt in den Sprüchen stehen und wird nur zum Sprechen Reh', () => {
+  assert.ok(Talk.LINES.horst.re.some((line) => line.startsWith('Re!')));
+  assert.ok(Talk.LINES.margarethe.re.some((line) => line.startsWith('Re,')));
+  assert.equal(Talk.spokenText('Re! Und wehe, der Partner pennt.'), 'Reh! Und wehe, der Partner pennt.');
+  assert.equal(Talk.spokenText('Re, Schätzchen. Haltung bewahren.'), 'Reh, Schätzchen. Haltung bewahren.');
+  assert.equal(Talk.spokenText('Armut auf dem Tisch. Tauschen, ansagen, und dann sind wir Re.'), 'Armut auf dem Tisch. Tauschen, ansagen, und dann sind wir Reh.');
+  assert.equal(Talk.spokenText('Kontra. Die Damen sitzen falsch.'), 'Kontra. Die Damen sitzen falsch.');
+  assert.equal(Talk.spokenText('Ich bin der aus dem Pott mit rheinischem Herzen.'), 'Ich bin der aus dem Pott mit rheinischem Herzen.');
+  assert.equal(Talk.spokenText(Talk.spokenText('Re.')), 'Reh.');
+  const voice = require('fs').readFileSync(require('path').join(__dirname, '../../public/doppelkopf/js/voice.js'), 'utf8');
+  assert.match(voice, /function forSpeech\(text\)/);
+  assert.match(voice, /forSpeech\(opts\.speech \|\| text\)/);
+  for (const who of Object.keys(Talk.LINES)) {
+    for (const lines of Object.values(Talk.LINES[who])) {
+      for (const line of lines) {
+        assert.equal(Talk.spokenText(Talk.spokenText(line)), Talk.spokenText(line));
+        assert.equal(line.includes('Kontra'), Talk.spokenText(line).includes('Kontra'));
+      }
+    }
+  }
+});
+
 test('Stichwort Rüdiger landet bei Rüdiger, Horst bei Horst', () => {
   assert.deepEqual(Talk.responders('Rüdiger, noch ein Pils'), ['ruediger']);
   assert.deepEqual(Talk.responders('Horst, das war mies'), ['horst']);
