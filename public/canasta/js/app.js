@@ -49,7 +49,7 @@
   }
 
   const S = {
-    state: null, gen: 0, selected: [], fresh: null, error: null, busy: false,
+    state: null, gen: 0, selected: [], fresh: null, busy: false,
     humanWait: null, askWait: null, nextWait: null, started: false,
     lastTalk: [0, 0, 0, 0], bubbleTimers: [], watchSteps: 0, settled: false,
     watch: params.get('watch') === '1' || params.get('demo') === '1',
@@ -340,14 +340,36 @@
     if (st.frozen || st.rules.pileTake === 'always') add(st.rules.pileTake === 'always' ? 'immer zwei Natürliche' : 'eingefroren', 'frozen');
     if (st.rules.canastasToGoOut === 2) add('zwei Canastas zum Ausmachen');
   }
+  function noteToken() {
+    const st = S.state;
+    if (!st) return '0';
+    const melds = (st.melds || []).map((m) => (m || []).length).join('.');
+    return [
+      match.handNo,
+      st.phase,
+      st.turn,
+      (st.hands || []).map((h) => h.length).join('.'),
+      (st.stock || []).length,
+      (st.discard || []).length,
+      melds,
+      st.asker == null ? '' : st.asker,
+    ].join('|');
+  }
+  const notes = window.HintNote.create({
+    box: () => $('hint-box'),
+    token: () => noteToken(),
+    onExpire: () => renderHint(),
+  });
   function renderHint() {
     const box = $('hint-box');
-    if (S.error) {
-      box.hidden = false;
-      box.textContent = S.error;
+    notes.sync();
+    if (notes.hold(box)) return;
+    box.classList.remove('shake');
+    if (!settings.hints || !S.state || S.state.turn !== 0 || S.state.phase === 'done') {
+      box.hidden = true;
+      box.textContent = '';
       return;
     }
-    if (!settings.hints || !S.state || S.state.turn !== 0 || S.state.phase === 'done') { box.hidden = true; return; }
     box.hidden = false;
     box.innerHTML = '<b>Tipp.</b> ' + esc(AI.suggest(S.state, 0));
   }
@@ -394,15 +416,10 @@
   }
   function noteHuman(res) {
     if (!res || !res.ok) {
-      S.error = (res && res.reason) || 'Das geht so nicht.';
-      const box = $('hint-box');
-      box.classList.remove('shake');
-      renderHint();
-      void box.offsetWidth;
-      box.classList.add('shake');
+      notes.show((res && res.reason) || 'Das geht so nicht.');
       return;
     }
-    S.error = null;
+    notes.clear();
     S.selected = [];
     if (res.card) S.fresh = res.card;
     else S.fresh = null;
@@ -444,7 +461,7 @@
       } else if (kind === 'ask') {
         const asked = E.askPartner(st, 0);
         if (!asked.ok) { noteHuman(asked); return; }
-        S.error = null;
+        notes.clear();
         render();
         const before = S.watchSteps;
         const out = AI.step(st, settings.level, rng);
@@ -605,7 +622,7 @@
     S.gen += 1;
     const gen = S.gen;
     S.selected = [];
-    S.error = null;
+    notes.clear();
     S.fresh = null;
     S.watchSteps = 0;
     S.humanWait = null;

@@ -218,12 +218,36 @@
     html += '</div>';
     panel.innerHTML = html;
   }
+  function noteToken() {
+    if (!table) return '0';
+    return [
+      table.dealer,
+      table.phase,
+      table.turn,
+      table.tricksDone || 0,
+      (table.trick || []).length,
+      (table.hands || []).map(function (h) { return h.length; }).join('.'),
+      (table.scores || []).join('.'),
+    ].join('|');
+  }
+  var notes = window.HintNote.create({
+    box: function () { return $('hint-box'); },
+    token: function () { return noteToken(); },
+    onExpire: function () { renderHint(); },
+  });
   function renderHint() {
     var box = $('hint-box');
+    notes.sync();
+    if (notes.hold(box)) {
+      document.body.classList.toggle('hints', !!settings.hints);
+      return;
+    }
     var on = settings.hints && table && table.turn === 0 && table.phase === 'play';
     box.hidden = !on;
+    box.classList.remove('shake');
     document.body.classList.toggle('hints', !!settings.hints);
     if (on) box.textContent = 'Grün ist erlaubt. Farbe bedienen, Trumpf darfst du trotzdem legen. Untertrumpfen nur, wenn du nur noch Trumpf hast. Der Puur muss bei Trumpf nicht her, wenn er dein einziger Trumpf ist.';
+    else box.textContent = '';
   }
   function render() {
     document.body.classList.toggle('deck-french', settings.deck === 'french');
@@ -419,10 +443,10 @@
     if (!btn || !table || table.turn !== 0 || table.phase !== 'play') return;
     var res = E.playCard(table, 0, btn.dataset.card);
     if (!res.ok) {
-      $('hint-box').hidden = false;
-      $('hint-box').textContent = 'Die Karte ist nicht erlaubt.';
+      notes.show('Die Karte ist nicht erlaubt.');
       return;
     }
+    if (notes.active()) notes.clear();
     applyEvents(res.events);
     poke();
   });

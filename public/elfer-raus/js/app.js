@@ -196,6 +196,7 @@
     return !!(st && st.turn === 0 && st.phase !== 'done' && !S.watch);
   }
   function releaseHuman(move) {
+    commitNote();
     const wait = S.humanWait;
     S.humanWait = null;
     if (wait) wait(move);
@@ -318,18 +319,43 @@
     btn.addEventListener('click', () => releaseHuman({ type: 'end' }));
     box.appendChild(btn);
   }
+  function noteToken() {
+    const st = S.state;
+    if (!st) return '0';
+    const rows = st.rows ? ['R', 'Y', 'G', 'B'].map((s) => {
+      const row = st.rows[s] || {};
+      return s + ':' + (row.open ? 1 : 0) + ':' + row.low + ':' + row.high;
+    }).join(',') : '';
+    return [
+      match.handNo,
+      st.phase,
+      st.turn,
+      st.plays,
+      (st.hands || []).map((h) => h.join('.')).join('/'),
+      rows,
+    ].join('|');
+  }
+  const notes = window.HintNote.create({
+    box: () => $('hint-box'),
+    token: () => noteToken(),
+    onExpire: () => renderHint(),
+  });
+  function commitNote() {
+    if (!notes.active()) return;
+    notes.clear();
+    renderHint();
+  }
   function note(text) {
-    const box = $('hint-box');
-    box.hidden = false;
-    box.textContent = text;
-    box.classList.remove('shake');
-    void box.offsetWidth;
-    box.classList.add('shake');
+    notes.show(text);
   }
   function renderHint() {
     const box = $('hint-box');
+    notes.sync();
+    if (notes.hold(box)) return;
+    box.classList.remove('shake');
     if (!settings.hints || !humanTurn()) {
-      if (!box.classList.contains('shake')) box.hidden = true;
+      box.hidden = true;
+      box.textContent = '';
       return;
     }
     const st = S.state;

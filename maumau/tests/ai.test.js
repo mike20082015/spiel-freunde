@@ -79,3 +79,151 @@ test('Anfänger legt den Buben früh und vergisst manchmal Mau', () => {
   }
   assert.ok(forgot > 0);
 });
+
+function seatAfter(seat, dir, n, steps) {
+  let s = seat;
+  for (let i = 0; i < (steps == null ? 1 : steps); i++) s = E.nextIndex(s, dir, n);
+  return s;
+}
+
+test('Turnier und Anfänger kontern eine 7 von jedem Sitz', () => {
+  ['anfaenger', 'turnier'].forEach((level) => {
+    [3, 4, 5].forEach((n) => {
+      [1, -1].forEach((dir) => {
+        for (let seat = 0; seat < n; seat++) {
+          const hands = Array.from({ length: n }, () => ['CK', 'D9', 'S8', 'HQ', 'C9']);
+          hands[seat] = ['D7', 'S9'];
+          const st = E.setup({
+            rules: { opponents: n - 1 },
+            hands: hands,
+            discard: ['HK'],
+            talon: ['CA', 'D8', 'H8', 'S10'],
+            pendingDraw: 2,
+            direction: dir,
+            turn: seat,
+          });
+          const where = level + ' n=' + n + ' dir=' + dir + ' seat=' + seat;
+          const mv = AI.act(st, seat, level, () => 1);
+          assert.equal(mv.type, 'play', where);
+          assert.equal(mv.card, 'D7', where);
+          assert.equal(mv.call, 'mau', where);
+          assert.equal(E.apply(st, seat, mv).ok, true, where);
+          assert.equal(st.pendingDraw, 4, where);
+          assert.equal(st.phase, 'play', where);
+          assert.equal(st.turn, seatAfter(seat, dir, n, 1), where);
+        }
+      });
+    });
+  });
+});
+
+test('Kneipe kontert, wenn der Nächste wenig hat oder der Stapel schon hoch ist', () => {
+  [3, 4, 5].forEach((n) => {
+    [1, -1].forEach((dir) => {
+      for (let seat = 0; seat < n; seat++) {
+        function state(nextCount, pending) {
+          const hands = Array.from({ length: n }, () => ['CK', 'D9', 'S8', 'HQ']);
+          hands[seat] = ['D7', 'S9', 'C8'];
+          hands[seatAfter(seat, dir, n, 1)] = ['H8', 'H9', 'H10', 'HQ', 'HK'].slice(0, nextCount);
+          return E.setup({
+            rules: { opponents: n - 1 },
+            hands: hands,
+            discard: ['SK'],
+            talon: ['CA', 'DA', 'SA', 'HA', 'CJ', 'DJ', 'SJ', 'C10'],
+            pendingDraw: pending,
+            direction: dir,
+            turn: seat,
+          });
+        }
+        const where = 'n=' + n + ' dir=' + dir + ' seat=' + seat;
+        const stack = state(3, 2);
+        const stacked = AI.act(stack, seat, 'kneipe', () => 1);
+        assert.equal(stacked.type, 'play', where);
+        assert.equal(stacked.card, 'D7', where);
+        assert.equal(E.apply(stack, seat, stacked).ok, true, where);
+        assert.equal(stack.pendingDraw, 4, where);
+        assert.equal(stack.turn, seatAfter(seat, dir, n, 1), where);
+
+        const high = state(5, 4);
+        const again = AI.act(high, seat, 'kneipe', () => 1);
+        assert.equal(again.type, 'play', where);
+        assert.equal(E.apply(high, seat, again).ok, true, where);
+        assert.equal(high.pendingDraw, 6, where);
+
+        const pass = state(4, 2);
+        const drawn = AI.act(pass, seat, 'kneipe', () => 1);
+        assert.equal(drawn.type, 'drawPenalty', where);
+        const before = pass.hands[seat].length;
+        assert.equal(E.apply(pass, seat, drawn).ok, true, where);
+        assert.equal(pass.pendingDraw, 0, where);
+        assert.equal(pass.hands[seat].length, before + 2, where);
+        assert.equal(pass.turn, seatAfter(seat, dir, n, 1), where);
+        assert.equal(pass.phase, 'play', where);
+      }
+    });
+  });
+});
+
+test('eine KI-7 als letzte Karte lässt den Stapel stehen, bis gezogen wird', () => {
+  ['anfaenger', 'turnier', 'kneipe'].forEach((level) => {
+    [3, 4, 5].forEach((n) => {
+      [1, -1].forEach((dir) => {
+        for (let seat = 0; seat < n; seat++) {
+          const hands = Array.from({ length: n }, () => ['CK', 'D9', 'S8', 'HQ']);
+          hands[seat] = ['D7'];
+          const st = E.setup({
+            rules: { opponents: n - 1 },
+            hands: hands,
+            discard: ['D9'],
+            talon: ['HA', 'S10', 'CQ', 'CK', 'C8', 'HJ'],
+            direction: dir,
+            turn: seat,
+          });
+          const where = level + ' n=' + n + ' dir=' + dir + ' seat=' + seat;
+          const mv = AI.act(st, seat, level, () => 1);
+          assert.equal(mv.type, 'play', where);
+          assert.equal(mv.card, 'D7', where);
+          assert.equal(mv.call, 'maumau', where);
+          assert.equal(E.apply(st, seat, mv).ok, true, where);
+          assert.equal(st.phase, 'play', where);
+          assert.equal(st.pendingDraw, 2, where);
+          assert.equal(st.hands[seat].length, 0, where);
+          const nxt = seatAfter(seat, dir, n, 1);
+          assert.equal(st.turn, nxt, where);
+          assert.equal(E.apply(st, nxt, { type: 'drawPenalty' }).ok, true, where);
+          assert.equal(st.pendingDraw, 0, where);
+          assert.equal(st.phase, 'done', where);
+          assert.equal(st.winner, seat, where);
+          assert.equal(st.points[seat], 0, where);
+          assert.equal(st.hands[nxt].length, 6, where);
+        }
+      });
+    });
+  });
+});
+
+test('Anfänger vergisst Mau-Mau auf der letzten 7, der Stapel bleibt trotzdem', () => {
+  const st = E.setup({
+    rules: { opponents: 2 },
+    hands: [['CK', 'D9'], ['D7'], ['S8', 'HQ']],
+    discard: ['D8'],
+    talon: ['HA', 'SK'],
+    turn: 1,
+    direction: -1,
+  });
+  const mv = AI.act(st, 1, 'anfaenger', () => 0);
+  assert.equal(mv.type, 'play');
+  assert.equal(mv.card, 'D7');
+  assert.equal(mv.call, undefined);
+  assert.equal(E.apply(st, 1, mv).ok, true);
+  assert.equal(st.phase, 'call');
+  assert.equal(st.pendingDraw, 2);
+  assert.equal(E.apply(st, 0, { type: 'forgive' }).ok, true);
+  assert.equal(st.phase, 'play');
+  assert.equal(st.pendingDraw, 2);
+  assert.equal(st.hands[1].length, 0);
+  assert.equal(st.turn, 0);
+  assert.equal(E.apply(st, 0, { type: 'drawPenalty' }).ok, true);
+  assert.equal(st.winner, 1);
+  assert.equal(st.pendingDraw, 0);
+});
