@@ -7,6 +7,8 @@
 .signup-card .btn{font-size:1.2rem;padding:.9em 1.3em}
 .signup-card form .btn{width:100%;margin-top:6px}
 .signup-card .pw-status{font-size:1.05rem;min-height:1.3em}
+.pw-spam{margin:14px 0 4px;padding:12px 14px;border-radius:14px;background:#fff6e4;border:1px solid rgba(176,133,50,.55);color:#3a2414;font-size:1.02rem;line-height:1.45;font-weight:600}
+.signup-card .pw-resend,#sf-invite-app .pw-resend{width:100%;margin-top:12px;white-space:normal}
 .sf-who{display:inline-flex;align-items:center;gap:8px;margin-right:8px;color:var(--cream,#f7f1e3);font-weight:700;font-size:1rem}
 .sf-who b{color:var(--gold-2,#e9c977);font-family:var(--serif,Georgia,serif);font-weight:700;font-size:1.08rem}
 .sf-who button{font:inherit;font-weight:700;color:var(--cream,#f7f1e3);background:transparent;border:1.5px solid rgba(233,201,119,.75);border-radius:999px;padding:.4em .85em;cursor:pointer}
@@ -21,6 +23,7 @@
 @media (max-width:560px){
   .signup-card h3{font-size:1.75rem}
   .signup-card .pw-lead,.signup-card .pw-field,.signup-card .pw-field input,.signup-card .btn{font-size:1.12rem}
+  .pw-spam{font-size:1rem;padding:12px 12px}
   .sf-who{font-size:.88rem;gap:6px}
   .sf-who button{padding:.3em .6em}
   /* Die Kopfzeile der Tische ist ohne Logo schon voll. Name und Abmelden

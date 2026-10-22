@@ -98,9 +98,15 @@ test('Proberunde, dann die Anmeldekarte, kein lokaler 14-Tage-Test', () => {
     assert.match(Account.signupMarkup(), /Wir schicken Dir einen Anmeldelink, kein Passwort nötig/);
     assert.match(Account.signupMarkup(), /E-Mail/);
     assert.match(Account.signupMarkup(), /Spielername/);
+    assert.match(Account.signupMarkup(), /Spam- oder Werbe-Ordner/);
     assert.match(Account.sentMarkup('helga@example.com'), /Der Link ist unterwegs/);
     assert.match(Account.sentMarkup('helga@example.com'), /helga@example.com/);
+    assert.match(Account.sentMarkup('helga@example.com'), /E-Mail erneut senden/);
+    assert.match(Account.sentMarkup('helga@example.com'), /data-resend/);
     assert.doesNotMatch(Account.sentMarkup('helga@example.com'), /data-paste/);
+    assert.match(Account.MAIL_HINT, /Gmail, GMX, web\.de und T-Online/);
+    assert.match(Account.MAIL_HINT, /„Kein Spam“/);
+    assert.doesNotMatch(Account.MAIL_HINT, /—/);
     const inApp = Account.sentMarkup('helga@example.com', { standalone: true });
     assert.match(inApp, /Link einlösen/);
     assert.match(inApp, /Tippe den Link in der Mail nicht an/);
