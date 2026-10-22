@@ -1,0 +1,246 @@
+/* Ort hinter dem Kartentisch. Leer (ohne data-ort) lässt jedes Spiel
+   seinen eigenen Hintergrund. Eine Wahl legt eine dunkle Schicht darüber,
+   damit Karten und Schrift lesbar bleiben. */
+
+.ort-pop{
+  position:fixed;
+  z-index:60;
+  right:12px;
+  top:68px;
+  width:min(460px, calc(100vw - 24px));
+  max-height:min(72vh, 640px);
+  overflow:auto;
+  padding:14px 14px 16px;
+  border-radius:18px;
+  background:linear-gradient(170deg,#fffaf0,#efe5cf);
+  color:#2a2420;
+  box-shadow:0 0 0 1px rgba(176,133,50,.5), 0 24px 50px -18px rgba(0,0,0,.75);
+}
+.ort-pop-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+.ort-pop-head b{
+  font-family:Georgia, 'Times New Roman', serif;
+  font-size:1.15rem;
+  color:#6e2424;
+}
+.ort-close{
+  border:1px solid rgba(110,36,36,.35);
+  background:transparent;
+  color:#6e2424;
+  border-radius:999px;
+  padding:4px 10px;
+  font:inherit;
+  font-size:.82rem;
+  font-weight:700;
+  cursor:pointer;
+}
+.ort-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(128px, 1fr));
+  gap:8px;
+}
+.ort-choice{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin:0;
+  padding:6px;
+  border-radius:14px;
+  border:2px solid transparent;
+  background:rgba(255,255,255,.45);
+  color:#2a2420;
+  font:inherit;
+  cursor:pointer;
+  text-align:left;
+}
+.ort-choice:hover{border-color:rgba(176,133,50,.7)}
+.ort-choice.is-on,
+.ort-choice[aria-pressed="true"]{
+  border-color:#b08532;
+  background:#fff6dc;
+  box-shadow:inset 0 0 0 1px #b08532;
+}
+.ort-thumb{
+  display:block;
+  aspect-ratio:16/10;
+  border-radius:10px;
+  background:#3a2616 center/cover no-repeat;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.28);
+}
+.ort-name{
+  display:block;
+  font-size:.78rem;
+  font-weight:700;
+  line-height:1.25;
+  color:#2a2420;
+}
+.ort-settings{grid-column:1 / -1}
+.ort-settings .note{margin:8px 2px 0}
+.ort-intro-btn{
+  display:inline-flex;
+  margin:0 0 12px;
+  padding:8px 14px;
+  border-radius:999px;
+  border:1.5px solid #8a2f2f;
+  background:transparent;
+  color:#6e2424;
+  font:inherit;
+  font-weight:700;
+  cursor:pointer;
+}
+.ort-intro-btn:hover{background:rgba(138,47,47,.08)}
+.ort-banner{
+  position:absolute;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:3;
+  margin:0;
+  max-width:calc(100% - 24px);
+  padding:4px 12px;
+  border-radius:999px;
+  background:rgba(18,10,6,.78);
+  color:#f7f1e3;
+  border:1px solid rgba(233,201,119,.5);
+  font-size:.82rem;
+  font-weight:700;
+  line-height:1.3;
+  letter-spacing:.01em;
+  pointer-events:none;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+html[data-ort] .app{
+  background-repeat:no-repeat;
+  background-size:cover;
+  background-position:center 30%;
+}
+html[data-ort] .app{background-color:#140c08}
+html[data-ort] .tabletop{inset:78px 22px 12px}
+
+.ort-thumb.is-default{
+  background-image:
+    radial-gradient(ellipse at 50% 62%, #8a5a32 0 38%, transparent 40%),
+    linear-gradient(#2b1a0f, #1a100c);
+}
+.ort-thumb.is-stammtisch{background-image:linear-gradient(rgba(0,0,0,.05), rgba(0,0,0,.18)), url(/assets/stammtisch-szene.jpg)}
+.ort-thumb.is-kneipe{background-image:linear-gradient(rgba(0,0,0,.05), rgba(0,0,0,.2)), url(/assets/ort-kneipe.jpg)}
+.ort-thumb.is-rayong{background-image:linear-gradient(rgba(0,0,0,.02), rgba(0,0,0,.18)), url(/assets/ort-rayong.jpg)}
+.ort-thumb.is-anden{background-image:linear-gradient(rgba(0,0,0,.05), rgba(0,0,0,.2)), url(/assets/ort-anden.jpg)}
+
+.ort-thumb.is-wohnzimmer,
+html[data-ort="wohnzimmer"] .app{
+  background-image:
+    linear-gradient(180deg, rgba(16,10,6,.5), rgba(16,10,6,.74)),
+    radial-gradient(ellipse at 50% 92%, rgba(255,150,40,.95), rgba(160,40,8,.28) 18%, transparent 36%),
+    linear-gradient(#c5e4f2, #f4e2c4),
+    linear-gradient(180deg, #5a3a3a 0%, #4a3028 48%, #2c1a12 48%, #1a100c 100%);
+  background-size:auto, auto, 22% 18%, auto;
+  background-position:center, center, 20% 16%, center;
+  background-repeat:no-repeat;
+}
+.ort-thumb.is-wohnzimmer{
+  background-image:
+    radial-gradient(ellipse at 50% 92%, rgba(255,160,50,.95), rgba(160,40,8,.2) 20%, transparent 38%),
+    linear-gradient(#c5e4f2, #f7e7cf),
+    linear-gradient(180deg, #6a4544 0%, #5a3c30 46%, #3a2418 46%, #24160f 100%);
+  background-size:auto, 28% 24%, auto;
+  background-position:center, 18% 14%, center;
+}
+
+.ort-thumb.is-biergarten,
+html[data-ort="biergarten"] .app{
+  background-image:
+    linear-gradient(180deg, rgba(10,24,12,.42), rgba(10,18,8,.7)),
+    radial-gradient(circle at 14% 24%, #ffe08a 0 5px, transparent 7px),
+    radial-gradient(circle at 30% 20%, #ffe08a 0 4px, transparent 7px),
+    radial-gradient(circle at 46% 26%, #ffe08a 0 5px, transparent 7px),
+    radial-gradient(circle at 64% 18%, #ffe08a 0 4px, transparent 7px),
+    radial-gradient(circle at 82% 24%, #ffe08a 0 5px, transparent 7px),
+    linear-gradient(180deg, #7eb6e0 0%, #d5ecc4 38%, #2f7a3e 58%, #1d5a30 100%);
+  background-repeat:no-repeat;
+}
+.ort-thumb.is-biergarten{
+  background-image:
+    radial-gradient(circle at 16% 30%, #ffe08a 0 5px, transparent 7px),
+    radial-gradient(circle at 36% 24%, #ffe08a 0 4px, transparent 7px),
+    radial-gradient(circle at 56% 32%, #ffe08a 0 5px, transparent 7px),
+    radial-gradient(circle at 76% 26%, #ffe08a 0 4px, transparent 7px),
+    linear-gradient(180deg, #8ec8ee 0%, #e7f4d4 42%, #3c8f4c 62%, #1f6a34 100%);
+}
+
+.ort-thumb.is-terrasse,
+html[data-ort="terrasse"] .app{
+  background-image:
+    linear-gradient(180deg, rgba(12,8,20,.4), rgba(8,10,16,.72)),
+    linear-gradient(180deg, transparent 61%, rgba(42,28,18,.95) 61%, rgba(42,28,18,.95) 64%, transparent 64%),
+    radial-gradient(circle at 18% 34%, #ffd27a 0 4px, transparent 6px),
+    radial-gradient(circle at 40% 30%, #ffd27a 0 4px, transparent 6px),
+    radial-gradient(circle at 62% 36%, #ffd27a 0 4px, transparent 6px),
+    radial-gradient(circle at 84% 30%, #ffd27a 0 4px, transparent 6px),
+    linear-gradient(180deg, #2a1848 0%, #c45c4a 40%, #f0a060 50%, #1d4e6f 50%, #0c2a42 100%);
+  background-repeat:no-repeat;
+}
+.ort-thumb.is-terrasse{
+  background-image:
+    linear-gradient(180deg, transparent 62%, #3a2a1c 62%, #3a2a1c 66%, transparent 66%),
+    radial-gradient(circle at 20% 40%, #ffd27a 0 4px, transparent 6px),
+    radial-gradient(circle at 50% 36%, #ffd27a 0 4px, transparent 6px),
+    radial-gradient(circle at 78% 42%, #ffd27a 0 4px, transparent 6px),
+    linear-gradient(180deg, #3a2060 0%, #d46a52 38%, #f2b070 52%, #1a5278 52%, #0d314c 100%);
+}
+
+html[data-ort="stammtisch"] .app{
+  background-image:
+    linear-gradient(180deg, rgba(18,10,6,.5), rgba(16,10,6,.76)),
+    url(/assets/stammtisch-szene.jpg);
+}
+html[data-ort="kneipe"] .app{
+  background-image:
+    linear-gradient(180deg, rgba(18,10,6,.48), rgba(16,10,6,.74)),
+    url(/assets/ort-kneipe.jpg);
+}
+html[data-ort="rayong"] .app{
+  background-image:
+    linear-gradient(180deg, rgba(18,10,6,.42), rgba(12,10,8,.72)),
+    url(/assets/ort-rayong.jpg);
+}
+html[data-ort="anden"] .app{
+  background-image:
+    linear-gradient(180deg, rgba(16,10,8,.48), rgba(12,10,8,.74)),
+    url(/assets/ort-anden.jpg);
+}
+
+@media (max-width:760px){
+  .ort-pop{
+    left:0;
+    right:0;
+    top:auto;
+    bottom:0;
+    width:auto;
+    max-height:78dvh;
+    border-radius:18px 18px 0 0;
+    padding-bottom:calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+  html[data-ort] .tabletop{inset:52px 10px 8px}
+  .ort-banner{top:6px;font-size:.74rem}
+  .ort-grid{grid-template-columns:repeat(2, minmax(0, 1fr))}
+}
+@media (min-width:761px) and (max-width:1100px){
+  html[data-ort] .tabletop{inset:64px 16px 10px}
+}
+@media (max-height:640px){
+  html[data-ort] .tabletop{inset:36px 10px 6px}
+  .ort-banner{top:4px}
+}
+@media (max-width:560px){
+  #btn-ort{flex:none}
+  .topbar-actions{overflow-x:auto}
+}
