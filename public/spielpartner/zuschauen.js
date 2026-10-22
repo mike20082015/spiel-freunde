@@ -23,8 +23,43 @@
 
   function aktiv() { return state.aktiv; }
 
+  var EINER = ['null', 'eins', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun'];
+  var ZEHNER = ['', 'zehn', 'zwanzig', 'dreißig', 'vierzig', 'fünfzig', 'sechzig', 'siebzig', 'achtzig', 'neunzig'];
+  function zahlWort(n) {
+    n = Number(n);
+    if (!isFinite(n) || n < 0 || n > 9999 || Math.floor(n) !== n) return '';
+    if (n < 10) return EINER[n];
+    if (n < 20) {
+      if (n === 11) return 'elf';
+      if (n === 12) return 'zwölf';
+      if (n === 16) return 'sechzehn';
+      if (n === 17) return 'siebzehn';
+      return EINER[n - 10] + 'zehn';
+    }
+    if (n < 100) {
+      var z = Math.floor(n / 10);
+      var e = n % 10;
+      if (!e) return ZEHNER[z];
+      return (e === 1 ? 'ein' : EINER[e]) + 'und' + ZEHNER[z];
+    }
+    if (n < 1000) {
+      var h = Math.floor(n / 100);
+      var rest = n % 100;
+      var head = (h === 1 ? 'ein' : EINER[h]) + 'hundert';
+      return rest ? head + zahlWort(rest) : head;
+    }
+    var t = Math.floor(n / 1000);
+    var restT = n % 1000;
+    var tausend = (t === 1 ? 'ein' : EINER[t]) + 'tausend';
+    return restT ? tausend + zahlWort(restT) : tausend;
+  }
   function fuerSprache(text) {
-    return String(text == null ? '' : text).replace(/(^|[^\p{L}\p{N}])Re(?=$|[^\p{L}\p{N}])/gu, '$1Reh');
+    var s = String(text == null ? '' : text).replace(/Sans Atout/g, 'ohne Trumpf');
+    s = s.replace(/(^|[^\p{L}\p{N}])(\d{1,4})(?=$|[^\p{L}\p{N}])/gu, function (full, pre, digits) {
+      var word = zahlWort(digits);
+      return word ? pre + word : full;
+    });
+    return s.replace(/(^|[^\p{L}\p{N}])Re(?=$|[^\p{L}\p{N}])/gu, '$1Reh');
   }
 
   function ersterSatz(text) {

@@ -118,6 +118,15 @@
     return 1;
   }
 
+  var WEIS_WORD = {
+    20: 'zwanzig', 50: 'fünfzig', 100: 'hundert', 150: 'hundertfünfzig',
+    200: 'zweihundert', 250: 'zweihundertfünfzig', 300: 'dreihundert'
+  };
+  function spokenWeis(points) {
+    var word = WEIS_WORD[points];
+    return word ? ('Weis ' + word + '.') : 'Weis.';
+  }
+
   function trumpName(trump, deck) {
     if (!trump) return 'noch offen';
     if (trump.mode === 'obenabe') return 'Obenabe';
@@ -626,6 +635,7 @@
     sumPoints: sumPoints,
     multiplier: multiplier,
     trumpName: trumpName,
+    spokenWeis: spokenWeis,
     cardName: cardName,
     legalCards: legalCards,
     selectMelds: selectMelds,

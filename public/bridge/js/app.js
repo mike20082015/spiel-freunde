@@ -397,11 +397,7 @@
   }
 
   function spokenBid(call) {
-    if (!call) return '';
-    if (call.kind === 'pass') return 'Passen.';
-    if (call.kind === 'double') return 'Kontra.';
-    if (call.kind === 'redouble') return 'Rekontra.';
-    return E.callLabel(call) + '.';
+    return E.spokenCall(call);
   }
   function applyEvents(events) {
     (events || []).forEach(function (ev) {

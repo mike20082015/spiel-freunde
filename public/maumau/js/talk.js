@@ -45,7 +45,7 @@
       welcome: [
         'Hey, schön dass du da bist. Ich hab zwischen zwei Vorlesungen noch eine Runde.',
         'Moin! Mau-Mau ist genau das Richtige, mein Kopf ist vom Lernen schon voll.',
-        'Hi! Setz dich, der Kaffee ist noch warm und die Karten auch.',
+        'Moin! Setz dich, der Kaffee ist noch warm und die Karten auch.',
       ],
       gameStart: [
         'Fünf Karten, los geht’s. Ich spiel schnell, die Bahn wartet nicht.',
@@ -171,7 +171,7 @@
       default: ['Wie bitte, Schätzchen?', 'Interessant. Spiel dabei weiter.', 'Ach was.'],
     },
     lena: {
-      greet: ['Hey! Schön, dass du schreibst und nicht nur ziehst.', 'Hi! Ich bin Lena, ich studier und ich lege Karten, in der Reihenfolge.'],
+      greet: ['Moin! Schön, dass du schreibst und nicht nur ziehst.', 'Moin! Ich bin Lena, ich studier und ich lege Karten, in der Reihenfolge.'],
       luck: ['Ein bisschen Glück darf sein. Die Sieben ist trotzdem Können.', 'Zufall mischt, den Rest machen wir.'],
       praise: ['Danke! Das hör ich gern, auch zwischen zwei Seminaren.', 'Oh, lieb. Ich merk mir das für die nächste Runde.'],
       anger: ['Atmen. Es ist nur Mau-Mau, kein Test.', 'Ärger bringt keine Karte weg. Eine Sieben schon.'],

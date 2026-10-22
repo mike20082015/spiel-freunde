@@ -35,7 +35,7 @@
       thirty: ['31! Eine Farbe, fertig, Runde vorbei.', 'Einunddreißig. Das zeige ich sofort, wie es sich gehört.'],
       feuer: ['Feuer, drei Asse. Das schlägt alles.', 'Feuer! Tut mir fast leid, aber die Asse lügen nicht.'],
       win: ['Leben behalten. So mag ich das.', 'Noch dabei. Nächstes Mal darfst du klopfen.'],
-      lose: ['Ein Leben weg. Okay, das war knapp daneben.', 'Ich schwimme noch nicht. Aber aufgepasst hab ich.'],
+      lose: ['Ein Leben weg. Gut, das war knapp daneben.', 'Ich schwimme noch nicht. Aber aufgepasst hab ich.'],
       encourage: ['Kopf hoch. Schwimmen verzeiht eine schlechte Hand.', 'Drei Leben sind ein Polster. Nutze es.'],
       close: ['Aufdecken. Die kleinste Hand gibt ein Leben ab, und es bleibt ein Spiel.'],
     },

@@ -1246,7 +1246,7 @@
     const lenaSeat = seatById('lena');
     if (lenaSeat) logLine('<b>Lena:</b> ' + esc(Talk.line('lena', 'welcome')), 'lena');
     say(1, 'Mau. Gleich is Feierabend.', { force: true });
-    if (lenaSeat) say(lenaSeat.seat, 'Hi! Der Kaffee ist warm, die Karten auch.', { force: true });
+    if (lenaSeat) say(lenaSeat.seat, 'Moin! Der Kaffee ist warm, die Karten auch.', { force: true });
     sys('Punkte statt Geld. Eine 7 zieht zwei, eine 8 setzt aus, der Bube wünscht.');
     const gen = S.gen;
     playLoop(gen).then(() => {

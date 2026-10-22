@@ -614,7 +614,7 @@
     const id = seat.aiId;
     if (event.kind === 'bid') {
       const token = event.action === 'pass' ? 'pass' : (event.action === 'hold' ? 'hold' : (event.action === 'bid' ? event.value : 'open'));
-      const said = Talk.callText(id, token) || (event.action === 'pass' ? 'Passe' : String(event.value || ''));
+      const said = Talk.callText(id, token) || (event.action === 'pass' ? 'Ich passe.' : (event.action === 'hold' ? 'Ja.' : 'Ich spiele.'));
       bubble(event.seat, event.action === 'pass' ? 'Passe' : (event.action === 'hold' ? 'Ja' : String(event.value || '18')));
       Voice.speak(id, said, { kind: 'bid' });
     } else if (event.kind === 'kontra' || event.kind === 're') {

@@ -131,11 +131,17 @@
     horst: { pass: 'Weg.', hold: 'Jo.', open: 'Na jut, ick spiele.' },
     margarethe: { pass: 'Ich passe.', hold: 'Ja.', open: 'Dann spiele ich eben.' },
   };
+  /* Jede andere Figur bekommt dieselben deutschen Wörter. Die Anzeige bleibt "18" und "Passe". */
+  const DEFAULT_CALL = { pass: 'Ich passe.', hold: 'Ja.', open: 'Ich spiele.' };
+  function callStyle(character) {
+    return CALL_STYLE[character] || DEFAULT_CALL;
+  }
   // Liefert den Sprechtext für eine Ansage: token 'pass' | 'hold' | 'open' | Zahl | Spielname
   function callText(character, token) {
-    const st = CALL_STYLE[character];
-    if (st[token]) return st[token];
-    if (NUMBER_WORDS[token]) return NUMBER_WORDS[token] + '.';
+    const st = callStyle(character);
+    if (st && Object.prototype.hasOwnProperty.call(st, token) && st[token]) return st[token];
+    const numeric = typeof token === 'string' && /^\d+$/.test(token) ? Number(token) : token;
+    if (NUMBER_WORDS[numeric]) return NUMBER_WORDS[numeric] + '.';
     if (GAME_CALLS.includes(token)) return token + '!';
     return null;
   }
@@ -149,7 +155,8 @@
   }
   function allCalls(character) {
     const out = [];
-    for (const k of Object.keys(CALL_STYLE[character])) out.push({ id: 'c-' + k, text: CALL_STYLE[character][k] });
+    const st = callStyle(character);
+    for (const k of Object.keys(st)) out.push({ id: 'c-' + k, text: st[k] });
     for (const n of Object.keys(NUMBER_WORDS)) out.push({ id: 'c-' + n, text: NUMBER_WORDS[n] + '.' });
     GAME_CALLS.forEach((g, i) => out.push({ id: 'c-game-' + i, text: g + '!' }));
     return out;
@@ -351,7 +358,7 @@
   }
 
   root.SkatTalk = {
-    CHARACTERS, LINES, REPLIES, line, cannedReply, classify, askAI, speakAI, responders, callText, spokenText, allLines, NUMBER_WORDS, GAME_CALLS,
+    CHARACTERS, LINES, REPLIES, line, cannedReply, classify, askAI, speakAI, responders, callText, spokenText, allLines, allCalls, NUMBER_WORDS, GAME_CALLS,
     probe, disableLive, resetForTests,
   };
 })(typeof self !== 'undefined' ? self : this);

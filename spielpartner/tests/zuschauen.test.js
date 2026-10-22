@@ -14,6 +14,11 @@ test('Re wird nur zum Sprechen zu Reh', () => {
   assert.equal(Z.fuerSprache('Kontra und Rekontra bleiben'), 'Kontra und Rekontra bleiben');
   assert.equal(Z.fuerSprache('Schneider'), 'Schneider');
   assert.equal(Z.fuerSprache(Z.fuerSprache('sagt Re')), 'sagt Reh');
+  assert.equal(Z.fuerSprache('sagt 18.'), 'sagt achtzehn.');
+  assert.equal(Z.fuerSprache('Ja zu 22'), 'Ja zu zweiundzwanzig');
+  assert.equal(Z.fuerSprache('keine 90'), 'keine neunzig');
+  assert.equal(Z.fuerSprache('1 Sans Atout.'), 'eins ohne Trumpf.');
+  assert.equal(Z.fuerSprache('Kontra.'), 'Kontra.');
 });
 
 test('Erklärungen nennen die Regel in einfachem Deutsch', () => {

@@ -51,3 +51,32 @@ test('Blase und Punkteliste zeigen weiter Re, die Stimme spricht den umgeschrieb
     }
   }
 });
+
+test('jede Figur sagt Reizen auf Deutsch, Horst und Margarethe behalten ihren Ton', () => {
+  const others = ['lena', 'jonas', 'oemer', 'hilde', 'oma-hilde', 'sepp', 'ruediger', 'chantal', 'urs', 'vreni'];
+  for (const who of others) {
+    assert.equal(Talk.callText(who, 'pass'), 'Ich passe.', who);
+    assert.equal(Talk.callText(who, 'hold'), 'Ja.', who);
+    assert.equal(Talk.callText(who, 'open'), 'Ich spiele.', who);
+    assert.equal(Talk.callText(who, 18), 'Achtzehn.', who);
+    assert.equal(Talk.callText(who, '20'), 'Zwanzig.', who);
+    assert.equal(Talk.callText(who, 22), 'Zweiundzwanzig.', who);
+    assert.equal(Talk.callText(who, 'Grand'), 'Grand!', who);
+    assert.equal(Talk.callText(who, 'Null Ouvert'), 'Null Ouvert!', who);
+    assert.equal(Talk.spokenText(Talk.callText(who, 'pass')), 'Ich passe.', who);
+    assert.doesNotMatch(Talk.callText(who, 18), /^\d/, who);
+    assert.equal(Talk.allCalls(who).some((row) => row.text === 'Ich passe.'), true, who);
+    assert.doesNotMatch(Talk.callText(who, 22), /—/, who);
+  }
+  assert.equal(Talk.callText('horst', 'pass'), 'Weg.');
+  assert.equal(Talk.callText('horst', 'hold'), 'Jo.');
+  assert.equal(Talk.callText('horst', 18), 'Achtzehn.');
+  assert.equal(Talk.callText('margarethe', 'pass'), 'Ich passe.');
+  assert.equal(Talk.callText('margarethe', 'hold'), 'Ja.');
+  assert.equal(Talk.callText('margarethe', 'open'), 'Dann spiele ich eben.');
+  assert.equal(Talk.spokenText('Re.'), 'Reh.');
+  assert.equal(Talk.spokenText(Talk.callText('oemer', 18)), 'Achtzehn.');
+  const tisch = fs.readFileSync(path.join(root, 'public/tisch/tisch.js'), 'utf8');
+  assert.match(tisch, /callText\(id, token\) \|\| \(event\.action === 'pass' \? 'Ich passe\.'/);
+  assert.match(tisch, /bubble\(event\.seat, event\.action === 'pass' \? 'Passe'/);
+});

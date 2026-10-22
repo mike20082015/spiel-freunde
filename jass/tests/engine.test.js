@@ -335,3 +335,12 @@ test('Voller Stichzähler: 157 ohne Match, Match gibt 100 extra, erstes Team am 
   const first = table.history[0];
   assert.ok(first.gained[0] + first.gained[1] === 157 || first.gained[0] + first.gained[1] === 257 || first.gained[0] + first.gained[1] > 157);
 });
+
+test('Weis wird als deutsches Wort angesagt', () => {
+  assert.equal(E.spokenWeis(20), 'Weis zwanzig.');
+  assert.equal(E.spokenWeis(50), 'Weis fünfzig.');
+  assert.equal(E.spokenWeis(100), 'Weis hundert.');
+  assert.equal(E.spokenWeis(300), 'Weis dreihundert.');
+  assert.equal(E.spokenWeis(0), 'Weis.');
+  assert.doesNotMatch(E.spokenWeis(20), /\d/);
+});
