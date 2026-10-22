@@ -6,8 +6,10 @@
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.SpielpartnerOrte = api;
   if (typeof document !== 'undefined' && document.documentElement) {
-    try { api.apply(api.read()); }
-    catch (err) { /* privat */ }
+    try {
+      var search = (typeof location !== 'undefined' && location.search) || '';
+      api.apply(api.previewId(search) || api.read(), undefined, undefined, search);
+    } catch (err) { /* privat */ }
     var boot = function () { api.install(); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
     else boot();
@@ -18,11 +20,9 @@
   /* Asia/Bangkok hat keinen Sommerzeitversatz, deshalb +07:00.
      from und until sind inklusive. Ein abgelaufener Saison-Tisch
      verschwindet aus der Auswahl, und eine gespeicherte Wahl fällt
-     auf den normalen Look zurück. Neue Saison: Eintrag ergänzen und
-     die Szene in orte.css anlegen, zum Beispiel
-     { id: 'weihnachten', name: 'Weihnachtstisch', scene: 'weihnachten',
-       from: '2026-12-01T00:00:00+07:00', until: '2026-12-26T23:59:59+07:00',
-       badge: 'Nur bis 26. Dezember' }. */
+     auf den normalen Look zurück. Neue Saison: Eintrag hier und die
+     Szene in orte.css. ?saison=id zeigt einen Tisch vor seinem Datum,
+     nur für diese Ansicht. */
   var SEASON_ZONE = 'Asia/Bangkok';
   var SEASONS = [
     {
@@ -32,6 +32,22 @@
       from: '2026-10-22T00:00:00+07:00',
       until: '2026-11-05T23:59:59+07:00',
       badge: 'Nur bis 5. November'
+    },
+    {
+      id: 'nikolaus',
+      name: 'Nikolaus-Tisch',
+      scene: 'nikolaus',
+      from: '2026-11-27T00:00:00+07:00',
+      until: '2026-12-06T23:59:59+07:00',
+      badge: 'Nur bis 6. Dezember'
+    },
+    {
+      id: 'weihnachten',
+      name: 'Weihnachtstisch',
+      scene: 'weihnachten',
+      from: '2026-12-07T00:00:00+07:00',
+      until: '2026-12-26T23:59:59+07:00',
+      badge: 'Nur bis 26. Dezember'
     }
   ];
   var ORTE = [
@@ -57,13 +73,27 @@
     return null;
   }
 
-  function seasonOpen(id, now) {
-    var season = typeof id === 'object' ? id : seasonById(id);
+  function pageSearch() {
+    try {
+      if (typeof location !== 'undefined' && location.search) return location.search;
+    } catch (err) { /* ohne Fenster */ }
+    return '';
+  }
+
+  function previewId(search) {
+    var query = search == null ? pageSearch() : String(search);
+    var match = /(?:\?|&)saison=([a-z0-9_-]+)/i.exec(query);
+    if (!match) return '';
+    var id = match[1].toLowerCase();
+    return seasonById(id) ? id : '';
+  }
+
+  function seasonOpen(id, now, search) {
+    var season = typeof id === 'object' && id ? id : seasonById(id);
     if (!season) return false;
+    if (previewId(search) === season.id) return true;
     var t = timeOf(now);
-    var from = Date.parse(season.from);
-    var until = Date.parse(season.until);
-    return t >= from && t <= until;
+    return t >= Date.parse(season.from) && t <= Date.parse(season.until);
   }
 
   function permanent(id) {
@@ -71,22 +101,24 @@
     return null;
   }
 
-  function catalog(now) {
+  function catalog(now, search) {
     var open = [];
-    for (var i = 0; i < SEASONS.length; i++) if (seasonOpen(SEASONS[i], now)) open.push(SEASONS[i]);
+    for (var i = 0; i < SEASONS.length; i++) if (seasonOpen(SEASONS[i], now, search)) open.push(SEASONS[i]);
     return [ORTE[0]].concat(open).concat(ORTE.slice(1));
   }
 
-  function byId(id, now) {
-    var list = catalog(now);
+  function byId(id, now, search) {
+    var list = catalog(now, search);
     for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
-    return ORTE[0];
+    var season = seasonById(id);
+    if (season && seasonOpen(season, now, search)) return season;
+    return permanent(id) || ORTE[0];
   }
 
-  function known(id, now) {
+  function known(id, now, search) {
     if (id === '') return true;
     if (permanent(id)) return true;
-    return seasonOpen(id, now);
+    return seasonOpen(id, now, search);
   }
 
   function storageOf(storage) {
@@ -149,9 +181,9 @@
     return raw;
   }
 
-  function write(storage, id, now) {
+  function write(storage, id, now, search) {
     storage = storageOf(storage);
-    if (!known(id, now)) id = '';
+    if (!known(id, now, search)) id = '';
     if (!storage) return id;
     try { storage.setItem(storageKey(storage), id); }
     catch (err) { /* privat */ }
@@ -165,10 +197,10 @@
     return id;
   }
 
-  function apply(id, doc, now) {
+  function apply(id, doc, now, search) {
     var root = (doc || document).documentElement;
     if (!root) return '';
-    if (!known(id, now)) id = '';
+    if (!known(id, now, search)) id = '';
     if (!id) {
       if (root.removeAttribute) root.removeAttribute('data-ort');
       if (root.dataset) delete root.dataset.ort;
@@ -207,9 +239,9 @@
     return button;
   }
 
-  function fillGrid(doc, grid, now) {
+  function fillGrid(doc, grid, now, search) {
     grid.textContent = '';
-    catalog(now).forEach(function (ort) {
+    catalog(now, search).forEach(function (ort) {
       grid.appendChild(choiceButton(doc, ort));
     });
   }
@@ -281,23 +313,40 @@
       var glow = el(doc, 'div', 'ort-glow');
       glow.id = 'ort-glow';
       glow.setAttribute('aria-hidden', 'true');
+      var snow = el(doc, 'div', 'ort-snow');
+      snow.id = 'ort-snow';
+      snow.setAttribute('aria-hidden', 'true');
       var banner = el(doc, 'p', 'ort-banner');
       banner.id = 'ort-banner';
       banner.hidden = true;
       room.insertBefore(banner, room.firstChild);
+      room.insertBefore(snow, room.firstChild);
       room.insertBefore(glow, room.firstChild);
     }
 
+    var visitPick = null;
+    function searchNow() {
+      try { return (typeof location !== 'undefined' && location.search) || ''; }
+      catch (err) { return ''; }
+    }
+    function shownId() {
+      if (visitPick != null) return visitPick;
+      var preview = previewId(searchNow());
+      if (preview) return preview;
+      return read(storage);
+    }
+
     function paint() {
-      var sig = catalog().map(function (ort) { return ort.id; }).join('|');
+      var search = searchNow();
+      var sig = catalog(undefined, search).map(function (ort) { return ort.id; }).join('|');
       if (sig !== paint.sig) {
         paint.sig = sig;
         var grids = doc.querySelectorAll('[data-ort-grid]');
-        for (var g = 0; g < grids.length; g++) fillGrid(doc, grids[g]);
+        for (var g = 0; g < grids.length; g++) fillGrid(doc, grids[g], undefined, search);
       }
-      var current = read(storage);
-      apply(current, doc);
-      var meta = byId(current);
+      var current = shownId();
+      apply(current, doc, undefined, search);
+      var meta = byId(current, undefined, search);
       var nodes = doc.querySelectorAll('[data-ort-id]');
       for (var i = 0; i < nodes.length; i++) {
         var on = nodes[i].getAttribute('data-ort-id') === current;
@@ -323,7 +372,8 @@
     }
 
     function choose(id) {
-      write(storage, id);
+      visitPick = id;
+      write(storage, id, undefined, searchNow());
       paint();
       close();
     }
@@ -382,6 +432,7 @@
     SEASON_ZONE: SEASON_ZONE,
     GUEST_KEY: GUEST_KEY,
     catalog: catalog,
+    previewId: previewId,
     seasonOpen: seasonOpen,
     byId: byId,
     known: known,

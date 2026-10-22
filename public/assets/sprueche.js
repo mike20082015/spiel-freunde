@@ -2740,14 +2740,110 @@
         "Hömma, Kürbis steht, Kerze brennt. Dat wird gemütlich.",
         "Nur warmes Licht, kein Schreck. Rück den Stuhl ran."
       ]
+    },
+    nikolaus: {
+      horst: [
+        "Na, Stiefel mit Süßem. Ick nehm nur eine Mandel, ehrlich.",
+        "Rote Mütze, warme Lampe. Nikolaus bleibt hier gemütlich."
+      ],
+      margarethe: [
+        "Mandarinen und ein kleiner Stiefel. Wie hübsch, Schätzchen.",
+        "Nüsse in der Schale, Kerzenlicht dazu. Setz Dich."
+      ],
+      urs: [
+        "Grüezi. Der Stiefel ist voll, das Spiel bleibt ruhig.",
+        "Nikolausmütze am Haken. Mehr Trubel braucht es nicht."
+      ],
+      vreni: [
+        "Hoi. Mandarinen duften, und der Stiefel ist freundlich gefüllt.",
+        "Nüsse knacken, Tee steht. So mag ich den Nikolaus."
+      ],
+      sepp: [
+        "Servus. Im Stiefel ist Süßes, am Tisch sind Karten.",
+        "Warmes Licht und eine rote Mütze. Passt zum Abend."
+      ],
+      hilde: [
+        "Na, Kind. Mandarine, Nuss, und der Stiefel ist lieb gefüllt.",
+        "Nikolaus kommt leise. Der Kuchen ist auch noch da."
+      ],
+      lena: [
+        "Hallo. Stiefel mit Süßem, und dann ganz normal Karten.",
+        "Die rote Mütze ist nur Schmuck. Der Abend bleibt warm."
+      ],
+      jonas: [
+        "Der Stiefel steht, der Platz ist frei. Ganz ohne Hetze.",
+        "Mandarinen auf dem Tisch. Nikolaus darf freundlich sein."
+      ],
+      oemer: [
+        "Komm rein. Im Stiefel ist Süßes, die Tür bleibt offen.",
+        "Nüsse, Mandarinen, warmes Licht. Ein friedlicher Abend."
+      ],
+      ruediger: [
+        "Guten Abend. Ein Stiefel, eine Mütze, und ein faires Spiel.",
+        "Nikolauslicht am Tisch. Der Abend bleibt ruhig."
+      ],
+      chantal: [
+        "Hömma, Stiefel steht, Mütze hängt. Dat wird gemütlich.",
+        "Mandarine für dich, Nuss für mich. Rück den Stuhl ran."
+      ]
+    },
+    weihnachten: {
+      horst: [
+        "Na, Lichter am Baum. Is warm hier, keen Trubel.",
+        "Lebkuchen aufm Teller. Ick teil, aber nur freundlich."
+      ],
+      margarethe: [
+        "Der Baum leuchtet leise. Wie festlich und friedlich, Schätzchen.",
+        "Lebkuchen und Kerzen. Setz Dich, der Schnee bleibt sanft."
+      ],
+      urs: [
+        "Grüezi. Die Lichter brennen, das Spiel bleibt ruhig.",
+        "Ein wenig Schnee am Fenster. Mehr Weihnachten braucht es nicht."
+      ],
+      vreni: [
+        "Hoi. Der Baum zwinkert mit warmen Lichtern.",
+        "Lebkuchen duftet, Kerzen brennen. So mag ich Weihnachten."
+      ],
+      sepp: [
+        "Servus. Lichterkette an, Karten auf den Tisch.",
+        "Kerzen, Lebkuchen, leiser Schnee. Passt zum Abend."
+      ],
+      hilde: [
+        "Na, Kind. Lebkuchen, Kerze, und der Baum ist freundlich.",
+        "Weihnachten, aber gemütlich. Der Abend bleibt weich."
+      ],
+      lena: [
+        "Hallo. Lichter am Baum, und dann ganz normal Karten.",
+        "Leiser Schnee, warmes Licht. Weihnachten darf ruhig sein."
+      ],
+      jonas: [
+        "Die Lichter brennen, der Platz ist frei. Ganz ohne Eile.",
+        "Lebkuchen auf dem Teller. So bleibt der Abend nett."
+      ],
+      oemer: [
+        "Komm rein. Der Baum leuchtet, die Tür bleibt offen.",
+        "Kerzen und Lebkuchen. Weihnachten, ganz friedlich."
+      ],
+      ruediger: [
+        "Guten Abend. Lichter, Kerzen, und ein faires Spiel.",
+        "Leiser Schnee am Fenster. Mehr braucht dieser Abend nicht."
+      ],
+      chantal: [
+        "Hömma, Baum leuchtet, Lebkuchen steht. Dat wird gemütlich.",
+        "Kerzen an, Schnee ganz sacht. Rück den Stuhl ran."
+      ]
     }
   };
 
-  function seasonOpen(id, now) {
+  function openSeasonIds(now) {
     var g = typeof globalThis !== 'undefined' ? globalThis : null;
     var Orte = g && g.SpielpartnerOrte;
-    if (!Orte || typeof Orte.seasonOpen !== 'function') return false;
-    return Orte.seasonOpen(id, now);
+    if (!Orte || !Orte.SEASONS || typeof Orte.seasonOpen !== 'function') return [];
+    var ids = [];
+    for (var i = 0; i < Orte.SEASONS.length; i++) {
+      if (Orte.seasonOpen(Orte.SEASONS[i].id, now)) ids.push(Orte.SEASONS[i].id);
+    }
+    return ids;
   }
 
   function seasonLines(id, season) {
@@ -2760,8 +2856,11 @@
     var extra = pool(id, situation);
     var merged = unique([].concat(local || [], extra));
     if (!merged.length) merged = pool(id, 'banter');
-    if ((situation === 'greetings' || situation === 'banter') && seasonOpen('halloween', now)) {
-      merged = unique(merged.concat(seasonLines(id, 'halloween')));
+    if (situation === 'greetings' || situation === 'banter') {
+      var seasons = openSeasonIds(now);
+      for (var s = 0; s < seasons.length; s++) {
+        merged = unique(merged.concat(seasonLines(id, seasons[s])));
+      }
     }
     return draw(id, event || situation, merged, rng);
   }

@@ -142,7 +142,7 @@ const BEFORE = '2026-10-21T23:59:59+07:00';
 
 test('der Halloween-Tisch hat ein festes Zeitfenster in Bangkok', () => {
   assert.equal(Orte.SEASON_ZONE, 'Asia/Bangkok');
-  assert.equal(Orte.SEASONS.length, 1);
+  assert.deepEqual(Orte.SEASONS.map((season) => season.id), ['halloween', 'nikolaus', 'weihnachten']);
   const halloween = Orte.SEASONS[0];
   assert.equal(halloween.id, 'halloween');
   assert.equal(halloween.name, 'Halloween-Tisch');
@@ -209,4 +209,73 @@ test('zur Halloween-Zeit kommen ein paar freundliche Saisonzeilen dazu', () => {
     const line = Sprueche.line('horst', 'welcome', [], Math.random, AFTER);
     assert.equal(seasonal.includes(line), false, line);
   }
+});
+
+test('Nikolaus und Weihnachten folgen aufeinander und lassen sich vorher ansehen', () => {
+  const nikolaus = Orte.SEASONS[1];
+  const weihnachten = Orte.SEASONS[2];
+  assert.equal(nikolaus.name, 'Nikolaus-Tisch');
+  assert.equal(nikolaus.badge, 'Nur bis 6. Dezember');
+  assert.equal(nikolaus.from, '2026-11-27T00:00:00+07:00');
+  assert.equal(nikolaus.until, '2026-12-06T23:59:59+07:00');
+  assert.equal(weihnachten.name, 'Weihnachtstisch');
+  assert.equal(weihnachten.badge, 'Nur bis 26. Dezember');
+  assert.equal(weihnachten.from, '2026-12-07T00:00:00+07:00');
+  assert.equal(weihnachten.until, '2026-12-26T23:59:59+07:00');
+  const nik = '2026-12-01T12:00:00+07:00';
+  const lastNik = '2026-12-06T23:59:59+07:00';
+  const firstTree = '2026-12-07T00:00:00+07:00';
+  const lastTree = '2026-12-26T23:59:59+07:00';
+  const afterTree = '2026-12-27T00:00:00+07:00';
+  assert.equal(Orte.seasonOpen('nikolaus', nikolaus.from), true);
+  assert.equal(Orte.seasonOpen('nikolaus', lastNik), true);
+  assert.equal(Orte.seasonOpen('weihnachten', lastNik), false);
+  assert.equal(Orte.seasonOpen('nikolaus', firstTree), false);
+  assert.equal(Orte.seasonOpen('weihnachten', firstTree), true);
+  assert.equal(Orte.seasonOpen('weihnachten', lastTree), true);
+  assert.equal(Orte.seasonOpen('weihnachten', afterTree), false);
+  assert.equal(Orte.catalog(INSIDE).some((ort) => ort.id === 'nikolaus'), false);
+  assert.equal(Orte.previewId('?saison=nikolaus'), 'nikolaus');
+  assert.equal(Orte.previewId('?quelle=pwa&saison=weihnachten'), 'weihnachten');
+  assert.equal(Orte.previewId('?saison=unbekannt'), '');
+  assert.equal(Orte.seasonOpen('weihnachten', INSIDE, '?saison=weihnachten'), true);
+  assert.equal(Orte.seasonOpen('nikolaus', INSIDE, '?saison=weihnachten'), false);
+  assert.ok(Orte.catalog(INSIDE, '?saison=nikolaus').some((ort) => ort.id === 'nikolaus'));
+  const storage = mem();
+  assert.equal(Orte.write(storage, 'nikolaus', INSIDE, '?saison=nikolaus'), 'nikolaus');
+  assert.equal(storage.getItem('sf-ort'), 'nikolaus');
+  assert.equal(Orte.read(storage, INSIDE), '');
+  assert.equal(storage.getItem('sf-ort'), '');
+  assert.equal(Orte.read(storage, nik), '');
+  Orte.write(storage, 'nikolaus', nik);
+  assert.equal(Orte.read(storage, afterTree), '');
+  Orte.write(storage, 'weihnachten', firstTree);
+  assert.equal(Orte.read(storage, afterTree), '');
+  const css = fs.readFileSync(path.join(root, 'public/assets/orte.css'), 'utf8');
+  assert.match(css, /html\[data-ort="nikolaus"\]/);
+  assert.match(css, /html\[data-ort="weihnachten"\]/);
+  assert.match(css, /ort-snow/);
+  for (const id of Sprueche.characters) {
+    for (const season of ['nikolaus', 'weihnachten']) {
+      const lines = Sprueche.seasonLines(id, season);
+      assert.equal(lines.length, 2, id + ' ' + season);
+      for (const line of lines) {
+        assert.doesNotMatch(line, /—|–/);
+        assert.doesNotMatch(line, /grok|openai|eleven|chatgpt|politik|partei|einkommen|blut|horror|grusel|zombie/i, line);
+      }
+    }
+  }
+  const all = [];
+  for (const season of ['halloween', 'nikolaus', 'weihnachten']) {
+    for (const id of Sprueche.characters) all.push(...Sprueche.seasonLines(id, season));
+  }
+  assert.equal(new Set(all).size, all.length);
+  Sprueche.reset({ store: mem(), wipe: true });
+  const duringNik = new Set();
+  for (let i = 0; i < 40; i++) duringNik.add(Sprueche.line('hilde', 'welcome', [], Math.random, nik));
+  assert.ok([...duringNik].some((line) => /Stiefel|Nikolaus|Mandarine|Nuss/.test(line)));
+  Sprueche.reset({ store: mem(), wipe: true });
+  const duringTree = new Set();
+  for (let i = 0; i < 40; i++) duringTree.add(Sprueche.line('lena', 'welcome', [], Math.random, '2026-12-20T18:00:00+07:00'));
+  assert.ok([...duringTree].some((line) => /Lebkuchen|Lichter|Schnee|Weihnachten|Baum/.test(line)));
 });

@@ -97,7 +97,7 @@
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.ort-glow{display:none;pointer-events:none}
+.ort-glow,.ort-snow{display:none;pointer-events:none}
 .ort-settings{grid-column:1 / -1}
 .ort-settings .note{margin:8px 2px 0}
 .ort-intro-btn{
@@ -289,7 +289,108 @@ html[data-ort="halloween"] .ort-glow{
   70%{opacity:.62}
 }
 @media (prefers-reduced-motion:reduce){
-  html[data-ort="halloween"] .ort-glow{animation:none;opacity:.8}
+  html[data-ort="halloween"] .ort-glow,
+  html[data-ort="nikolaus"] .ort-glow{animation:none;opacity:.8}
+  html[data-ort="weihnachten"] .ort-snow{animation:none}
+}
+
+html[data-ort="nikolaus"] .app,
+.ort-thumb.is-nikolaus{
+  background-color:#2a140e;
+  background-image:
+    linear-gradient(180deg, rgba(28,12,8,.3), rgba(16,8,6,.58)),
+    radial-gradient(ellipse 40px 16px at 20% 7%, #f7f1e4 0 62%, transparent 64%),
+    linear-gradient(#c42932, #8e1c24),
+    radial-gradient(ellipse 28px 14px at 78% 16%, #f0d7a2 0 55%, transparent 58%),
+    linear-gradient(#6a3a1c, #3d2412),
+    radial-gradient(circle at 42% 13%, #f08a28 0 11px, #c45c12 12px, transparent 13px),
+    radial-gradient(circle at 50% 16%, #ef7d22 0 8px, #c45c12 9px, transparent 10px),
+    radial-gradient(circle at 60% 11%, #d4b483 0 5px, #8a6840 6px, transparent 7px),
+    radial-gradient(circle at 66% 15%, #c4a06a 0 4px, transparent 5px),
+    radial-gradient(ellipse at 50% 0%, rgba(255,186,96,.42), transparent 46%),
+    linear-gradient(180deg, #7a2430 0%, #4a2218 42%, #2a140e 100%);
+  background-repeat:no-repeat;
+  background-size:auto, auto, 26px 36px, auto, 20px 46px, auto, auto, auto, auto, auto, auto;
+  background-position:center, 20% 5%, 20% 12%, 78% 14%, 78% 8%, center, center, center, center, center, center;
+}
+.ort-thumb.is-nikolaus{
+  background-image:
+    radial-gradient(ellipse 28% 14% at 24% 22%, #f7f1e4 0 62%, transparent 64%),
+    linear-gradient(#c42932, #8e1c24),
+    radial-gradient(ellipse 22% 16% at 74% 58%, #f0d7a2 0 50%, transparent 54%),
+    linear-gradient(#6a3a1c, #3d2412),
+    radial-gradient(circle at 40% 62%, #f08a28 0 12px, #c45c12 13px, transparent 14px),
+    radial-gradient(circle at 55% 68%, #ef7d22 0 9px, transparent 10px),
+    radial-gradient(circle at 46% 48%, #d4b483 0 5px, transparent 6px),
+    radial-gradient(ellipse at 50% 0%, rgba(255,186,96,.5), transparent 55%),
+    linear-gradient(180deg, #8a2c38 0%, #5a2a1c 48%, #2a140e 100%);
+  background-size:auto, 22% 28%, auto, 16% 34%, auto, auto, auto, auto, auto;
+  background-position:center, 24% 18%, center, 74% 42%, center, center, center, center, center;
+  background-repeat:no-repeat;
+}
+html[data-ort="nikolaus"] .ort-glow{
+  display:block;
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height:74px;
+  z-index:3;
+  background:
+    radial-gradient(circle at 20% 48%, rgba(255,210,120,.9) 0 3px, rgba(255,140,40,.25) 16px, transparent 30px),
+    radial-gradient(circle at 76% 40%, rgba(255,196,110,.85) 0 3px, rgba(196,40,48,.2) 18px, transparent 32px);
+  animation:ort-candle 3s ease-in-out infinite;
+}
+
+html[data-ort="weihnachten"] .app,
+.ort-thumb.is-weihnachten{
+  background-color:#102018;
+  background-image:
+    linear-gradient(180deg, rgba(10,16,12,.32), rgba(8,12,10,.6)),
+    radial-gradient(circle at 46% 8%, #f2d27a 0 3px, transparent 4px),
+    radial-gradient(circle at 52% 12%, #e25a4a 0 3px, transparent 4px),
+    radial-gradient(circle at 40% 14%, #f7f1e3 0 2px, transparent 3.5px),
+    radial-gradient(ellipse 90px 70px at 50% 16%, #1f6b3a 0 58%, transparent 60%),
+    radial-gradient(ellipse 54px 46px at 50% 10%, #2f8a4a 0 60%, transparent 62%),
+    linear-gradient(#6a3a1c, #6a3a1c),
+    radial-gradient(circle at 30% 18%, #c4783a 0 8px, #8a4a22 9px, transparent 10px),
+    radial-gradient(circle at 68% 16%, #d4924a 0 7px, #8a4a22 8px, transparent 9px),
+    radial-gradient(ellipse at 50% 0%, rgba(255,210,140,.28), transparent 40%),
+    linear-gradient(180deg, #14324a 0%, #1a3a2c 36%, #1a2418 100%);
+  background-repeat:no-repeat;
+  background-size:auto, auto, auto, auto, auto, auto, 14px 28px, auto, auto, auto, auto;
+  background-position:center, center, center, center, center, center, 50% 22%, center, center, center, center;
+}
+.ort-thumb.is-weihnachten{
+  background-image:
+    radial-gradient(circle at 46% 28%, #f2d27a 0 3px, transparent 4px),
+    radial-gradient(circle at 54% 36%, #e25a4a 0 3px, transparent 4px),
+    radial-gradient(circle at 40% 40%, #f7f1e3 0 2px, transparent 3.5px),
+    radial-gradient(ellipse 46% 42% at 50% 58%, #1f6b3a 0 58%, transparent 60%),
+    radial-gradient(ellipse 28% 30% at 50% 40%, #2f8a4a 0 60%, transparent 62%),
+    linear-gradient(#6a3a1c, #6a3a1c),
+    radial-gradient(circle at 28% 72%, #c4783a 0 8px, #8a4a22 9px, transparent 10px),
+    radial-gradient(ellipse at 50% 0%, rgba(255,210,140,.35), transparent 50%),
+    linear-gradient(180deg, #16344c 0%, #1c4030 40%, #142016 100%);
+  background-size:auto, auto, auto, auto, auto, 12% 22%, auto, auto, auto;
+  background-position:center, center, center, center, center, 50% 72%, center, center, center;
+  background-repeat:no-repeat;
+}
+html[data-ort="weihnachten"] .tabletop{z-index:2}
+html[data-ort="weihnachten"] .ort-snow{
+  display:block;
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.9) 0 1.4px, transparent 2.1px),
+    radial-gradient(circle, rgba(255,255,255,.55) 0 1.1px, transparent 1.8px);
+  background-size:86px 120px, 128px 150px;
+  animation:ort-snow 10s linear infinite;
+}
+@keyframes ort-snow{
+  from{background-position:0 -40px, 30px -20px}
+  to{background-position:18px 220px, -12px 260px}
 }
 
 @media (max-width:760px){
@@ -305,7 +406,8 @@ html[data-ort="halloween"] .ort-glow{
   }
   html[data-ort] .tabletop{inset:52px 10px 8px}
   .ort-banner{top:6px;font-size:.74rem}
-  html[data-ort="halloween"] .ort-glow{height:46px}
+  html[data-ort="halloween"] .ort-glow,
+  html[data-ort="nikolaus"] .ort-glow{height:46px}
   .ort-grid{grid-template-columns:repeat(2, minmax(0, 1fr));gap:6px}
   .ort-thumb{aspect-ratio:2/1}
   .ort-name{font-size:.72rem}
