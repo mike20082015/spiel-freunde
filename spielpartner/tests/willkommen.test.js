@@ -22,10 +22,17 @@ function session(name, createdAt) {
 }
 
 test('der Gruß nennt den Spielernamen und bleibt herzlich', () => {
-  const line = W.greeting('Helga');
-  assert.strictEqual(line, 'Willkommen bei Spiel-Freunde, Helga! Das ganze Avatar-Team freut sich auf spannende Spiele mit Dir.');
+  assert.deepStrictEqual(W.lines('Michael'), [
+    'Willkommen bei Spiel-Freunde.',
+    'Schön, dass Du da bist, Michael!',
+    'Das ganze Avatar-Team freut sich auf spannende Spiele mit Dir.'
+  ]);
+  assert.doesNotMatch(W.lines('Michael')[0], /Michael/);
+  assert.strictEqual(W.greeting('Helga'), 'Willkommen bei Spiel-Freunde. Schön, dass Du da bist, Helga! Das ganze Avatar-Team freut sich auf spannende Spiele mit Dir.');
+  assert.ok(W.PAUSE_VOR_DEM_NAMEN >= 500);
   assert.match(W.hintText(), /Zuschauen & Lernen/);
-  assert.match(W.markup('Helga'), /Willkommen bei Spiel-Freunde, Helga!/);
+  assert.match(W.markup('Helga'), /Willkommen bei Spiel-Freunde\./);
+  assert.match(W.markup('Helga'), /Schön, dass Du da bist, Helga!/);
   assert.match(W.markup('Helga'), /Horst Kaluppke/);
   assert.match(W.markup('Helga'), /Horst begrüßt Dich/);
   assert.match(W.markup('Helga'), /Los geht's/);
@@ -35,12 +42,17 @@ test('der Gruß nennt den Spielernamen und bleibt herzlich', () => {
   assert.doesNotMatch(W.markup('<b>'), /<b>/);
   const src = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/willkommen.js'), 'utf8');
   const css = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/willkommen.css'), 'utf8');
+  const talk = fs.readFileSync(path.join(__dirname, '../../public/skat/js/talk.js'), 'utf8');
   assert.doesNotMatch(src, VERBOTEN);
   assert.doesNotMatch(css, VERBOTEN);
+  assert.doesNotMatch(src, /speechSynthesis|SpeechSynthesisUtterance/);
+  assert.match(src, /\/api\/sf\/tts', '\/api\/tts', '\/api\/default\/tts'/);
+  assert.match(talk, /\/api\/sf\/tts', '\/api\/tts', '\/api\/default\/tts'/);
+  assert.match(src, /character:\s*'horst'/);
+  assert.match(src, /abortSignal\(12000\)/);
   assert.match(css, /max-width:\s*640px/);
   assert.match(css, /orientation:\s*portrait/);
   assert.match(css, /orientation:\s*landscape/);
-  assert.match(src, /character:\s*'horst'/);
 });
 
 test('eine neue Anmeldung öffnet die Karte einmal, eine spätere nicht', () => {
