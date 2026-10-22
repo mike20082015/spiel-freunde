@@ -125,6 +125,9 @@ test('Stände und gutgeschriebene Wochen', () => {
   assert.match(Invites.formMarkup({ slotsLeft: 0 }), /schon 5 Einladungen/);
   assert.match(Invites.formMarkup({ slotsLeft: 2, inviterName: 'Michael', game: 'skat' }), /Michael lädt Dich zum Skat ein/);
   assert.match(Invites.loginMarkup(), /Anmeldelink/);
+  assert.match(Invites.loginMarkup(), /Spam- oder Werbe-Ordner/);
+  assert.match(Invites.sentMarkup('helga@example.com'), /E-Mail erneut senden/);
+  assert.match(Invites.sentMarkup('helga@example.com'), /helga@example.com/);
   assert.match(Invites.messageFor('self_invite'), /nicht einladen/);
   assert.match(Invites.messageFor('rate_limited'), /zu oft/);
   assert.match(Invites.messageFor('not_found'), /noch nicht erreichbar/);

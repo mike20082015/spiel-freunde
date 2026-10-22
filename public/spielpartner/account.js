@@ -441,6 +441,17 @@
     if (wall && typeof wall.open === 'function') wall.open();
   }
 
+  var MAIL_HINT = 'Keine E-Mail bekommen? Bitte schau auch im Spam- oder Werbe-Ordner nach, bei Gmail, GMX, web.de und T-Online, und markiere sie als „Kein Spam“.';
+
+  function mailHintMarkup() {
+    return '<p class="pw-spam">' + MAIL_HINT + '</p>';
+  }
+
+  function resendButton() {
+    return '<button type="button" class="btn btn-gold pw-resend" data-resend>E-Mail erneut senden</button>' +
+      '<p class="pw-status" data-resend-status role="status"></p>';
+  }
+
   function signupMarkup() {
     return '<p class="pw-kicker">Eine Runde hast Du</p>' +
       '<h3 id="signup-title">Setz Dich richtig dazu</h3>' +
@@ -455,6 +466,7 @@
       '<button type="submit" class="btn btn-gold">Link schicken</button>' +
       '<p class="pw-status" data-status role="status"></p>' +
       '</form>' +
+      mailHintMarkup() +
       '<div class="pw-actions"><button type="button" class="btn btn-ghost-dark" data-signup-close>Später</button></div>';
   }
 
@@ -504,8 +516,27 @@
       '<h3 id="signup-title">Der Link ist unterwegs</h3>' +
       '<p class="pw-lead">Schau in Dein Postfach' + (email ? ' bei ' + escapeText(email) : '') +
       '. Wir schicken Dir einen Anmeldelink, kein Passwort nötig.</p>' +
+      mailHintMarkup() +
+      resendButton() +
       (standalone ? pasteMarkup() : '') +
       '<div class="pw-actions"><button type="button" class="btn btn-ghost-dark" data-signup-close>Später</button></div>';
+  }
+
+  function bindResend(root, storage, fetcher, input) {
+    var again = root.querySelector('[data-resend]');
+    if (!again) return;
+    again.addEventListener('click', function () {
+      var status = root.querySelector('[data-resend-status]');
+      again.disabled = true;
+      if (status) status.textContent = '';
+      requestLink(storage, input, Date.now(), fetcher).then(function () {
+        again.disabled = false;
+        if (status) status.textContent = 'Wir haben die Mail noch einmal geschickt.';
+      }).catch(function (err) {
+        again.disabled = false;
+        if (status) status.textContent = (err && err.userMessage) || messageFor(err && err.code);
+      });
+    });
   }
 
   function escapeText(value) {
@@ -554,6 +585,7 @@
         root.innerHTML = sentMarkup(result.email, { standalone: standaloneNow() });
         var later = root.querySelector('[data-signup-close]');
         if (later) later.addEventListener('click', function () { modal.hidden = true; });
+        bindResend(root, storage, fetcher, { email: result.email, name: result.name });
         bindPaste(root, storage, fetcher, function (session) {
           var name = session && session.player ? session.player.displayName : '';
           root.innerHTML = '<p class="pw-kicker">Angemeldet</p>' +
@@ -873,6 +905,7 @@
     finish: finish,
     hint: hint,
     openSignup: openSignup,
+    MAIL_HINT: MAIL_HINT,
     signupMarkup: signupMarkup,
     sentMarkup: sentMarkup,
     pasteMarkup: pasteMarkup,

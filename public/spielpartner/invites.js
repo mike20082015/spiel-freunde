@@ -302,6 +302,14 @@
       '</form>';
   }
 
+  function mailHintMarkup() {
+    var Account = account();
+    var text = Account && Account.MAIL_HINT
+      ? Account.MAIL_HINT
+      : 'Keine E-Mail bekommen? Bitte schau auch im Spam- oder Werbe-Ordner nach, bei Gmail, GMX, web.de und T-Online, und markiere sie als „Kein Spam“.';
+    return '<p class="pw-spam">' + text + '</p>';
+  }
+
   function loginMarkup() {
     return '<form class="invite-form" data-invite-login>' +
       '<p class="pw-lead">Zum Einladen brauchst Du ein Konto. Wir schicken Dir einen Anmeldelink, kein Passwort nötig.</p>' +
@@ -309,13 +317,17 @@
       '<label class="pw-field">Spielername<input data-name type="text" autocomplete="nickname" maxlength="24" required placeholder="Wie Du am Tisch heißt"></label>' +
       '<p class="pw-status" data-invite-status role="status"></p>' +
       '<button type="submit" class="btn btn-gold">Anmeldelink schicken</button>' +
+      mailHintMarkup() +
       '</form>';
   }
 
   function sentMarkup(email) {
     return '<p class="pw-lead">Der Anmeldelink ist unterwegs' +
       (email ? ' an ' + escapeText(email) : '') +
-      '. Danach kannst Du hier Deine Freunde einladen.</p>';
+      '. Danach kannst Du hier Deine Freunde einladen.</p>' +
+      mailHintMarkup() +
+      '<button type="button" class="btn btn-gold pw-resend" data-resend>E-Mail erneut senden</button>' +
+      '<p class="pw-status" data-resend-status role="status"></p>';
   }
 
   function appMarkup(state) {
@@ -462,6 +474,24 @@
           returnPath: '/freunde/'
         }, Date.now(), fetchFn).then(function (result) {
           root.innerHTML = sentMarkup(result.email);
+          var again = root.querySelector('[data-resend]');
+          if (!again) return;
+          again.addEventListener('click', function () {
+            var note = root.querySelector('[data-resend-status]');
+            again.disabled = true;
+            if (note) note.textContent = '';
+            Account.requestLink(store, {
+              email: result.email,
+              name: result.name,
+              returnPath: '/freunde/'
+            }, Date.now(), fetchFn).then(function () {
+              again.disabled = false;
+              if (note) note.textContent = 'Wir haben die Mail noch einmal geschickt.';
+            }).catch(function (err) {
+              again.disabled = false;
+              if (note) note.textContent = err.userMessage || messageFor(err.code);
+            });
+          });
         }).catch(function (err) {
           if (button) button.disabled = false;
           if (status) status.textContent = err.userMessage || messageFor(err.code);
@@ -543,6 +573,7 @@
     summaryMarkup: summaryMarkup,
     formMarkup: formMarkup,
     loginMarkup: loginMarkup,
+    sentMarkup: sentMarkup,
     appMarkup: appMarkup,
     listInvites: listInvites,
     createInvite: createInvite,
