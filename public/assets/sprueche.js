@@ -2152,6 +2152,398 @@
     partnerAsk: 'banter', answerYes: 'banter', answerNo: 'banter', schweinchen: 'banter'
   };
 
+  /*
+   * Kurze Reizworte. Die Zahl und der Spielname bleiben fest.
+   * Der alte eine Satz steckt mit im Vorrat, damit die vorhandene Aufnahme
+   * weiter passt, wenn genau dieser Satz gezogen wird.
+   */
+  var CALLS = {
+    standard: {
+      pass: [
+        'Ich passe.',
+        'Diesmal nicht.',
+        'Ohne mich.',
+        'Ich lasse es.',
+        'Heute passe ich.',
+        'Ich warte lieber.',
+        'Passe. Ganz in Ruhe.',
+        'Ich steige aus.'
+      ],
+      hold: [
+        'Ja.',
+        'Ich halte.',
+        'Ich bleibe dabei.',
+        'Ja, ich gehe mit.',
+        'Ich halte mit.',
+        'Gern, weiter.',
+        'Ich bleibe.',
+        'Ja, in Ruhe.'
+      ],
+      open: [
+        'Ich spiele.',
+        'Dann spiele ich.',
+        'Das Spiel nehme ich.',
+        'Ich fange an.',
+        'Nun spiele ich.',
+        'Das wird meins.',
+        'Ich übernehme.',
+        'So, ich spiele.'
+      ]
+    },
+    horst: {
+      pass: [
+        'Weg.',
+        'Ick passe.',
+        'Nich mit dem Blatt.',
+        'Diesmal lass ick.',
+        'Passe. Ehrlich.',
+        'Ohne mich.',
+        'Ick steig aus.',
+        'Weg, diesmal.'
+      ],
+      hold: [
+        'Jo.',
+        'Ick halte.',
+        'Ja, ick bleib.',
+        'Mitgegangen.',
+        'Ick bleib dabei.',
+        'Jo, weiter.',
+        'Ick halt mit.',
+        'Na jut, ick halte.'
+      ],
+      open: [
+        'Na jut, ick spiele.',
+        'Denn spiel ick.',
+        'Ick nehm das Spiel.',
+        'Los, ick spiele.',
+        'Det Spiel is meins.',
+        'Ick fang an.',
+        'Na schön, ick spiele.',
+        'Denn mal los.'
+      ]
+    },
+    margarethe: {
+      pass: [
+        'Ich passe.',
+        'Diesmal nicht, Schätzchen.',
+        'Ich halte mich zurück.',
+        'Ohne mich, diesmal.',
+        'Ich lasse Euch den Vortritt.',
+        'Passe. Mit Haltung.',
+        'Ich steige aus.',
+        'Heute passe ich.'
+      ],
+      hold: [
+        'Ja.',
+        'Ich halte.',
+        'Ich bleibe dabei.',
+        'Ja, ich gehe mit.',
+        'Ich halte mit.',
+        'Aber gern.',
+        'Ich bleibe.',
+        'Ja, weiter.'
+      ],
+      open: [
+        'Dann spiele ich eben.',
+        'Ich spiele.',
+        'Das Spiel nehme ich.',
+        'Ich fange an.',
+        'Nun spiele ich.',
+        'Das wird meins.',
+        'Ich übernehme.',
+        'So, ich spiele.'
+      ]
+    },
+    urs: {
+      pass: [
+        'Ich passe.',
+        'Diesmal nicht.',
+        'Ich lasse es ruhig.',
+        'Ohne mich, gelassen.',
+        'Ich warte lieber.',
+        'Passe. Ganz ruhig.',
+        'Ich steige aus.',
+        'Heute nicht, guet so.'
+      ],
+      hold: [
+        'Ja.',
+        'Ich halte.',
+        'Ich bleibe dabei.',
+        'Ja, ich gehe mit.',
+        'Ich halte mit.',
+        'Gern, weiter.',
+        'Ich bleibe.',
+        'Ja, in Ruhe.'
+      ],
+      open: [
+        'Ich spiele.',
+        'Dann spiele ich.',
+        'Das Spiel nehme ich.',
+        'Ich fange an.',
+        'Nun spiele ich.',
+        'Das wird meins.',
+        'Ich übernehme.',
+        'So, ich spiele.'
+      ]
+    },
+    vreni: {
+      pass: [
+        'Ich passe.',
+        'Diesmal nicht, oder?',
+        'Ich lasse es.',
+        'Ohne mich, diesmal.',
+        'Lieber warten.',
+        'Passe. Ganz locker.',
+        'Ich steige aus.',
+        'Heute nicht.'
+      ],
+      hold: [
+        'Ja.',
+        'Ich halte.',
+        'Ich bleibe dabei.',
+        'Ja, ich gehe mit.',
+        'Ich halte mit.',
+        'Aber gern.',
+        'Ich bleibe.',
+        'Ja, weiter, oder?'
+      ],
+      open: [
+        'Ich spiele.',
+        'Dann spiele ich.',
+        'Das Spiel nehme ich.',
+        'Ich fange an.',
+        'Nun spiele ich.',
+        'Das wird meins.',
+        'Ich übernehme.',
+        'So, ich spiele.'
+      ]
+    },
+    sepp: {
+      pass: [
+        'Ich passe.',
+        'Basst, ich lass.',
+        'Diesmal nicht.',
+        'Ohne mi.',
+        'I lass euch vor.',
+        'Passe. Ganz gmiadlich.',
+        'I steig aus.',
+        'Heute ned.'
+      ],
+      hold: [
+        'Ja.',
+        'I halt.',
+        'I bleib dabei.',
+        'Ja, i geh mit.',
+        'I halt mit.',
+        'Gern, weiter.',
+        'I bleib.',
+        'Ja, in Ruh.'
+      ],
+      open: [
+        'Ich spiele.',
+        'Dann spiel i.',
+        'Des Spiel nimm i.',
+        'I fang an.',
+        'Nun spiel i.',
+        'Des wird meins.',
+        'I übernimm.',
+        'So, i spiel.'
+      ]
+    },
+    hilde: {
+      pass: [
+        'Ich passe.',
+        'Diesmal nicht, Kind.',
+        'Ich lasse es.',
+        'Ohne mich, in Ruhe.',
+        'Ich warte lieber.',
+        'Passe. Der Kaffee bleibt warm.',
+        'Ich steige aus.',
+        'Heute passe ich.'
+      ],
+      hold: [
+        'Ja.',
+        'Ich halte.',
+        'Ich bleibe dabei.',
+        'Ja, ich gehe mit.',
+        'Ich halte mit.',
+        'Gern, Kind.',
+        'Ich bleibe.',
+        'Ja, weiter.'
+      ],
+      open: [
+        'Ich spiele.',
+        'Dann spiele ich.',
+        'Das Spiel nehme ich.',
+        'Ich fange an.',
+        'Nun spiele ich.',
+        'Das wird meins.',
+        'Ich übernehme.',
+        'So, ich spiele.'
+      ]
+    },
+    lena: {
+      pass: [
+        'Ich passe.',
+        'Diesmal nicht.',
+        'Ohne mich.',
+        'Ich lasse es fair.',
+        'Heute passe ich.',
+        'Ich warte lieber.',
+        'Passe. Ganz sportlich.',
+        'Ich steige aus.'
+      ],
+      hold: [
+        'Ja.',
+        'Ich halte.',
+        'Ich bleibe dabei.',
+        'Ja, ich gehe mit.',
+        'Ich halte mit.',
+        'Gern, weiter.',
+        'Ich bleibe.',
+        'Ja, fair weiter.'
+      ],
+      open: [
+        'Ich spiele.',
+        'Dann spiele ich.',
+        'Das Spiel nehme ich.',
+        'Ich fange an.',
+        'Nun spiele ich.',
+        'Das wird meins.',
+        'Ich übernehme.',
+        'So, ich spiele.'
+      ]
+    },
+    jonas: {
+      pass: [
+        'Ich passe.',
+        'Diesmal nicht.',
+        'Ohne mich, danke.',
+        'Ich lasse euch vor.',
+        'Heute passe ich.',
+        'Ich warte lieber.',
+        'Passe. Ganz höflich.',
+        'Ich steige aus.'
+      ],
+      hold: [
+        'Ja.',
+        'Ich halte.',
+        'Ich bleibe dabei.',
+        'Ja, ich gehe mit.',
+        'Ich halte mit.',
+        'Gern, weiter.',
+        'Ich bleibe.',
+        'Ja, bitte weiter.'
+      ],
+      open: [
+        'Ich spiele.',
+        'Dann spiele ich.',
+        'Das Spiel nehme ich.',
+        'Ich fange an.',
+        'Nun spiele ich.',
+        'Das wird meins.',
+        'Ich übernehme.',
+        'So, ich spiele.'
+      ]
+    },
+    oemer: {
+      pass: [
+        'Ich passe.',
+        'Diesmal nicht.',
+        'Ohne mich, gern so.',
+        'Ich lasse euch den Platz.',
+        'Heute passe ich.',
+        'Ich warte lieber.',
+        'Passe. Ganz herzlich.',
+        'Ich steige aus.'
+      ],
+      hold: [
+        'Ja.',
+        'Ich halte.',
+        'Ich bleibe dabei.',
+        'Ja, ich gehe mit.',
+        'Ich halte mit.',
+        'Aber gern.',
+        'Ich bleibe.',
+        'Ja, kommt mit.'
+      ],
+      open: [
+        'Ich spiele.',
+        'Dann spiele ich.',
+        'Das Spiel nehme ich.',
+        'Ich fange an.',
+        'Nun spiele ich.',
+        'Das wird meins.',
+        'Ich übernehme.',
+        'So, ich spiele.'
+      ]
+    },
+    ruediger: {
+      pass: [
+        'Ich passe.',
+        'Diesmal nicht.',
+        'Ohne mich.',
+        'Ich lasse es.',
+        'Heute passe ich.',
+        'Das ist die ruhige Wahl.',
+        'Passe. Ganz klar.',
+        'Ich steige aus.'
+      ],
+      hold: [
+        'Ja.',
+        'Ich halte.',
+        'Ich bleibe dabei.',
+        'Ja, ich gehe mit.',
+        'Ich halte mit.',
+        'Gern, weiter.',
+        'Ich bleibe.',
+        'Ja, genau so.'
+      ],
+      open: [
+        'Ich spiele.',
+        'Dann spiele ich.',
+        'Das Spiel nehme ich.',
+        'Ich fange an.',
+        'Nun spiele ich.',
+        'Das wird meins.',
+        'Ich übernehme.',
+        'So, ich spiele.'
+      ]
+    },
+    chantal: {
+      pass: [
+        'Ich passe.',
+        'Diesmal nich.',
+        'Ohne mich, ne.',
+        'Ich lass dat.',
+        'Heute pass ich.',
+        'Lieber warten.',
+        'Passe. Ganz locker.',
+        'Ich steig aus.'
+      ],
+      hold: [
+        'Ja.',
+        'Ich halt.',
+        'Ich bleib dabei.',
+        'Ja, ich geh mit.',
+        'Ich halt mit.',
+        'Aber gern.',
+        'Ich bleib.',
+        'Ja, weiter, ne.'
+      ],
+      open: [
+        'Ich spiele.',
+        'Dann spiel ich.',
+        'Dat Spiel nehm ich.',
+        'Ich fang an.',
+        'Nun spiel ich.',
+        'Dat wird meins.',
+        'Ich übernehm.',
+        'So, ich spiel.'
+      ]
+    }
+  };
+
   var KEY = 'sf-sprueche-v1';
   var bags = {};
   var recent = {};
@@ -2233,6 +2625,18 @@
     var bank = REPLIES[canon(id)] || {};
     var extra = bank[kind] || bank.default || [];
     return unique([].concat(local || [], extra));
+  }
+
+  function callPool(id, token, local) {
+    var own = (CALLS[canon(id)] || {})[token];
+    var base = own && own.length ? own : ((CALLS.standard || {})[token] || []);
+    return unique([].concat(local || [], base));
+  }
+
+  function call(id, token, local, rng) {
+    var merged = callPool(id, token, local);
+    if (!merged.length) return null;
+    return draw(id, 'call:' + token, merged, rng);
   }
 
   function draw(id, bagKey, poolLines, rng) {
@@ -2326,8 +2730,10 @@
     situationOf: situationOf,
     pool: pool,
     replyPool: replyPool,
+    callPool: callPool,
     line: line,
     reply: reply,
+    call: call,
     allow: allow,
     reset: reset,
     characters: Object.keys(POOLS),

@@ -64,6 +64,36 @@ test('zwei Avatare sagen nicht denselben Satz direkt hintereinander', () => {
   assert.ok(shared.includes(second));
 });
 
+test('Reizworte kommen aus dem Beutel und hängen nicht am ersten Satz', () => {
+  const box = store();
+  Sprueche.reset({ store: box, wipe: true });
+  for (const id of Sprueche.characters) {
+    for (const token of ['pass', 'hold', 'open']) {
+      const lines = Sprueche.callPool(id, token);
+      assert.ok(lines.length >= 8, id + ' ' + token + ' ' + lines.length);
+      assert.equal(new Set(lines).size, lines.length, id + ' ' + token);
+      for (const line of lines) {
+        assert.doesNotMatch(line, /—|–/);
+        assert.doesNotMatch(line, /grok|openai|eleven|xai|politik|partei|einkommen/i);
+      }
+    }
+  }
+  assert.ok(Sprueche.callPool('horst', 'pass').includes('Weg.'));
+  assert.ok(Sprueche.callPool('horst', 'hold').includes('Jo.'));
+  assert.ok(Sprueche.callPool('horst', 'open').includes('Na jut, ick spiele.'));
+  assert.ok(Sprueche.callPool('margarethe', 'open').includes('Dann spiele ich eben.'));
+  assert.ok(Sprueche.callPool('oemer', 'pass').includes('Ich passe.'));
+  const seen = [];
+  const pool = Sprueche.callPool('horst', 'pass');
+  for (let i = 0; i < pool.length; i++) {
+    const line = Sprueche.call('horst', 'pass', ['Weg.'], () => 0.17);
+    assert.equal(seen.includes(line), false, line);
+    seen.push(line);
+  }
+  assert.equal(seen.length, pool.length);
+  assert.ok(seen.some((line) => line !== 'Weg.'));
+});
+
 test('Bemerkungen haben Abstand, erzwungene Ansagen bleiben', () => {
   Sprueche.reset({ store: store(), wipe: true });
   assert.equal(Sprueche.allow({ force: true, now: 1000, rng: () => 0 }), true);
