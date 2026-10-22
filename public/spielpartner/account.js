@@ -371,7 +371,10 @@
       }
       var session = storeVerified(storage, result.body);
       return refresh(storage, now, fetcher).then(function () {
-        return readSession(storage, now) || session;
+        var current = readSession(storage, now) || session;
+        noteWillkommen(storage, current, result.body, now);
+        showWillkommen(storage);
+        return current;
       });
     }).catch(function (err) {
       if (err && err.message === 'netz') {
@@ -743,6 +746,27 @@
     catch (err) { /* alter Browser */ }
   }
 
+  function willkommenApi() {
+    try {
+      if (typeof window !== 'undefined' && window.SpielpartnerWillkommen) return window.SpielpartnerWillkommen;
+    } catch (err) { /* kein Fenster */ }
+    return null;
+  }
+
+  function noteWillkommen(storage, session, body, now) {
+    var W = willkommenApi();
+    if (!W || typeof W.note !== 'function') return false;
+    try { return !!W.note(storage, session, body, now); }
+    catch (err) { return false; }
+  }
+
+  function showWillkommen(storage) {
+    var W = willkommenApi();
+    if (!W || typeof W.show !== 'function') return false;
+    try { return !!W.show(storage); }
+    catch (err) { return false; }
+  }
+
   function ensureCss() {
     if (typeof document === 'undefined') return;
     if (document.querySelector('link[data-sf-account-css], link[href$="/spielpartner/account.css"], link[href$="account.css"]')) return;
@@ -762,6 +786,7 @@
     }
     if (!store) return null;
     mountHeader(store);
+    showWillkommen(store);
     if (booted) return readSession(store, now);
     booted = true;
     var session = readSession(store, now);
