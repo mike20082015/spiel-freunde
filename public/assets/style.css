@@ -246,6 +246,18 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;letter-spacin
 .who-card p{color:rgba(247,241,227,.8)}
 
 /* tradition */
+.sec-head.light .sub a{color:var(--gold-2);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+#lernen{scroll-margin-top:86px}
+.learn{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:48px;align-items:center}
+.learn .eyebrow{color:var(--gold-2);letter-spacing:.12em}
+.learn-copy h2{font-family:var(--serif);font-weight:500;font-size:clamp(2rem,3.6vw,3rem);line-height:1.12;color:var(--cream);margin:8px 0 14px}
+.learn-lead{font-size:1.12rem;line-height:1.5;color:rgba(247,241,227,.88);margin-bottom:16px}
+.learn-points{list-style:none;display:grid;gap:10px;margin:0 0 22px}
+.learn-points li{position:relative;padding-left:22px;line-height:1.45;color:rgba(247,241,227,.88)}
+.learn-points li::before{content:"♦";position:absolute;left:0;color:var(--gold-2);font-size:.85rem;top:.15em}
+.learn-shot{margin:0}
+.learn-shot img{width:100%;height:auto;border-radius:18px;display:block;box-shadow:0 0 0 1px rgba(233,201,119,.55),0 0 0 7px rgba(42,16,16,.55),0 28px 50px -24px rgba(0,0,0,.55)}
+.learn-shot figcaption{margin-top:12px;color:rgba(247,241,227,.78);font-size:.95rem;line-height:1.4}
 .tradition{background:linear-gradient(rgba(79,25,25,.82),rgba(60,18,18,.93)),url(ort-kneipe.jpg) center/cover;color:var(--cream);padding:96px 0;text-align:center}
 .trad-suits{display:flex;justify-content:center;gap:20px;font-size:1.6rem;color:var(--cream);margin-bottom:22px}
 .trad-suits .r{color:var(--gold-2)}
@@ -309,7 +321,8 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;letter-spacin
   .chars,.places{grid-template-columns:1fr;max-width:480px;margin:0 auto}
   .steps{grid-template-columns:1fr;gap:40px}.steps::before{display:none}
   .games{grid-template-columns:repeat(2,1fr)}.game-feature{grid-column:span 2}
-  .plans,.who{grid-template-columns:1fr}
+  .plans,.who,.learn{grid-template-columns:1fr}
+  .learn{gap:28px}
   .foot-in{grid-template-columns:1fr 1fr}.foot-brand{grid-column:span 2}
   .sec{padding:72px 0}
 }
