@@ -83,6 +83,12 @@ body.sf-willkommen-offen { overflow: hidden; }
   line-height: 1.18;
   color: #2a2420;
 }
+.sf-willkommen-name {
+  margin: 0 0 6px;
+  font-size: 1.18rem;
+  line-height: 1.35;
+  font-weight: 700;
+}
 .sf-willkommen-lead {
   margin: 0 0 14px;
   font-size: 1.12rem;
@@ -102,7 +108,8 @@ body.sf-willkommen-offen { overflow: hidden; }
   font-size: 1.12rem;
   cursor: pointer;
 }
-.sf-willkommen-play[hidden] { display: none !important; }
+.sf-willkommen-play[hidden],
+.sf-willkommen-mute[hidden] { display: none !important; }
 .sf-willkommen-play {
   background: #6e2424;
   color: #f7f1e3;
@@ -144,6 +151,7 @@ body.sf-willkommen-offen { overflow: hidden; }
   .sf-willkommen-horst { width: 112px; height: 112px; }
   .sf-willkommen-side img { width: 40px; height: 40px; }
   .sf-willkommen-card h2 { font-size: 1.45rem; }
+  .sf-willkommen-name { font-size: 1.08rem; }
   .sf-willkommen-lead { font-size: 1.05rem; }
 }
 
@@ -153,6 +161,7 @@ body.sf-willkommen-offen { overflow: hidden; }
   .sf-willkommen-side { max-width: 210px; gap: 8px; }
   .sf-willkommen-side img { width: 58px; height: 58px; }
   .sf-willkommen-card h2 { font-size: 2.05rem; }
+  .sf-willkommen-name { font-size: 1.35rem; }
   .sf-willkommen-lead { font-size: 1.28rem; }
   .sf-willkommen-hint { font-size: 1.05rem; }
   .sf-willkommen-play,
@@ -177,6 +186,7 @@ body.sf-willkommen-offen { overflow: hidden; }
   .sf-willkommen-horst { width: 76px; height: 76px; }
   .sf-willkommen-side img { width: 32px; height: 32px; }
   .sf-willkommen-card h2 { font-size: 1.2rem; margin-bottom: 2px; }
+  .sf-willkommen-name,
   .sf-willkommen-lead,
   .sf-willkommen-hint { font-size: .88rem; margin-bottom: 6px; }
   .sf-willkommen-hint { margin-top: 6px; }

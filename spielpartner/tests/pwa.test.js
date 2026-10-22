@@ -81,7 +81,7 @@ test('der Service Worker fasst API und Anmeldung nicht an', () => {
   assert.equal(kind(ORIGIN + '/mein-avatar/avatar.js'), 'bypass');
   assert.equal(kind(ORIGIN + '/mein-avatar/avatar.css'), 'bypass');
   assert.equal(kind(ORIGIN + '/assets/avatar-store.js'), 'bypass');
-  assert.match(sw, /sf-pwa-v5/);
+  assert.match(sw, /sf-pwa-v6/);
   assert.match(sw, /client\.navigate\(client\.url\)/);
   assert.doesNotMatch(sw, /return Promise\.all\(clients\.map/);
   assert.match(sw, /cache: 'no-cache'/);

@@ -1,9 +1,9 @@
 /*
  * Persönliche Begrüßung von Horst, einmal nach der ersten Anmeldung.
  * Die Karte merkt sich die Spieler-Kennung. Eine spätere Anmeldung
- * bleibt still. Horst spricht den Gruß mit seiner Stimme. Blockiert
- * der Browser den Ton, liegt ein Tipp bereit. Ein kleiner Schalter
- * macht ihn leise.
+ * bleibt still. Horst spricht mit derselben Stimme wie am Tisch.
+ * Kommt dieser Ton nicht an, bleibt der Text stehen. Die Stimme des
+ * Browsers springt nicht ein. Vor dem Namen liegt eine kurze Pause.
  */
 (function (root, factory) {
   var api = factory();
@@ -19,7 +19,7 @@
   var FRESH_MS = 72 * 60 * 60 * 1000;
   var FLAGS = ['created', 'isNew', 'newAccount', 'firstLogin', 'signup'];
   var TTS = ['/api/sf/tts', '/api/tts', '/api/default/tts'];
-  var MALE = /(male|mann|markus|stefan|hans|yannick|conrad|klaus|jonas|florian|killian|bernd|daniel)/i;
+  var PAUSE_VOR_DEM_NAMEN = 700;
 
   var TEAM = [
     { name: 'Margarethe', src: '/media/spielpartner/margarethe.jpg' },
@@ -52,10 +52,21 @@
     });
   }
 
+  function cleanName(name) {
+    return String(name || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function lines(name) {
+    var clean = cleanName(name);
+    return [
+      'Willkommen bei Spiel-Freunde.',
+      clean ? 'Schön, dass Du da bist, ' + clean + '!' : 'Schön, dass Du da bist!',
+      'Das ganze Avatar-Team freut sich auf spannende Spiele mit Dir.'
+    ];
+  }
+
   function greeting(name) {
-    var clean = String(name || '').replace(/\s+/g, ' ').trim();
-    if (!clean) return 'Willkommen bei Spiel-Freunde! Das ganze Avatar-Team freut sich auf spannende Spiele mit Dir.';
-    return 'Willkommen bei Spiel-Freunde, ' + clean + '! Das ganze Avatar-Team freut sich auf spannende Spiele mit Dir.';
+    return lines(name).join(' ');
   }
 
   function hintText() {
@@ -183,10 +194,7 @@
   }
 
   function markup(name) {
-    var clean = String(name || '').replace(/\s+/g, ' ').trim();
-    var title = clean
-      ? 'Willkommen bei Spiel-Freunde, ' + escapeText(clean) + '!'
-      : 'Willkommen bei Spiel-Freunde!';
+    var said = lines(name);
     var left = TEAM.slice(0, 5);
     var right = TEAM.slice(5);
     return '<div class="sf-willkommen" id="sf-willkommen" role="dialog" aria-modal="true" aria-labelledby="sf-willkommen-title">' +
@@ -198,8 +206,9 @@
       '<img class="sf-willkommen-horst" src="/media/spielpartner/horst.jpg" alt="Horst Kaluppke" width="180" height="180">' +
       '<div class="sf-willkommen-side">' + faces(right) + '</div>' +
       '</div>' +
-      '<h2 id="sf-willkommen-title">' + title + '</h2>' +
-      '<p class="sf-willkommen-lead">Das ganze Avatar-Team freut sich auf spannende Spiele mit Dir.</p>' +
+      '<h2 id="sf-willkommen-title">' + escapeText(said[0]) + '</h2>' +
+      '<p class="sf-willkommen-name">' + escapeText(said[1]) + '</p>' +
+      '<p class="sf-willkommen-lead">' + escapeText(said[2]) + '</p>' +
       '<button type="button" class="sf-willkommen-play" data-play hidden>Horst begrüßt Dich</button>' +
       '<button type="button" class="sf-willkommen-go" data-go>Los geht\'s</button>' +
       '<p class="sf-willkommen-hint">' + escapeText(hintText()) + '</p>' +
@@ -216,25 +225,6 @@
     document.head.appendChild(link);
   }
 
-  function horstTone() {
-    var voices = typeof window !== 'undefined' ? window.SpielpartnerStimmen : null;
-    if (voices && typeof voices.synth === 'function') {
-      var tone = voices.synth('horst');
-      if (tone) return tone;
-    }
-    return { pitch: 0.65, rate: 0.95, male: true };
-  }
-
-  function userActive() {
-    try {
-      var nav = typeof navigator !== 'undefined' ? navigator : null;
-      var gate = nav && nav.userActivation;
-      return !!(gate && gate.isActive);
-    } catch (err) {
-      return false;
-    }
-  }
-
   function abortSignal(ms) {
     try {
       if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') return AbortSignal.timeout(ms);
@@ -242,48 +232,50 @@
     return undefined;
   }
 
-  function fetchTts(text) {
+  /*
+   * Dieselbe Anfrage wie die freie Stimme am Tisch: POST an /api/sf/tts,
+   * danach /api/tts und /api/default/tts, Körper { character: 'horst', text }.
+   * Die Stimme wählt der Server. Drei Sätze, dazwischen eine Pause vor dem Namen.
+   */
+  function clipAt(path, text) {
     var g = typeof globalThis !== 'undefined' ? globalThis : window;
     if (!g || typeof g.fetch !== 'function') return Promise.resolve(null);
-    var chain = Promise.resolve(null);
-    TTS.forEach(function (path) {
-      chain = chain.then(function (url) {
-        if (url) return url;
-        return g.fetch(path, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          cache: 'no-store',
-          body: JSON.stringify({ character: 'horst', text: text }),
-          signal: abortSignal(4000)
-        }).then(function (res) {
-          if (!res || !res.ok || typeof res.blob !== 'function') return null;
-          return res.blob();
-        }).then(function (blob) {
-          if (!blob || !blob.size || !g.URL || typeof g.URL.createObjectURL !== 'function') return null;
-          return g.URL.createObjectURL(blob);
-        }).catch(function () { return null; });
-      });
+    return g.fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+      body: JSON.stringify({ character: 'horst', text: text }),
+      signal: abortSignal(12000)
+    }).then(function (res) {
+      if (!res || !res.ok || typeof res.blob !== 'function') return null;
+      return res.blob();
+    }).then(function (blob) {
+      if (!blob || !blob.size || !g.URL || typeof g.URL.createObjectURL !== 'function') return null;
+      return g.URL.createObjectURL(blob);
+    }).catch(function () { return null; });
+  }
+
+  function dropUrls(urls) {
+    var g = typeof globalThis !== 'undefined' ? globalThis : window;
+    if (!g || !g.URL || typeof g.URL.revokeObjectURL !== 'function') return;
+    (urls || []).forEach(function (url) {
+      if (!url) return;
+      try { g.URL.revokeObjectURL(url); } catch (err) { /* schon weg */ }
     });
-    return chain;
   }
 
-  function voiceUrl(text) {
-    var voices = typeof window !== 'undefined' ? window.SpielpartnerStimmen : null;
-    if (voices && typeof voices.speak === 'function') {
-      return Promise.resolve(voices.speak('horst', text)).then(function (url) {
-        return url || fetchTts(text);
-      }).catch(function () { return fetchTts(text); });
+  function loadClips(parts) {
+    function atPath(index) {
+      if (index >= TTS.length) return Promise.resolve(null);
+      return Promise.all(parts.map(function (text) {
+        return clipAt(TTS[index], text);
+      })).then(function (urls) {
+        if (urls.every(Boolean)) return urls;
+        dropUrls(urls);
+        return atPath(index + 1);
+      });
     }
-    return fetchTts(text);
-  }
-
-  function pickVoice() {
-    var synth = window.speechSynthesis;
-    if (!synth || typeof synth.getVoices !== 'function') return null;
-    var all = synth.getVoices() || [];
-    var german = all.filter(function (voice) { return /^de(-|_|$)/i.test(voice.lang); });
-    if (!german.length) return null;
-    return german.find(function (voice) { return MALE.test(voice.name); }) || german[0];
+    return atPath(0);
   }
 
   function show(storage, now) {
@@ -309,10 +301,12 @@
     var play = root.querySelector('[data-play]');
     var mute = root.querySelector('[data-mute]');
     var go = root.querySelector('[data-go]');
-    var spoken = greeting(name);
+    var parts = lines(name);
     var muted = false;
     var audio = null;
     var round = 0;
+    var clips = null;
+    var loading = null;
 
     function stop() {
       round += 1;
@@ -320,7 +314,6 @@
         try { audio.pause(); } catch (err) { /* schon aus */ }
         audio = null;
       }
-      try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (err) { /* fehlt */ }
       root.classList.remove('ist-spricht');
     }
 
@@ -336,94 +329,114 @@
       root.classList.add('ist-spricht');
     }
 
-    function playUrl(url, ticket) {
-      var el;
-      try { el = new Audio(url); }
-      catch (err) { revealPrompt(); return Promise.resolve(false); }
-      el.setAttribute('playsinline', '');
-      el.preload = 'auto';
-      audio = el;
-      var started = el.play();
-      if (!started || typeof started.then !== 'function') {
-        if (ticket !== round || muted) return Promise.resolve(false);
-        hidePrompt();
-        markSpeaking();
-        return Promise.resolve(true);
-      }
-      return started.then(function () {
-        if (ticket !== round || muted) {
-          try { el.pause(); } catch (err) { /* egal */ }
-          return false;
+    function textOnly() {
+      hidePrompt();
+      if (mute) mute.hidden = true;
+      root.classList.add('ist-still');
+    }
+
+    function playClip(url, ticket) {
+      return new Promise(function (resolve) {
+        var el;
+        var settled = false;
+        function finish(ok) {
+          if (settled) return;
+          settled = true;
+          if (audio === el) audio = null;
+          resolve(!!ok);
         }
+        try { el = new Audio(url); }
+        catch (err) { finish(false); return; }
+        el.setAttribute('playsinline', '');
+        el.preload = 'auto';
+        audio = el;
+        el.addEventListener('ended', function () { finish(ticket === round && !muted); });
+        el.addEventListener('error', function () { finish(false); });
+        var started;
+        try { started = el.play(); }
+        catch (err) { finish(false); return; }
+        if (started && typeof started.then === 'function') {
+          started.then(function () {
+            if (ticket !== round || muted) {
+              try { el.pause(); } catch (err) { /* egal */ }
+              finish(false);
+              return;
+            }
+            hidePrompt();
+            markSpeaking();
+          }, function () { finish(false); });
+          return;
+        }
+        if (ticket !== round || muted) { finish(false); return; }
         hidePrompt();
         markSpeaking();
-        el.addEventListener('ended', function () {
-          if (audio === el) root.classList.remove('ist-spricht');
-        });
-        return true;
-      }).catch(function () {
-        if (ticket === round) revealPrompt();
-        return false;
       });
     }
 
-    function playSynth(ticket) {
-      var synth = window.speechSynthesis;
-      if (!synth || typeof window.SpeechSynthesisUtterance !== 'function') {
-        revealPrompt();
-        return false;
-      }
-      var utter = new window.SpeechSynthesisUtterance(spoken);
-      var tone = horstTone();
-      utter.lang = 'de-DE';
-      utter.pitch = tone.pitch;
-      utter.rate = tone.rate;
-      var voice = pickVoice();
-      if (voice) utter.voice = voice;
-      utter.onend = function () {
-        if (ticket === round) root.classList.remove('ist-spricht');
-      };
-      utter.onerror = function () {
-        if (ticket === round) {
-          root.classList.remove('ist-spricht');
-          revealPrompt();
-        }
-      };
-      try {
-        synth.cancel();
-        synth.speak(utter);
-      } catch (err) {
-        revealPrompt();
-        return false;
-      }
-      if (ticket !== round || muted) return false;
-      hidePrompt();
-      markSpeaking();
-      return true;
+    function wait(ms, ticket) {
+      return new Promise(function (resolve) {
+        setTimeout(function () { resolve(ticket === round && !muted); }, ms);
+      });
     }
 
-    function begruessen(fromTap) {
+    function playParts(urls, ticket) {
+      var index = 0;
+      function next() {
+        if (ticket !== round || muted) return Promise.resolve(false);
+        if (index >= urls.length) {
+          root.classList.remove('ist-spricht');
+          return Promise.resolve(true);
+        }
+        var gap = index === 1 ? PAUSE_VOR_DEM_NAMEN : 0;
+        var pending = gap ? wait(gap, ticket) : Promise.resolve(true);
+        var current = index;
+        index += 1;
+        return pending.then(function (go) {
+          if (!go) return false;
+          return playClip(urls[current], ticket).then(function (ok) {
+            if (!ok) return false;
+            return next();
+          });
+        });
+      }
+      return next();
+    }
+
+    function ensureClips() {
+      if (clips) return Promise.resolve(clips);
+      if (!loading) {
+        loading = loadClips(parts).then(function (urls) {
+          loading = null;
+          clips = urls;
+          return urls;
+        }, function () {
+          loading = null;
+          clips = null;
+          return null;
+        });
+      }
+      return loading;
+    }
+
+    function begruessen() {
       if (muted) return Promise.resolve(false);
       stop();
       var ticket = round;
-      var tapped = !!fromTap || userActive();
-      if (!tapped) revealPrompt();
-      return voiceUrl(spoken).then(function (url) {
+      return ensureClips().then(function (urls) {
         if (ticket !== round || muted) return false;
-        if (url) {
-          return playUrl(url, ticket).then(function (ok) {
-            if (ok || ticket !== round || muted) return ok;
-            if (!tapped) return false;
-            return playSynth(ticket);
-          });
-        }
-        if (!tapped) {
-          revealPrompt();
+        if (!urls) {
+          textOnly();
           return false;
         }
-        return playSynth(ticket);
+        if (mute) mute.hidden = false;
+        return playParts(urls, ticket).then(function (ok) {
+          if (ticket !== round || muted) return ok;
+          if (ok) hidePrompt();
+          else revealPrompt();
+          return ok;
+        });
       }).catch(function () {
-        if (ticket === round) revealPrompt();
+        if (ticket === round) textOnly();
         return false;
       });
     }
@@ -439,7 +452,7 @@
         muted = !muted;
         paintMute();
         if (muted) stop();
-        else begruessen(true);
+        else begruessen();
       });
     }
     if (play) {
@@ -448,7 +461,7 @@
           muted = false;
           paintMute();
         }
-        begruessen(true);
+        begruessen();
       });
     }
     if (go) {
@@ -476,13 +489,15 @@
       var focus = play && !play.hidden ? play : go;
       if (focus && typeof focus.focus === 'function') focus.focus();
     } catch (err) { /* egal */ }
-    begruessen(false);
+    begruessen();
   }
 
   return {
     SEEN_KEY: SEEN_KEY,
     OPEN_KEY: OPEN_KEY,
     FRESH_MS: FRESH_MS,
+    PAUSE_VOR_DEM_NAMEN: PAUSE_VOR_DEM_NAMEN,
+    lines: lines,
     greeting: greeting,
     hintText: hintText,
     fresh: fresh,
