@@ -229,14 +229,44 @@
   }
   // Auf "Anfänger" sind die beiden freundlicher und machen Mut.
   const KIND_EVENTS = { weakPlay: 'weakPlayKind', humanLoses: 'encourage' };
+  function tableFacts(p, event) {
+    const bits = ['Spieler ' + (NAMES[p] || 'jemand')];
+    const st = S.st;
+    if (event) bits.push(event);
+    if (st && st.phase) bits.push('Phase ' + st.phase);
+    if (st && st.bid) bits.push('Reizwert ' + st.bid);
+    if (st && st.game) bits.push('Spiel ' + E.gameLabel(st.game));
+    if (st && st.trick && st.trick.length) bits.push('Karten im Stich ' + st.trick.length);
+    if (match && match.scores) bits.push('Punkte ' + match.scores.map((n, i) => (i === 0 ? 'Du' : NAMES[i]) + ' ' + n).join(', '));
+    return bits.join('. ');
+  }
+  function gameSlice() {
+    const st = S.st;
+    if (!st) return null;
+    return { phase: st.phase, declarer: st.declarer, game: st.game ? E.gameLabel(st.game) : null, scores: match.scores.slice() };
+  }
   function talk(p, event, prob, force) {
     if (prob != null && Math.random() > prob) return false;
     if (typeof window !== 'undefined' && window.SpielpartnerSprueche && !window.SpielpartnerSprueche.allow({ force: !!force })) return false;
     if (S.level === 'anfaenger' && KIND_EVENTS[event]) event = KIND_EVENTS[event];
-    const text = Talk.line(WHO[p], event);
-    const ok = say(p, text, { force });
-    if (ok) S.lastLine = { p, text };
-    return ok;
+    const who = WHO[p];
+    const sprueche = typeof window !== 'undefined' ? window.SpielpartnerSprueche : null;
+    const fallback = () => Talk.line(who, event);
+    const speak = (text) => {
+      if (!text) return false;
+      const ok = say(p, text, { force: force });
+      if (ok) S.lastLine = { p, text };
+      return ok;
+    };
+    if (!sprueche || typeof sprueche.freshComment !== 'function') return speak(fallback());
+    sprueche.freshComment({
+      character: who,
+      event: event,
+      situation: tableFacts(p, event),
+      game: gameSlice(),
+      fallback: fallback,
+    }).then(speak);
+    return true;
   }
   const otherAI = (p) => (p === 1 ? 2 : 1);
   const aiWho = (p) => ({ persona: WHO[p], level: S.level });
@@ -1663,8 +1693,8 @@
     S.started = true;
     unlockOnce();
     $('intro').hidden = true;
-    say(2, Talk.line(WHO[2], 'welcome'), { force: true });
-    setTimeout(() => say(1, Talk.line(WHO[1], 'welcome'), { force: true }), 250);
+    talk(2, 'welcome', 1, true);
+    setTimeout(() => talk(1, 'welcome', 1, true), 250);
     const w = E.sessionWinner(match.scores, targetValue());
     if (w != null && match.rows.length) { S.st = null; showSession(w); return true; }
     newGame();

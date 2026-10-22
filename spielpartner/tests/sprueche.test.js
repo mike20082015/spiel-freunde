@@ -94,6 +94,83 @@ test('Reizworte kommen aus dem Beutel und hängen nicht am ersten Satz', () => {
   assert.ok(seen.some((line) => line !== 'Weg.'));
 });
 
+test('ein Tischspruch fragt gelegentlich den Chat und fällt sonst sofort auf den Beutel zurück', async () => {
+  const box = store();
+  Sprueche.reset({ store: box, wipe: true });
+  let calls = 0;
+  const ask = async () => {
+    calls += 1;
+    return 'Ein frischer freundlicher Satz am Tisch.';
+  };
+  for (let i = 0; i < 3; i++) {
+    const text = await Sprueche.freshComment({
+      character: 'sepp', event: 'trick', situation: 'Spieler Sepp. Stich.',
+      fallback: () => 'Fest.', ask, timeout: 40,
+    });
+    assert.equal(text, 'Fest.');
+  }
+  assert.equal(calls, 0);
+  const fresh = await Sprueche.freshComment({
+    character: 'sepp', event: 'trick', situation: 'Spieler Sepp. Punkte 4, 8.',
+    fallback: () => 'Fest.', ask, timeout: 80,
+  });
+  assert.equal(calls, 1);
+  assert.equal(fresh, 'Ein frischer freundlicher Satz am Tisch.');
+  const started = Date.now();
+  const slow = await Sprueche.freshComment({
+    forceFresh: true,
+    timeout: 40,
+    fallback: () => 'Sofort der Beutel.',
+    ask: () => new Promise((resolve) => setTimeout(() => resolve('Zu spät für diesen Stich gesagt.'), 180)),
+  });
+  assert.equal(slow, 'Sofort der Beutel.');
+  assert.ok(Date.now() - started < 150, String(Date.now() - started));
+  const blocked = await Sprueche.freshComment({
+    forceFresh: true,
+    timeout: 40,
+    fallback: () => 'Beutel bleibt.',
+    ask: async () => 'Das ist Politik und grok.',
+  });
+  assert.equal(blocked, 'Beutel bleibt.');
+  const long = await Sprueche.freshComment({
+    forceFresh: true,
+    timeout: 40,
+    fallback: () => 'kurz',
+    ask: async () => 'eins zwei drei vier fünf sechs sieben acht neun zehn elf zwölf dreizehn vierzehn',
+  });
+  assert.ok(long.split(/\s+/).length <= 12, long);
+  assert.equal(long.includes('dreizehn'), false);
+  Sprueche.reset({ store: store(), wipe: true });
+  const seen = [];
+  const prev = globalThis.fetch;
+  globalThis.fetch = async (url, opts) => {
+    seen.push({ url, body: JSON.parse(opts.body), signal: opts.signal });
+    return { ok: true, json: async () => ({ text: 'Frisch gesagt, Sepp.' }) };
+  };
+  try {
+    for (let i = 0; i < 3; i++) {
+      await Sprueche.freshComment({ character: 'oma-hilde', event: 'trick', fallback: () => 'Fest.' });
+    }
+    const posted = await Sprueche.freshComment({
+      character: 'oma-hilde',
+      event: 'trick',
+      situation: 'Spieler Oma Hilde. Stich. Punkte 1, 2.',
+      game: { phase: 'play', scores: [1, 2, 0] },
+      fallback: () => 'Fest.',
+    });
+    assert.equal(posted, 'Frisch gesagt, Sepp.');
+    assert.equal(seen.length, 1);
+    assert.equal(seen[0].url, '/api/sf/chat');
+    assert.equal(seen[0].body.purpose, 'remark');
+    assert.equal(seen[0].body.character, 'hilde');
+    assert.match(seen[0].body.message, /Oma Hilde/);
+    assert.deepEqual(seen[0].body.history, []);
+    assert.equal(seen[0].body.game.phase, 'play');
+  } finally {
+    globalThis.fetch = prev;
+  }
+});
+
 test('Bemerkungen haben Abstand, erzwungene Ansagen bleiben', () => {
   Sprueche.reset({ store: store(), wipe: true });
   assert.equal(Sprueche.allow({ force: true, now: 1000, rng: () => 0 }), true);
@@ -123,8 +200,10 @@ test('die Stimme fällt auf Text zurück und der Cache heißt sf-pwa-v8', () => 
     assert.match(voice, /function holdText/, game);
     assert.doesNotMatch(voice, /speechSynthesis\.speak|synth\.speak\(/, game);
     assert.match(html, /\/assets\/sprueche\.js/, game);
-    if (['jass', 'watten', 'schnapsen'].includes(game)) assert.match(app, /function remark/, game);
-    else if (game !== 'bridge') assert.match(app, /SpielpartnerSprueche\.allow/, game);
+    assert.match(app, /freshComment/, game);
+    if (['jass', 'watten', 'schnapsen', 'bridge'].includes(game)) assert.match(app, /function remark/, game);
+    else assert.match(app, /SpielpartnerSprueche\.allow/, game);
+    assert.match(app, /askAI/, game);
   }
   const stimmen = fs.readFileSync(path.join(root, 'public/spielpartner/stimmen.js'), 'utf8');
   assert.doesNotMatch(stimmen, /speechSynthesis\.speak/);

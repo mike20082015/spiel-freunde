@@ -147,6 +147,15 @@
     hideLater(Math.min(5200, 1800 + text.length * 36));
     return true;
   }
+  function tableFacts(seat, event) {
+    const who = Seats.seats[seat];
+    const st = S.state;
+    const bits = ['Spieler ' + ((who && who.name) || 'jemand')];
+    if (event) bits.push(event);
+    if (st && st.phase) bits.push('Phase ' + st.phase);
+    if (match && Array.isArray(match.scores)) bits.push('Punkte ' + match.scores.join(', '));
+    return bits.join('. ');
+  }
   function talk(seat, event, prob, force) {
     if (prob != null && Math.random() > prob) return false;
     if (typeof window !== 'undefined' && window.SpielpartnerSprueche && !window.SpielpartnerSprueche.allow({ force: !!force })) return false;
@@ -154,7 +163,17 @@
     if (!who || who.id === 'du') return false;
     let ev = event;
     if (settings.level === 'anfaenger' && ev === 'roundLose') ev = 'encourage';
-    return say(seat, Talk.line(who.id, ev), { force: force });
+    const sprueche = typeof window !== 'undefined' ? window.SpielpartnerSprueche : null;
+    const fallback = () => Talk.line(who.id, ev);
+    if (!sprueche || typeof sprueche.freshComment !== 'function') return say(seat, fallback(), { force: force });
+    sprueche.freshComment({
+      character: who.id,
+      event: ev,
+      situation: tableFacts(seat, ev),
+      game: S.state ? { phase: S.state.phase, scores: match && match.scores ? match.scores.slice() : null } : null,
+      fallback: fallback,
+    }).then((text) => { if (text) say(seat, text, { force: force }); });
+    return true;
   }
 
   async function playerFace() {

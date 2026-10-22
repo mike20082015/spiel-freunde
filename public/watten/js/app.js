@@ -341,12 +341,34 @@
   }
 
 
+  function tableFacts(seat, event) {
+    var person = Seats[seat];
+    var g = publicGame() || {};
+    var bits = ['Spieler ' + ((person && person.name) || 'jemand')];
+    if (event) bits.push(event);
+    if (g.phase) bits.push('Phase ' + g.phase);
+    if (g.game) bits.push('Spiel ' + g.game);
+    if (table && table.trick && table.trick.length) bits.push('Karten im Stich ' + table.trick.length);
+    if (g.scores) bits.push('Punkte ' + g.scores.join(', '));
+    return bits.join('. ');
+  }
   function remark(seat, event, opts) {
     var gate = window.SpielpartnerSprueche;
     if (gate && !gate.allow({ force: !!(opts && opts.force) })) return false;
     var person = Seats[seat];
     if (!person || person.id === 'du') return false;
-    say(seat, Talk.line(person.id, event), opts || {});
+    var fallback = function () { return Talk.line(person.id, event); };
+    if (!gate || typeof gate.freshComment !== 'function') {
+      say(seat, fallback(), opts || {});
+      return true;
+    }
+    gate.freshComment({
+      character: person.id,
+      event: event,
+      situation: tableFacts(seat, event),
+      game: publicGame(),
+      fallback: fallback
+    }).then(function (text) { if (text) say(seat, text, opts || {}); });
     return true;
   }
   function actFrom(btn) {
@@ -460,7 +482,7 @@
     table = E.newTable(opts(), Math.random);
     lastTrick = null;
     sys('Geber: ' + nameOf(table.dealer) + '. Vorhand: ' + nameOf(table.forehand) + '.');
-    if (table.turn !== 0) say(table.turn, Talk.line(Seats[table.turn].id, 'welcome'));
+    if (table.turn !== 0) remark(table.turn, 'welcome', { force: true });
     poke();
     return true;
   }

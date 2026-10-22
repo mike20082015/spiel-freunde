@@ -2545,12 +2545,21 @@
   };
 
   var KEY = 'sf-sprueche-v1';
+  var AI_EVERY = 4;
+  var AI_WAIT_MS = 3000;
+  var AI_WORDS = 12;
+  var CHAT_PATHS = ['/api/sf/chat', '/api/chat', '/api/default/chat'];
   var bags = {};
   var recent = {};
   var lastGlobal = '';
   var nextAt = 0;
   var customStore = null;
   var loaded = false;
+  var moveCount = 0;
+  var lastAiMove = 0;
+  var aiBusy = false;
+  var aiDown = 0;
+  var chatBase = 0;
 
   function canon(id) {
     if (id === 'oma-hilde') return 'hilde';
@@ -2697,6 +2706,100 @@
     return draw(id, 'reply:' + (kind || 'default'), merged, rng);
   }
 
+  var EVENT_DE = {
+    welcome: 'Begrüßung', greet: 'Begrüßung', bidding: 'Reizen', bidHigh: 'hohes Reizen',
+    passBid: 'Passen', declare: 'Ansage', gameStart: 'Spielbeginn', trick: 'Stich',
+    win: 'Gewinn', lose: 'Verlust', selfWins: 'Stich gewonnen', humanWins: 'Stich des Menschen',
+    goodMove: 'guter Zug', badLuck: 'Pech', encourage: 'Zuspruch', handWin: 'Spiel gewonnen',
+    handLose: 'Spiel verloren', matchWin: 'Runde gewonnen', matchLose: 'Runde verloren'
+  };
+  var LINE_BLOCK = /\b(grok|x\.?ai|openai|eleven|chatgpt|sprachmodell|politik|partei|einkommen)\b|künstliche intelligenz/i;
+
+  function clampWords(text) {
+    var t = String(text || '').replace(/[—–]/g, ',').replace(/\s+/g, ' ').trim();
+    t = t.replace(/^["„«]+|["“»]+$/g, '');
+    var words = t.split(' ').filter(Boolean);
+    if (words.length > AI_WORDS) t = words.slice(0, AI_WORDS).join(' ');
+    return t;
+  }
+
+  function acceptable(text) {
+    var t = clampWords(text);
+    if (!t) return '';
+    if (LINE_BLOCK.test(t)) return '';
+    if (/nicht erreichbar|gateway timeout/i.test(t)) return '';
+    return t;
+  }
+
+  function situationLine(opts) {
+    var given = String(opts.situation || '').trim();
+    if (given) return given.slice(0, 240);
+    var ev = EVENT_DE[opts.event] || '';
+    return ev ? ('Lage ' + ev) : 'Lage am Tisch';
+  }
+
+  function postRemark(opts, signal) {
+    var who = canon(opts.character);
+    if (!who) return Promise.reject(new Error('wer'));
+    var g = typeof globalThis !== 'undefined' ? globalThis : null;
+    if (!g || typeof g.fetch !== 'function') return Promise.reject(new Error('kein fetch'));
+    var message = 'Lage: ' + situationLine(opts);
+    var url = CHAT_PATHS[chatBase] || CHAT_PATHS[0];
+    return g.fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+      body: JSON.stringify({
+        character: who,
+        message: message,
+        purpose: 'remark',
+        game: opts.game || null,
+        history: []
+      }),
+      signal: signal
+    }).then(function (res) {
+      if (!res || !res.ok) throw new Error('status');
+      return res.json();
+    }).then(function (data) {
+      var text = data && typeof data.text === 'string' ? data.text.trim() : '';
+      if (!text) throw new Error('leer');
+      return text;
+    });
+  }
+
+  function freshComment(opts) {
+    opts = opts || {};
+    moveCount += 1;
+    var fallback = typeof opts.fallback === 'function' ? opts.fallback : function () { return null; };
+    var wait = typeof opts.timeout === 'number' ? opts.timeout : AI_WAIT_MS;
+    var due = !!opts.forceFresh || (aiDown < 2 && !aiBusy && moveCount - lastAiMove >= AI_EVERY);
+    if (!due) return Promise.resolve(fallback());
+    aiBusy = true;
+    lastAiMove = moveCount;
+    var ctrl = null;
+    try { ctrl = typeof AbortController === 'function' ? new AbortController() : null; } catch (err) { ctrl = null; }
+    var timer = null;
+    var slow = new Promise(function (resolve) {
+      timer = setTimeout(function () {
+        if (ctrl) { try { ctrl.abort(); } catch (e) { /* schon zu */ } }
+        resolve(null);
+      }, wait);
+    });
+    var ask = typeof opts.ask === 'function'
+      ? function () { return opts.ask(ctrl && ctrl.signal); }
+      : function () { return postRemark(opts, ctrl && ctrl.signal); };
+    var request = Promise.resolve().then(ask).then(function (text) {
+      return acceptable(text) || null;
+    }, function () { return null; });
+    return Promise.race([request, slow]).then(function (text) {
+      if (timer) clearTimeout(timer);
+      aiBusy = false;
+      if (text) aiDown = 0;
+      else aiDown += 1;
+      return text || fallback();
+    });
+  }
+
   function allow(opts) {
     opts = opts || {};
     if (opts.force) return true;
@@ -2718,6 +2821,10 @@
     recent = {};
     lastGlobal = '';
     nextAt = 0;
+    moveCount = 0;
+    lastAiMove = 0;
+    aiBusy = false;
+    aiDown = 0;
     loaded = true;
     if (opts.store) customStore = opts.store;
     if (opts.wipe !== false) {
@@ -2735,6 +2842,7 @@
     reply: reply,
     call: call,
     allow: allow,
+    freshComment: freshComment,
     reset: reset,
     characters: Object.keys(POOLS),
     situations: ['greetings', 'bidding', 'winning', 'losing', 'goodMove', 'badLuck', 'banter']
