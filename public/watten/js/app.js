@@ -28,6 +28,22 @@
   var handClosed = false;
 
   function $(id) { return document.getElementById(id); }
+  function zui() { return window.SpielpartnerZuschauen; }
+  function lernen() { return !!(zui() && zui().aktiv()); }
+  function lern(text, platz) { if (lernen() && text) zui().kommentar(text, { platz: platz }); }
+  function wattenSatz(seat, action) {
+    var name = nameOf(seat);
+    if (!action || !zui()) return '';
+    if (action.type === 'schlag') return zui().erklaere('watten', { art: 'schlag', name: name, text: E.rankName(action.rank) });
+    if (action.type === 'swap' || action.type === 'accept') return zui().erklaere('watten', { art: 'tausch', name: name });
+    if (action.type === 'decline') return name + ' lässt den Tausch aus. Die Karten bleiben, wie sie gegeben sind.';
+    if (action.type === 'trump') return zui().erklaere('watten', { art: 'trumpfwahl', name: name, trumpf: ['Eichel', 'Gras', 'Herz', 'Schellen'][action.suit] || 'eine Farbe' });
+    if (action.type === 'bieten') return zui().erklaere('watten', { art: 'bieten', name: name });
+    if (action.type === 'spielen' || action.type === 'halten') return zui().erklaere('watten', { art: 'halten', name: name });
+    if (action.type === 'gehen') return zui().erklaere('watten', { art: 'gehen', name: name });
+    var card = (table.hands[seat] || []).filter(function (c) { return c.id === action.id; })[0];
+    return zui().erklaere('watten', { art: 'karte', name: name, karte: card ? E.cardName(card) : 'eine Karte' });
+  }
   function loadSettings() {
     var out = Object.assign({}, DEFAULTS);
     try {
@@ -163,7 +179,7 @@
     });
     mine.forEach(function (card) {
       var el = Cards.cardEl(card);
-      var playable = table.phase === 'play' && table.turn === 0 && legal[card.id];
+      var playable = table.phase === 'play' && table.turn === 0 && !lernen() && legal[card.id];
       el.classList.toggle('playable', !!playable);
       el.classList.toggle('blocked', table.phase === 'play' && table.turn === 0 && !legal[card.id]);
       el.disabled = !playable;
@@ -247,7 +263,7 @@
   }
   function renderPanel() {
     var panel = $('panel');
-    var phase = table && table.turn === 0 ? table.phase : '';
+    var phase = table && table.turn === 0 && !lernen() ? table.phase : '';
     var show = phase === 'schlag' || phase === 'swap' || phase === 'trump' || phase === 'concede' || phase === 'bieten' || phase === 'raise';
     panel.hidden = !show;
     if (!show) { panel.innerHTML = ''; return; }
@@ -286,7 +302,7 @@
   }
   function renderActions() {
     var box = $('actions');
-    if (!table || table.turn !== 0 || table.phase !== 'play' || !E.canRaise(table, 0)) {
+    if (!table || lernen() || table.turn !== 0 || table.phase !== 'play' || !E.canRaise(table, 0)) {
       box.hidden = true;
       box.innerHTML = '';
       return;
@@ -331,7 +347,7 @@
     return { type: act };
   }
   function humanAct(action) {
-    if (!table || table.turn !== 0 || !action) return;
+    if (!table || lernen() || table.turn !== 0 || !action) return;
     var res = E.applyAction(table, 0, action);
     if (!res.ok) return;
     applyEvents(res.events);
@@ -365,16 +381,20 @@
   function poke() {
     var gen = ++generation;
     render();
-    if (!table || table.turn === 0 || table.phase === 'handEnd' || table.phase === 'matchEnd') return;
-    setTimeout(function () {
-      if (gen !== generation || !table || table.turn === 0 || table.phase === 'handEnd' || table.phase === 'matchEnd') return;
+    if (!table || table.phase === 'handEnd' || table.phase === 'matchEnd') return;
+    if (table.turn === 0 && !lernen()) return;
+    var warte = lernen() ? zui().takt() : new Promise(function (r) { setTimeout(r, delay()); });
+    Promise.resolve(warte).then(function () {
+      if (gen !== generation || !table || table.phase === 'handEnd' || table.phase === 'matchEnd') return;
+      if (table.turn === 0 && !lernen()) { render(); return; }
       var seat = table.turn;
       var action = AI.choose(table, seat, settings.level, Math.random);
+      lern(wattenSatz(seat, action), seat);
       var res = action && E.applyAction(table, seat, action);
       if (res && res.ok) applyEvents(res.events);
       else { sys(nameOf(seat) + ' setzt aus.'); return; }
       poke();
-    }, delay());
+    });
   }
 
   function showSummary() {
@@ -387,6 +407,7 @@
     html += '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next">Nächstes Spiel</button></div>';
     $('summary').innerHTML = html;
     $('modal-summary').hidden = false;
+    if (lernen()) zui().nachRunde(function () { var btn = $('btn-next'); if (btn) btn.click(); });
     $('btn-next').addEventListener('click', function () {
       if (!roundsAllow()) return;
       $('modal-summary').hidden = true;
@@ -531,7 +552,7 @@
   });
   $('hand').addEventListener('click', function (e) {
     var btn = e.target.closest('[data-card]');
-    if (!btn || !table || table.turn !== 0 || table.phase !== 'play') return;
+    if (!btn || !table || lernen() || table.turn !== 0 || table.phase !== 'play') return;
     var res = E.applyAction(table, 0, { type: 'card', id: btn.dataset.card });
     if (!res.ok) {
       $('hint-box').hidden = false;
@@ -765,14 +786,28 @@
   $('chat-input').addEventListener('input', function () { if (!MIC.writing) MIC.userEdit = $('chat-input').value.length > 0; });
   document.addEventListener('pointerdown', function () { MIC.gesture = true; Voice.unlock(); if (shouldListen()) startHandsFree(); }, true);
 
-  $('btn-start').addEventListener('click', function () {
-    if (started) return;
-    if (!roundsAllow()) return;
+  function start() {
+    if (started) return false;
+    if (!roundsAllow()) return false;
     started = true;
     $('intro').hidden = true;
     Voice.unlock();
     begin();
-  });
+    return true;
+  }
+  $('btn-start').addEventListener('click', start);
+  if (zui()) {
+    zui().mount({
+      start: start,
+      uebernehmen: function () { render(); },
+      sprich: function (platz, text) {
+        var person = Seats[platz] && Seats[platz].id !== 'du' ? Seats[platz] : Seats[1];
+        if (!person || !settings.sound) return false;
+        Voice.unlock();
+        return Voice.speak(person.id, text, { priority: true });
+      }
+    });
+  }
 
   Voice.setGetter(function () { return { sound: settings.sound, volume: settings.volume }; });
   refreshFaces();

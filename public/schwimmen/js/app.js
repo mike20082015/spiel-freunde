@@ -62,7 +62,22 @@
     state: null, gen: 0, started: false, humanWait: null, humanTimer: 0, nextWait: null,
     pick: null, seats: Seats.layout(rulesNow().opponents), lastTalk: {}, bubbleTimers: {},
     watch: params.get('watch') === '1',
+    learn: false,
   };
+  function zui() { return window.SpielpartnerZuschauen; }
+  function lernen() { return !!(S.learn && zui() && zui().aktiv()); }
+  function autoPlatz() { return !!(S.watch || lernen()); }
+  function lern(text, platz) { if (lernen() && text) zui().kommentar(text, { platz: platz }); }
+  function schwimmSatz(seat, mv, st) {
+    if (!mv || !zui()) return '';
+    const name = nameOf(seat);
+    if (mv.type === 'swapAll') return zui().erklaere('schwimmen', { art: 'alle', name: name });
+    if (mv.type === 'swap') return zui().erklaere('schwimmen', { art: 'tausch', name: name, karte: mv.card ? E.cardName(mv.card, st.rules) : 'eine Karte' });
+    if (mv.type === 'knock') return zui().erklaere('schwimmen', { art: 'klopfen', name: name });
+    if (mv.type === 'reveal') return zui().erklaere('schwimmen', { art: 'aufdecken', name: name });
+    if (mv.type === 'schieben') return zui().erklaere('schwimmen', { art: 'schieben', name: name });
+    return name + ' ist am Zug.';
+  }
 
   function delay(ms) {
     const g = S.gen;
@@ -206,7 +221,7 @@
   }
   function humanTurn() {
     const st = S.state;
-    return !!(st && st.turn === 0 && st.phase !== 'done' && !S.watch);
+    return !!(st && st.turn === 0 && st.phase !== 'done' && !autoPlatz());
   }
   function releaseHuman(move) {
     commitNote();
@@ -459,7 +474,7 @@
       if (++guard > 200) { sys('Diese Runde findet kein Ende. Nimm noch einmal Platz.'); break; }
       const st = S.state;
       const seat = st.turn;
-      if (seat === 0 && !S.watch) {
+      if (seat === 0 && !autoPlatz()) {
         S.pick = null;
         render();
         const move = await waitHuman();
@@ -474,17 +489,20 @@
         continue;
       }
       render();
-      await delay(seat === 0 ? 180 : 560);
+      if (lernen()) await zui().takt();
+      else await delay(seat === 0 ? 180 : 560);
       if (gen !== S.gen) throw CANCEL;
+      if (seat === 0 && !autoPlatz()) continue;
       let mv = AI.act(st, seat, settings.level, Math.random);
       if (!mv || !E.apply(st, seat, mv).ok) {
         const legal = E.legalMoves(st, seat);
         mv = legal[0];
         if (!mv || !E.apply(st, seat, mv).ok) { sys('Da stockt eine Karte. Die Runde wird neu gegeben.'); break; }
       }
+      lern(schwimmSatz(seat, mv, st), seat);
       drainEvents();
       render();
-      await delay(240);
+      if (!lernen()) await delay(240);
     }
   }
 
@@ -558,6 +576,10 @@
         saveMatch();
       } else {
         showSummary();
+        if (lernen()) zui().nachRunde(() => {
+          const btn = document.querySelector('#modal-summary [data-next]');
+          if (btn) btn.click();
+        });
         await waitNext();
         if (gen !== S.gen) return;
         $('modal-summary').hidden = true;
@@ -893,8 +915,8 @@
   document.addEventListener('pointerdown', () => { if (Voice) Voice.unlock(); MIC.gesture = true; }, { once: true, capture: true });
 
   function start() {
-    if (S.started) return;
-    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
+    if (S.started) return false;
+    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return false;
     S.started = true;
     $('intro').hidden = true;
     if (Voice) Voice.unlock();
@@ -902,6 +924,31 @@
     const lena = seatById('lena');
     if (lena) say(lena.seat, Talk.line('lena', 'welcome'), { force: true });
     dealAndPlay();
+    return true;
+  }
+  if (zui()) {
+    zui().mount({
+      start: function () {
+        const vorher = S.watch;
+        S.learn = true;
+        S.watch = true;
+        const ok = start();
+        if (!ok) { S.learn = false; S.watch = vorher; }
+        return ok;
+      },
+      uebernehmen: function () {
+        S.learn = false;
+        S.watch = params.get('watch') === '1';
+        render();
+      },
+      sprich: function (platz, text) {
+        const who = S.seats[platz];
+        const id = who && who.id && who.id !== 'du' ? who.id : (S.seats[1] && S.seats[1].id);
+        if (!id || !Voice || !settings.sound) return false;
+        Voice.unlock();
+        return Voice.speak(id, text, { priority: true });
+      }
+    });
   }
 
   function showShot() {

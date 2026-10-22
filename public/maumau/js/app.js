@@ -77,7 +77,34 @@
     state: null, gen: 0, started: false, humanWait: null, humanTimer: 0, nextWait: null,
     armed: null, seats: Seats.layout(rulesNow().opponents), lastTalk: {}, bubbleTimers: {},
     watch: params.get('watch') === '1',
+    learn: false,
   };
+
+  function zui() { return window.SpielpartnerZuschauen; }
+  function lernen() { return !!(S.learn && zui() && zui().aktiv()); }
+  function autoPlatz() { return !!(S.watch || lernen()); }
+  function lern(text, platz) { if (lernen() && text) zui().kommentar(text, { platz: platz }); }
+  function mauSatz(seat, mv, st) {
+    if (!mv || !zui()) return '';
+    const name = nameOf(seat);
+    const info = { name: name };
+    if (mv.type === 'draw' || mv.type === 'drawPenalty' || mv.type === 'keep') info.art = 'ziehen';
+    else if (mv.type === 'suit') { info.art = 'wunsch'; info.farbe = E.suitName(mv.suit, st.rules); }
+    else if (mv.type === 'notice') info.art = 'strafe';
+    else if (mv.type === 'forgive') info.art = 'verzeihen';
+    else if (mv.type === 'call') info.art = 'mau';
+    else if (mv.type === 'play') {
+      const rank = E.rankOf(mv.card);
+      info.karte = E.cardName(mv.card, st.rules);
+      if (mv.call === 'maumau') info.art = 'maumau';
+      else if (mv.call === 'mau') info.art = 'mau';
+      else if (rank === '7' && st.rules.seven !== false) info.art = 'sieben';
+      else if (rank === '8' && st.rules.eight !== false) info.art = 'acht';
+      else if (rank === 'J') info.art = 'bube';
+      else info.art = 'legen';
+    } else info.art = 'legen';
+    return zui().erklaere('maumau', info);
+  }
 
   function delay(ms) {
     const g = S.gen;
@@ -290,7 +317,7 @@
 
   function humanTurn() {
     const st = S.state;
-    return !!(st && st.turn === 0 && st.phase !== 'done' && !S.watch);
+    return !!(st && st.turn === 0 && st.phase !== 'done' && !autoPlatz());
   }
   function releaseHuman(move) {
     commitNote();
@@ -384,7 +411,7 @@
     games.innerHTML = '';
     chooser.hidden = true;
     const st = S.state;
-    if (!st || st.phase === 'done' || S.watch) return;
+    if (!st || st.phase === 'done' || autoPlatz()) return;
     const waiting = !!S.humanWait || st.turn === 0 || st.phase === 'call' || st.phase === 'suit';
     if (!waiting) return;
     if (st.phase === 'suit' && st.turn === 0) {
@@ -580,7 +607,8 @@
     if (!st || st.phase !== 'call') return;
     render();
     let humanMove = null;
-    if (!S.watch) humanMove = await waitHuman(st.pendingCall.seat === 0 ? 1300 : 1500);
+    if (!autoPlatz()) humanMove = await waitHuman(st.pendingCall.seat === 0 ? 1300 : 1500);
+    else if (lernen()) await zui().takt();
     else await delay(280);
     if (!S.state || S.state.phase !== 'call') return;
     if (humanMove && E.legalMoves(st, 0).some((m) => m.type === humanMove.type)) {
@@ -589,19 +617,22 @@
       return;
     }
     const debtor = st.pendingCall.seat;
-    if (debtor !== 0) {
+    if (debtor !== 0 || autoPlatz()) {
       const self = AI.act(st, debtor, settings.level, Math.random);
       if (self && self.type === 'call' && E.apply(st, debtor, self).ok) {
+        lern(mauSatz(debtor, self, st), debtor);
         drainEvents(debtor);
         return;
       }
     }
     let actor = (debtor + 1) % st.players;
-    if (actor === 0) actor = st.players > 2 ? 2 : 1;
+    if (actor === 0 && !autoPlatz()) actor = st.players > 2 ? 2 : 1;
     if (actor === debtor) actor = (debtor + 2) % st.players;
     const harsh = settings.level !== 'anfaenger' || Math.random() < 0.45;
     const type = harsh ? 'notice' : 'forgive';
-    if (!E.apply(st, actor, { type: type }).ok) E.apply(st, actor, { type: 'forgive' });
+    const mv = { type: type };
+    if (!E.apply(st, actor, mv).ok) E.apply(st, actor, { type: 'forgive' });
+    lern(mauSatz(actor, mv, st), actor);
     drainEvents(actor);
   }
 
@@ -621,8 +652,8 @@
       }
       const st = S.state;
       const seat = st.turn;
-      if (seat !== 0 || S.watch) S.queued = null;
-      if (seat === 0 && !S.watch) {
+      if (seat !== 0 || autoPlatz()) S.queued = null;
+      if (seat === 0 && !autoPlatz()) {
         render();
         const move = await waitHuman();
         if (gen !== S.gen) throw CANCEL;
@@ -638,8 +669,10 @@
         continue;
       }
       render();
-      await delay(seat === 0 ? 180 : 520);
+      if (lernen()) await zui().takt();
+      else await delay(seat === 0 ? 180 : 520);
       if (gen !== S.gen) throw CANCEL;
+      if (seat === 0 && !autoPlatz()) continue;
       let mv = AI.act(st, seat, settings.level, Math.random);
       if (!mv) {
         const legal = E.legalMoves(st, seat);
@@ -649,9 +682,10 @@
         sys('Da stockt eine Karte. Die Runde wird neu gegeben.');
         break;
       }
+      lern(mauSatz(seat, mv, st), seat);
       drainEvents(seat);
       render();
-      await delay(220);
+      if (!lernen()) await delay(220);
     }
   }
 
@@ -753,6 +787,10 @@
         saveMatch();
       } else {
         showSummary(scored);
+        if (lernen()) zui().nachRunde(() => {
+          const btn = document.querySelector('#modal-summary [data-next]');
+          if (btn) btn.click();
+        });
         await waitNext();
         if (gen !== S.gen) return;
         $('modal-summary').hidden = true;
@@ -1129,8 +1167,8 @@
   document.addEventListener('pointerdown', () => { if (Voice) Voice.unlock(); MIC.gesture = true; }, { once: true, capture: true });
 
   function start() {
-    if (S.started) return;
-    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
+    if (S.started) return false;
+    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return false;
     S.started = true;
     $('intro').hidden = true;
     if (Voice) Voice.unlock();
@@ -1138,6 +1176,31 @@
     const lena = seatById('lena');
     if (lena) say(lena.seat, Talk.line('lena', 'welcome'), { force: true });
     dealAndPlay();
+    return true;
+  }
+  if (zui()) {
+    zui().mount({
+      start: function () {
+        const vorher = S.watch;
+        S.learn = true;
+        S.watch = true;
+        const ok = start();
+        if (!ok) { S.learn = false; S.watch = vorher; }
+        return ok;
+      },
+      uebernehmen: function () {
+        S.learn = false;
+        S.watch = params.get('watch') === '1';
+        render();
+      },
+      sprich: function (platz, text) {
+        const who = person(platz);
+        const id = who && who.id && who.id !== 'du' ? who.id : (person(1) && person(1).id);
+        if (!id || !Voice || !settings.sound) return false;
+        Voice.unlock();
+        return Voice.speak(id, text, { priority: true });
+      }
+    });
   }
 
   function showShot() {

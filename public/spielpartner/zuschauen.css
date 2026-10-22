@@ -1,0 +1,142 @@
+/* Zuschauen & Lernen: Kommentar und Tempo, lesbar auf Telefon und Tablet. */
+.zuschauen-start{
+  display:flex;
+  width:100%;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  margin:0 0 8px;
+  min-height:48px;
+  padding:10px 16px;
+  border-radius:999px;
+  border:2px solid #6e1d2c;
+  background:#6e1d2c;
+  color:#f7f1e3;
+  font:inherit;
+  font-weight:800;
+  font-size:1.05rem;
+  line-height:1.2;
+  letter-spacing:.01em;
+  cursor:pointer;
+  text-align:center;
+}
+.zuschauen-start:hover{background:#541624}
+.zuschauen-start:focus-visible{outline:3px solid #d4a84b;outline-offset:3px}
+.zuschauen-hinweis{
+  margin:0 0 12px;
+  color:#3d2a1c;
+  font-size:.92rem;
+  line-height:1.35;
+  text-align:center;
+}
+
+.zuschauen-dock{
+  position:fixed;
+  z-index:160;
+  top:calc(58px + env(safe-area-inset-top, 0px));
+  left:max(8px, env(safe-area-inset-left, 0px));
+  right:max(8px, env(safe-area-inset-right, 0px));
+  max-height:min(36vh, 240px);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  box-sizing:border-box;
+  padding:12px 12px 10px;
+  overflow:auto;
+  border-radius:16px;
+  color:#f7f1e3;
+  background:rgba(36, 22, 12, .96);
+  box-shadow:0 0 0 1px rgba(233, 201, 119, .7), 0 18px 40px -16px rgba(0, 0, 0, .85);
+}
+.zuschauen-dock[hidden]{display:none !important}
+.zuschauen-kicker{
+  margin:0;
+  color:#e9c977;
+  font-size:.78rem;
+  font-weight:800;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.zuschauen-text{
+  margin:0;
+  color:#f7f1e3;
+  font-size:1.05rem;
+  font-weight:650;
+  line-height:1.35;
+}
+.zuschauen-tempo,
+.zuschauen-aktionen{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.zuschauen-dock button{
+  min-height:44px;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(233, 201, 119, .55);
+  background:transparent;
+  color:#f7f1e3;
+  font:inherit;
+  font-size:.95rem;
+  font-weight:750;
+  line-height:1.2;
+  cursor:pointer;
+}
+.zuschauen-dock button[aria-pressed="true"]{
+  background:#e9c977;
+  color:#24160c;
+  border-color:#e9c977;
+}
+.zuschauen-selbst{
+  background:#f7f1e3;
+  color:#24160c;
+  border-color:#f7f1e3;
+}
+.zuschauen-dock.ist-selbst .zuschauen-tempo,
+.zuschauen-dock.ist-selbst .zuschauen-aktionen{display:none}
+
+@media (max-width: 700px) and (orientation: portrait){
+  .zuschauen-dock{
+    top:calc(52px + env(safe-area-inset-top, 0px));
+    max-height:min(40vh, 250px);
+  }
+  .zuschauen-text{font-size:1.02rem}
+  .zuschauen-aktionen button,
+  .zuschauen-tempo button{flex:1 1 calc(50% - 8px)}
+  .zuschauen-selbst{flex-basis:100%}
+}
+
+@media (min-width: 700px) and (max-width: 1100px) and (orientation: portrait){
+  .zuschauen-dock{
+    left:16px;
+    right:16px;
+    max-height:min(32vh, 260px);
+  }
+  .zuschauen-text{font-size:1.12rem}
+}
+
+@media (orientation: landscape) and (min-width: 900px){
+  .zuschauen-dock{
+    top:calc(62px + env(safe-area-inset-top, 0px));
+    left:auto;
+    right:max(12px, env(safe-area-inset-right, 0px));
+    width:min(380px, 34vw);
+    max-height:calc(100dvh - 78px - env(safe-area-inset-bottom, 0px));
+  }
+  .zuschauen-text{font-size:1.08rem}
+}
+
+@media (orientation: landscape) and (max-height: 520px){
+  .zuschauen-dock{
+    top:max(6px, env(safe-area-inset-top, 0px));
+    left:auto;
+    right:max(6px, env(safe-area-inset-right, 0px));
+    width:min(320px, 46vw);
+    max-height:calc(100dvh - 12px);
+    gap:6px;
+    padding:8px;
+  }
+  .zuschauen-text{font-size:.92rem}
+  .zuschauen-dock button{min-height:36px;padding:6px 8px;font-size:.82rem}
+}
