@@ -60,7 +60,7 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     assert.equal(parsed.value.history[2].text.length, 300);
     const body = H.buildChatBody(parsed.value, {});
     const blob = JSON.stringify(body);
-    assert.equal(body.max_tokens, 80);
+    assert.equal(body.max_tokens, 40);
     assert.equal(body.model, 'grok-4.3');
     assert.equal(body.temperature, 0.7);
     assert.deepEqual(Object.keys(body).sort(), ['max_tokens', 'messages', 'model', 'temperature']);
@@ -157,11 +157,11 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     assert.equal(JSON.stringify(logs[0]).includes('Bearer'), false);
   });
 
-  test('langes Gerede wird auf zwei Sätze und 40 Wörter gekürzt', () => {
+  test('langes Gerede wird auf zwei Sätze und 22 Wörter gekürzt', () => {
     const words = [];
     for (let i = 0; i < 50; i++) words.push('wort' + i);
     const cut = H.clampSpeech(words.join(' ') + '.');
-    assert.ok(cut.split(/\s+/).length <= 40);
+    assert.equal(cut.split(/\s+/).length, 22);
   });
 
   test('Tages- und Minutengrenze', async () => {
@@ -770,5 +770,74 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     assert.doesNotMatch(system, /türkisch|Türkisch|elevenlabs|grok|openai/i);
     assert.match(H.PERSONA.oemer, /deutsch/);
     assert.doesNotMatch(H.PERSONA.oemer, /türkisch/);
+  });
+
+  test('Chat bleibt unter der Funktionsgrenze und der Prompt ist kürzer', async () => {
+    const yml = fs.readFileSync(path.join(__dirname, '../../api/project.yml'), 'utf8');
+    const chatFn = yml.slice(yml.indexOf('name: chat'), yml.indexOf('name: tts'));
+    const ttsFn = yml.slice(yml.indexOf('name: tts'), yml.indexOf('name: avatar'));
+    assert.match(chatFn, /timeout: 12000/);
+    assert.match(ttsFn, /timeout: 15000/);
+    assert.equal(H.FUNCTION_LIMIT_MS, 12000);
+    assert.equal(H.CHAT_TIMEOUT_MS, 11000);
+    assert.ok(H.CHAT_TIMEOUT_MS < H.FUNCTION_LIMIT_MS);
+    assert.ok(H.FUNCTION_LIMIT_MS - H.CHAT_TIMEOUT_MS >= 500);
+    assert.equal(H.MAX_TOKENS, 40);
+
+    const beforeChars = 1214;
+    const sample = {
+      character: 'oemer',
+      message: 'Wie geht das Reizen?',
+      history: [{ role: 'du', text: 'Moin' }],
+      game: { phase: 'bidding', scores: [0, 0, 0] },
+    };
+    const system = H.buildMessages(sample)[0].content;
+    assert.match(system, /nur auf Deutsch/);
+    assert.ok(system.length < beforeChars, 'nachher ' + system.length + ', vorher ' + beforeChars);
+    assert.ok(system.length < 900, system.length);
+
+    const talkFiles = [
+      'public/skat/js/talk.js',
+      'public/spielpartner/stimmen.js',
+      'public/bridge/js/talk.js',
+      'public/jass/js/talk.js',
+      'public/doppelkopf/js/talk.js',
+      'public/canasta/js/talk.js',
+      'public/romme/js/talk.js',
+      'public/schafkopf/js/talk.js',
+      'public/maumau/js/talk.js',
+      'public/schwimmen/js/talk.js',
+      'public/elfer-raus/js/talk.js',
+      'public/schnapsen/js/talk.js',
+      'public/watten/js/talk.js',
+    ];
+    for (const rel of talkFiles) {
+      const src = fs.readFileSync(path.join(__dirname, '../../', rel), 'utf8');
+      assert.match(src, /abortSignal\(11500\)/, rel);
+      assert.match(src, /abortSignal\(12000\)/, rel);
+      assert.equal(src.includes('abortSignal(9000)'), false, rel);
+    }
+
+    H.resetLimits();
+    const fastStart = Date.now();
+    const fast = await H.handleChat(event('POST', { character: 'horst', message: 'hallo' }), chatDeps(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      return { ok: true, json: async () => ({ choices: [{ message: { content: 'Na jut.' } }] }) };
+    }));
+    const fastMs = Date.now() - fastStart;
+    assert.equal(fast.status, 200);
+    assert.equal(fast.json.text, 'Na jut.');
+    assert.ok(fastMs < 500, 'schnell ' + fastMs);
+
+    H.resetLimits();
+    const hungStart = Date.now();
+    const hung = await H.handleChat(event('POST', { character: 'horst', message: 'hallo' }), Object.assign(chatDeps(() => new Promise(() => {})), {
+      chatTimeoutMs: 120,
+    }));
+    const hungMs = Date.now() - hungStart;
+    assert.equal(hung.status, 503);
+    assert.equal(hung.json.reason, 'timeout');
+    assert.equal(hung.json.error, 'nicht erreichbar');
+    assert.ok(hungMs >= 100 && hungMs < 800, 'abbruch ' + hungMs);
   });
 });
