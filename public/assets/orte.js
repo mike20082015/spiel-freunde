@@ -37,7 +37,7 @@
       id: 'nikolaus',
       name: 'Nikolaus-Tisch',
       scene: 'nikolaus',
-      from: '2026-11-27T00:00:00+07:00',
+      from: '2026-12-01T00:00:00+07:00',
       until: '2026-12-06T23:59:59+07:00',
       badge: 'Nur bis 6. Dezember'
     },
@@ -46,8 +46,8 @@
       name: 'Weihnachtstisch',
       scene: 'weihnachten',
       from: '2026-12-07T00:00:00+07:00',
-      until: '2026-12-26T23:59:59+07:00',
-      badge: 'Nur bis 26. Dezember'
+      until: '2026-12-31T23:59:59+07:00',
+      badge: 'Nur bis 31. Dezember'
     }
   ];
   var ORTE = [
