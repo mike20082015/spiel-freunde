@@ -622,12 +622,10 @@
       bubble(event.seat, word);
       Voice.speak(id, word);
     } else if (event.kind === 'declare') {
-      const line = Talk.line(id, 'declare') || event.label || '';
-      bubble(event.seat, event.label || line);
-      if (line) Voice.speak(id, line);
+      bubble(event.seat, event.label || 'Ansage');
+      speakFresh(id, event.seat, 'declare', event);
     } else if (event.kind === 'gameOver') {
-      const line = Talk.line(id, 'selfWins');
-      if (line) Voice.speak(id, line);
+      speakFresh(id, event.seat, 'selfWins', event);
     }
   }
 
@@ -644,6 +642,23 @@
       if (window.SpielpartnerRounds) window.SpielpartnerRounds.finish();
       paintRounds();
     }
+  }
+
+  function speakFresh(id, seat, ev, event) {
+    const fallback = () => (Talk.line(id, ev) || '');
+    const speak = (line) => { if (line) Voice.speak(id, line); };
+    const sprueche = window.SpielpartnerSprueche;
+    if (!sprueche || typeof sprueche.freshComment !== 'function') { speak(fallback()); return; }
+    const view = S.view || {};
+    const name = (view.seats && view.seats[seat] && view.seats[seat].name) || id;
+    const scores = Array.isArray(view.scores) ? view.scores.join(', ') : '';
+    sprueche.freshComment({
+      character: id,
+      event: ev,
+      situation: ['Spieler ' + name, view.phase ? ('Phase ' + view.phase) : '', event && event.label ? event.label : '', scores ? ('Punkte ' + scores) : ''].filter(Boolean).join('. '),
+      game: { phase: view.phase || '', game: event && event.label ? event.label : null, scores: view.scores || null },
+      fallback: fallback,
+    }).then(speak);
   }
 
   async function maybeAi() {

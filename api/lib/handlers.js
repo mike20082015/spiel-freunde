@@ -25,6 +25,8 @@ const DEFAULT_CHANTAL = 'SiMvlSW9cKKHDYT4BzOp'; // Lola
 const MAX_MESSAGE = 300;
 const MAX_TOKENS = 40;
 const MAX_WORDS = 22;
+const REMARK_WORDS = 12;
+const REMARK_TOKENS = 32;
 const MAX_HISTORY = 6;
 const PER_MINUTE = 12;
 const DEFAULT_DAILY = 400;
@@ -366,6 +368,7 @@ function validateChat(input) {
     value: {
       character: input.character,
       message,
+      purpose: input.purpose === 'remark' ? 'remark' : 'chat',
       game: cleanGame(input.game),
       history: cleanHistory(input.history),
     },
@@ -410,9 +413,12 @@ function historyMessages(history, character) {
 }
 
 function buildMessages(value) {
-  const system = PERSONA[value.character]
+  let system = PERSONA[value.character]
     + ' Antworte nur auf Deutsch. Mundart ist erlaubt. Nur der gesprochene Satz, ohne Anführungszeichen. '
     + publicBlock(value.game);
+  if (value.purpose === 'remark') {
+    system += ' Sag von dir aus einen kurzen Tischspruch zu dieser Lage. Höchstens 12 Wörter. Ein Satz. Freundlich. Keine Politik. Nenne kein Programm und keine Firma.';
+  }
   return [{ role: 'system', content: system }].concat(historyMessages(value.history, value.character), [
     { role: 'user', content: value.message },
   ]);
@@ -422,7 +428,7 @@ function buildChatBody(value, env) {
   return {
     model: envStr(env, 'XAI_MODEL', DEFAULT_MODEL),
     messages: buildMessages(value),
-    max_tokens: MAX_TOKENS,
+    max_tokens: value && value.purpose === 'remark' ? REMARK_TOKENS : MAX_TOKENS,
     temperature: 0.7,
   };
 }
@@ -462,12 +468,16 @@ function takeSlot(ip, now, env) {
   return true;
 }
 
-function clampSpeech(text) {
+const REMARK_BLOCK = /\b(politik|partei|wahlkampf|bundestag|einkommen)\b/i;
+
+function clampSpeech(text, wordLimit) {
+  const limit = wordLimit > 0 ? wordLimit : MAX_WORDS;
+  const sentences = limit <= REMARK_WORDS ? 1 : 2;
   let t = normalizeSpaces(text).replace(/^["„«]+|["“»]+$/g, '').trim();
   const bits = t.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [];
-  if (bits.length) t = bits.slice(0, 2).map((part) => part.trim()).filter(Boolean).join(' ');
+  if (bits.length) t = bits.slice(0, sentences).map((part) => part.trim()).filter(Boolean).join(' ');
   const words = t.split(/\s+/).filter(Boolean);
-  if (words.length > MAX_WORDS) t = words.slice(0, MAX_WORDS).join(' ');
+  if (words.length > limit) t = words.slice(0, limit).join(' ');
   if (t.length > MAX_MESSAGE) t = t.slice(0, MAX_MESSAGE).trim();
   return t;
 }
@@ -532,9 +542,11 @@ async function handleChat(event, deps) {
     const raw = data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
     if (typeof raw !== 'string') return fail(origin, 'empty');
     if (SLIP.test(raw)) return fail(origin, 'filtered');
-    const text = clampSpeech(raw);
+    const remark = parsed.value.purpose === 'remark';
+    if (remark && REMARK_BLOCK.test(raw)) return fail(origin, 'filtered');
+    const text = clampSpeech(raw, remark ? REMARK_WORDS : MAX_WORDS);
     if (!text) return fail(origin, 'empty');
-    if (SLIP.test(text)) return fail(origin, 'filtered');
+    if (SLIP.test(text) || (remark && REMARK_BLOCK.test(text))) return fail(origin, 'filtered');
     return { status: 200, json: { text }, headers: withCors(origin) };
   } catch (e) {
     const name = e && (e.name || '');
@@ -973,6 +985,9 @@ module.exports = {
   DEFAULT_CHANTAL,
   MAX_MESSAGE,
   MAX_TOKENS,
+  MAX_WORDS,
+  REMARK_WORDS,
+  REMARK_TOKENS,
   CHAT_TIMEOUT_MS,
   FUNCTION_LIMIT_MS,
   MAX_HISTORY,

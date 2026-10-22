@@ -163,13 +163,34 @@
     hideLater(Math.min(5200, 1800 + text.length * 36));
     return true;
   }
+  function tableFacts(seat, event) {
+    const person = who(seat);
+    const st = S.state;
+    const bits = ['Spieler ' + ((person && person.name) || 'jemand')];
+    if (event) bits.push(event);
+    if (st && st.phase) bits.push('Phase ' + st.phase);
+    if (st && Array.isArray(st.trick)) bits.push('Karten im Stich ' + st.trick.length);
+    if (match && Array.isArray(match.scores)) bits.push('Punkte ' + match.scores.join(', '));
+    return bits.join('. ');
+  }
   function talk(seat, event, prob, force) {
     if (prob != null && Math.random() > prob) return false;
+    if (typeof window !== 'undefined' && window.SpielpartnerSprueche && !window.SpielpartnerSprueche.allow({ force: !!force })) return false;
     const person = who(seat);
     if (!person || person.id === 'du') return false;
     let ev = event;
     if (settings.level === 'anfaenger' && ev === 'lose') ev = 'encourage';
-    return say(seat, Talk.line(person.id, ev), { force: force });
+    const sprueche = typeof window !== 'undefined' ? window.SpielpartnerSprueche : null;
+    const fallback = () => Talk.line(person.id, ev);
+    if (!sprueche || typeof sprueche.freshComment !== 'function') return say(seat, fallback(), { force: force });
+    sprueche.freshComment({
+      character: person.id,
+      event: ev,
+      situation: tableFacts(seat, ev),
+      game: S.state && E.publicSummary ? E.publicSummary(S.state, match.scores) : { phase: S.state && S.state.phase, scores: match && match.scores ? match.scores.slice() : null },
+      fallback: fallback,
+    }).then((text) => { if (text) say(seat, text, { force: force }); });
+    return true;
   }
 
   async function playerFace() {

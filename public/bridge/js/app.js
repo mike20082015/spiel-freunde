@@ -161,6 +161,37 @@
     }
   }
 
+  function tableFacts(seat, event) {
+    var person = Seats[seat];
+    var g = publicGame() || {};
+    var bits = ['Spieler ' + ((person && person.name) || 'jemand')];
+    if (event) bits.push(event);
+    if (g.phase) bits.push('Phase ' + g.phase);
+    if (g.game) bits.push('Spiel ' + g.game);
+    if (table && table.trick && table.trick.length) bits.push('Karten im Stich ' + table.trick.length);
+    if (table && table.tricksWon) bits.push('Stiche ' + table.tricksWon.join(', '));
+    if (g.scores) bits.push('Punkte ' + g.scores.join(', '));
+    return bits.join('. ');
+  }
+  function remark(seat, event, opts) {
+    var gate = window.SpielpartnerSprueche;
+    if (gate && !gate.allow({ force: !!(opts && opts.force) })) return false;
+    var person = Seats[seat];
+    if (!person || person.id === 'du') return false;
+    var fallback = function () { return Talk.line(person.id, event); };
+    if (!gate || typeof gate.freshComment !== 'function') {
+      say(seat, fallback(), opts || {});
+      return true;
+    }
+    gate.freshComment({
+      character: person.id,
+      event: event,
+      situation: tableFacts(seat, event),
+      game: publicGame(),
+      fallback: fallback
+    }).then(function (text) { if (text) say(seat, text, opts || {}); });
+    return true;
+  }
   function publicGame() {
     if (!table) return null;
     return {
@@ -401,7 +432,10 @@
   }
   function applyEvents(events) {
     (events || []).forEach(function (ev) {
-      if (ev.type === 'trick') holdTrick = true;
+      if (ev.type === 'trick') {
+        holdTrick = true;
+        if (ev.winner && Math.random() < 0.34) remark(ev.winner, 'trick');
+      }
       if (ev.type === 'contract') sys('Kontrakt: ' + E.contractLabel(ev.contract) + '. Alleinspieler ' + NAMES[ev.contract.declarer] + '.');
       if (ev.type === 'passed') sys('Alle haben gepasst.');
     });
@@ -897,7 +931,7 @@
     $('intro').hidden = true;
     table = E.demo(params.get('demo') === 'spiel' ? 'play' : 'bid');
     if (table.phase === 'play') say(2, 'Ich liege offen. Du spielst den Strohmann.');
-    else say(2, Talk.line(Seats[2].id, 'welcome'));
+    else remark(2, 'welcome', { force: true });
     poke();
   }
   if (window.SpielpartnerRunde) SpielpartnerRunde.mount({

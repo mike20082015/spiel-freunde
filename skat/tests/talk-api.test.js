@@ -157,6 +157,54 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     assert.equal(JSON.stringify(logs[0]).includes('Bearer'), false);
   });
 
+  test('ein Tischspruch bleibt bei zwölf Wörtern, der Chat bei vierzig Token', async () => {
+    const words = [];
+    for (let i = 0; i < 30; i++) words.push('wort' + i);
+    const parsed = H.validateChat({
+      character: 'oemer',
+      message: 'Lage: Spieler Ömer. Stich. Punkte Du 0, Ömer 18.',
+      purpose: 'remark',
+      game: { phase: 'play', declarer: 1, game: 'Grand', scores: [0, 18, 4], hands: ['VERDECKT'] },
+    });
+    assert.equal(parsed.ok, true);
+    assert.equal(parsed.value.purpose, 'remark');
+    assert.equal(parsed.value.game.hands, undefined);
+    const body = H.buildChatBody(parsed.value, {});
+    assert.equal(body.max_tokens, H.REMARK_TOKENS);
+    assert.equal(body.max_tokens, 32);
+    assert.deepEqual(Object.keys(body).sort(), ['max_tokens', 'messages', 'model', 'temperature']);
+    assert.match(body.messages[0].content, /Ömer Aydin/);
+    assert.match(body.messages[0].content, /Höchstens 12 Wörter/);
+    assert.match(body.messages[0].content, /Keine Politik/);
+    assert.match(body.messages[1].content, /Spieler Ömer/);
+    const said = body.messages.map((row) => row.content).join('\n');
+    assert.equal(said.includes('VERDECKT'), false);
+    assert.doesNotMatch(said, /elevenlabs|openai|\bgrok\b/i);
+    const chat = H.validateChat({ character: 'horst', message: 'hallo' });
+    assert.equal(chat.value.purpose, 'chat');
+    assert.equal(H.buildChatBody(chat.value, {}).max_tokens, 40);
+    let sent = null;
+    const res = await H.handleChat(event('POST', {
+      character: 'chantal',
+      message: 'Lage: Spieler Chantal. Stich.',
+      purpose: 'remark',
+      game: { phase: 'play', scores: [2, 4, 1] },
+    }), chatDeps(async (url, opts) => {
+      sent = JSON.parse(opts.body);
+      return { ok: true, json: async () => ({ choices: [{ message: { content: words.join(' ') + '.' } }] }) };
+    }));
+    assert.equal(res.status, 200);
+    assert.equal(sent.max_tokens, 32);
+    assert.equal(res.json.text.split(/\s+/).length, 12);
+    const politics = await H.handleChat(event('POST', {
+      character: 'horst',
+      message: 'Lage: Stich.',
+      purpose: 'remark',
+    }), chatDeps(async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: 'Das ist Politik, wa.' } }] }) })));
+    assert.equal(politics.status, 503);
+    assert.equal(politics.json.reason, 'filtered');
+  });
+
   test('langes Gerede wird auf zwei Sätze und 22 Wörter gekürzt', () => {
     const words = [];
     for (let i = 0; i < 50; i++) words.push('wort' + i);

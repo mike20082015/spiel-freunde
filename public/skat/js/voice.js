@@ -3,7 +3,7 @@
  * Reihenfolge je Satz:
  *   1. vorab erzeugte MP3 aus js/voice-manifest.js (feste Sprüche, assets/voice/<figur>/<id>.mp3)
  *   2. Talk.speakAI(character, text) nur ohne MP3 (serverseitiges ElevenLabs, Objekt-URL)
- *   3. Sprachausgabe des Browsers (speechSynthesis, de-DE), je Figur andere Tonhöhe und Tempo
+ *   3. Bleibt die Aufnahme aus, zeigt der Tisch nur den Text.
  * Es spricht immer nur eine Figur (Warteschlange). Ton startet erst nach der ersten Nutzeraktion (Autoplay-Regeln).
  *
  * Damit die Sätze ohne Loch aneinanderhängen:
@@ -254,8 +254,8 @@
         if (!ok) {
           try { ok = await playElement(src, item); } catch (e) { ok = false; }
         }
-        if (!ok) { mode = 'synth'; await playSynth(item); }
-      } else { mode = 'synth'; await playSynth(item); }
+        if (!ok) { mode = 'text'; await holdText(item); }
+      } else { mode = 'text'; await holdText(item); }
     } catch (e) { /* weiter mit dem nächsten Satz */ }
     if (owned) { try { root.URL.revokeObjectURL(owned); } catch (e) { /* egal */ } }
     V.log.push({ character: item.character, text: item.text, mode });
@@ -352,22 +352,11 @@
     return vs.find((v) => (male ? MALE : FEMALE).test(v.name)) || vs[character === 'horst' ? 0 : vs.length - 1];
   }
 
-  function playSynth(item) {
-    return new Promise((resolve) => {
-      const synth = root.speechSynthesis;
-      if (!synth || !root.SpeechSynthesisUtterance) { setTimeout(resolve, Math.min(4000, 900 + item.text.length * 45)); return; }
-      const u = new root.SpeechSynthesisUtterance(item.text);
-      const extraTone = root.SpielpartnerStimmen && root.SpielpartnerStimmen.synth ? root.SpielpartnerStimmen.synth(item.character) : null;
-      const cfg = SYNTH[item.character] || extraTone || { pitch: 1, rate: 1 };
-      u.lang = 'de-DE'; u.pitch = cfg.pitch; u.rate = cfg.rate; u.volume = volume();
-      const v = pickVoice(item.character);
-      if (v) u.voice = v;
-      let done = false;
-      const fin = () => { if (done) return; done = true; clearTimeout(guard); resolve(); };
-      const guard = setTimeout(fin, 2500 + item.text.length * 110);
-      u.onend = fin; u.onerror = fin;
-      item.stop = () => { try { synth.cancel(); } catch (e) { /* egal */ } fin(); };
-      try { synth.speak(u); } catch (e) { fin(); }
+  function holdText(item) {
+    return new Promise(function (resolve) {
+      var ms = Math.min(4200, 1400 + String((item && item.text) || '').length * 38);
+      var timer = setTimeout(resolve, ms);
+      if (item) item.stop = function () { clearTimeout(timer); resolve(); };
     });
   }
 

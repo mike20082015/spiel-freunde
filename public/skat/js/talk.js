@@ -136,10 +136,18 @@
   function callStyle(character) {
     return CALL_STYLE[character] || DEFAULT_CALL;
   }
-  // Liefert den Sprechtext für eine Ansage: token 'pass' | 'hold' | 'open' | Zahl | Spielname
+  // Liefert den Sprechtext für eine Ansage: token 'pass' | 'hold' | 'open' | Zahl | Spielname.
+  // Passen, Halten und Eröffnen kommen aus dem Beutel. Zahl und Spielname bleiben fest.
   function callText(character, token) {
     const st = callStyle(character);
-    if (st && Object.prototype.hasOwnProperty.call(st, token) && st[token]) return st[token];
+    if (st && Object.prototype.hasOwnProperty.call(st, token) && st[token]) {
+      const api = spruecheApi();
+      if (api && typeof api.call === 'function') {
+        const said = api.call(character, token, [st[token]]);
+        if (said) return said;
+      }
+      return st[token];
+    }
     const numeric = typeof token === 'string' && /^\d+$/.test(token) ? Number(token) : token;
     if (NUMBER_WORDS[numeric]) return NUMBER_WORDS[numeric] + '.';
     if (GAME_CALLS.includes(token)) return token + '!';
@@ -156,7 +164,15 @@
   function allCalls(character) {
     const out = [];
     const st = callStyle(character);
-    for (const k of Object.keys(st)) out.push({ id: 'c-' + k, text: st[k] });
+    const api = spruecheApi();
+    for (const k of Object.keys(st)) {
+      let lines = [st[k]];
+      if (api && typeof api.callPool === 'function') {
+        const pool = api.callPool(character, k, [st[k]]);
+        if (pool && pool.length) lines = pool;
+      }
+      lines.forEach((text, i) => out.push({ id: 'c-' + k + '-' + i, text: text }));
+    }
     for (const n of Object.keys(NUMBER_WORDS)) out.push({ id: 'c-' + n, text: NUMBER_WORDS[n] + '.' });
     GAME_CALLS.forEach((g, i) => out.push({ id: 'c-game-' + i, text: g + '!' }));
     return out;
@@ -169,13 +185,32 @@
     return out.concat(allCalls(character));
   }
 
+
+  function spruecheApi() {
+    var g = typeof globalThis !== 'undefined' ? globalThis : root;
+    if (g && g.SpielpartnerSprueche) return g.SpielpartnerSprueche;
+    if (typeof require === 'function') {
+      try {
+        var api = require('../../assets/sprueche.js');
+        if (g) g.SpielpartnerSprueche = api;
+        return api;
+      } catch (err) { return null; }
+    }
+    return null;
+  }
   function pick(arr, rng) {
     if (!arr || !arr.length) return null;
     return arr[Math.floor((rng || Math.random)() * arr.length)];
   }
 
   function line(character, event, rng) {
-    return pick((LINES[character] || {})[event], rng);
+    var local = (LINES[character] || {})[event];
+    var api = spruecheApi();
+    if (api && typeof api.line === 'function') {
+      var said = api.line(character, event, local, rng);
+      if (said) return said;
+    }
+    return pick(local, rng);
   }
 
   function classify(text) {
@@ -185,9 +220,15 @@
   }
 
   function cannedReply(character, text, rng) {
-    const kind = classify(text);
-    const pool = REPLIES[character][kind] || REPLIES[character].default;
-    return pick(pool, rng);
+    var kind = classify(text);
+    var bank = (typeof REPLIES !== 'undefined' && REPLIES[character]) || {};
+    var local = bank[kind] || bank.default || [];
+    var api = spruecheApi();
+    if (api && typeof api.reply === 'function') {
+      var said = api.reply(character, kind, local, rng);
+      if (said) return said;
+    }
+    return pick(local, rng) || 'Mhm.';
   }
 
   /*

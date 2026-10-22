@@ -105,7 +105,7 @@
       if (src) {
         try { ok = await playElement(src, item); } catch (e) { ok = false; }
       }
-      if (!ok) await playSynth(item);
+      if (!ok) await holdText(item);
     } catch (e) { /* nächster Satz */ }
     if (owned) { try { root.URL.revokeObjectURL(owned); } catch (e) { /* egal */ } }
     V.log.push({ character: item.character, text: item.text });
@@ -153,29 +153,11 @@
     return vs.find((v) => (male ? MALE : FEMALE).test(v.name)) || vs[character === 'horst' ? 0 : vs.length - 1];
   }
 
-  function playSynth(item) {
-    return new Promise((resolve) => {
-      const synth = root.speechSynthesis;
-      if (!synth || !root.SpeechSynthesisUtterance) {
-        setTimeout(resolve, Math.min(2800, 700 + item.text.length * 35));
-        return;
-      }
-      const u = new root.SpeechSynthesisUtterance(item.text);
-      const extraTone = root.SpielpartnerStimmen && root.SpielpartnerStimmen.synth ? root.SpielpartnerStimmen.synth(item.character) : null;
-      const cfg = SYNTH[item.character] || extraTone || { pitch: 1, rate: 1 };
-      u.lang = 'de-DE';
-      u.pitch = cfg.pitch;
-      u.rate = cfg.rate;
-      u.volume = volume();
-      const v = pickVoice(item.character);
-      if (v) u.voice = v;
-      let done = false;
-      const fin = () => { if (done) return; done = true; clearTimeout(guard); resolve(); };
-      const guard = setTimeout(fin, 2200 + item.text.length * 90);
-      u.onend = fin;
-      u.onerror = fin;
-      item.stop = () => { try { synth.cancel(); } catch (e) { /* egal */ } fin(); };
-      try { synth.speak(u); } catch (e) { fin(); }
+  function holdText(item) {
+    return new Promise(function (resolve) {
+      var ms = Math.min(4200, 1400 + String((item && item.text) || '').length * 38);
+      var timer = setTimeout(resolve, ms);
+      if (item) item.stop = function () { clearTimeout(timer); resolve(); };
     });
   }
 

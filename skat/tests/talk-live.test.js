@@ -3,6 +3,11 @@ const test = require('node:test');
 const assert = require('assert');
 
 const Talk = require('../../public/skat/js/talk.js').SkatTalk;
+const Sprueche = require('../../public/assets/sprueche.js');
+
+function horstGreet(text) {
+  return Sprueche.replyPool('horst', 'greet', Talk.REPLIES.horst.greet).includes(text);
+}
 
 function jsonRes(body, ok) {
   return { ok: ok !== false, status: ok === false ? 503 : 200, json: async () => body, blob: async () => new Blob() };
@@ -28,11 +33,11 @@ test.describe('askAI und speakAI', { concurrency: 1 }, () => {
       return jsonRes({}, false);
     };
     const first = await Talk.askAI('horst', { message: 'hallo' });
-    assert.ok(Talk.REPLIES.horst.greet.includes(first));
+    assert.ok(horstGreet(first));
     const seen = calls;
     assert.equal(seen, 3);
     const second = await Talk.askAI('horst', { message: 'hallo nochmal' });
-    assert.ok(Talk.REPLIES.horst.greet.includes(second));
+    assert.ok(horstGreet(second));
     assert.equal(calls, seen);
   });
 
@@ -99,8 +104,8 @@ test.describe('askAI und speakAI', { concurrency: 1 }, () => {
     };
     const a = await Talk.askAI('horst', { message: 'hallo' });
     const b = await Talk.askAI('horst', { message: 'hallo' });
-    assert.ok(Talk.REPLIES.horst.greet.includes(a));
-    assert.ok(Talk.REPLIES.horst.greet.includes(b));
+    assert.ok(horstGreet(a));
+    assert.ok(horstGreet(b));
     assert.equal(posts, 2);
     await Talk.askAI('horst', { message: 'hallo' });
     assert.equal(posts, 2);
@@ -112,7 +117,7 @@ test.describe('askAI und speakAI', { concurrency: 1 }, () => {
       return { ok: false, status: 504, json: async () => ({ error: 'nicht erreichbar', reason: 'timeout' }) };
     };
     const gone = await Talk.askAI('horst', { message: 'hallo' });
-    assert.ok(Talk.REPLIES.horst.greet.includes(gone));
+    assert.ok(horstGreet(gone));
     assert.doesNotMatch(gone, /nicht erreichbar|504|timeout|error/i);
 
     Talk.resetForTests();
@@ -121,7 +126,7 @@ test.describe('askAI und speakAI', { concurrency: 1 }, () => {
       return jsonRes({ text: 'Gateway Timeout' });
     };
     const leaked = await Talk.askAI('horst', { message: 'hallo' });
-    assert.ok(Talk.REPLIES.horst.greet.includes(leaked));
+    assert.ok(horstGreet(leaked));
     assert.doesNotMatch(leaked, /gateway timeout/i);
   });
 

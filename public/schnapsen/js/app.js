@@ -141,6 +141,37 @@
     if (seat !== 0 && optsSay.log !== false) logLine('<b>' + esc(nameOf(seat)) + ':</b> ' + esc(text));
     if (seat !== 0 && settings.sound && optsSay.voice !== false) Voice.speak(Seats[seat].id, text, { priority: !!optsSay.priority });
   }
+  function tableFacts(seat, event) {
+    var person = Seats[seat];
+    var g = publicGame() || {};
+    var bits = ['Spieler ' + ((person && person.name) || 'jemand')];
+    if (event) bits.push(event);
+    if (g.phase) bits.push('Phase ' + g.phase);
+    if (g.trump) bits.push('Trumpf ' + g.trump);
+    if (g.game) bits.push('Spiel ' + g.game);
+    if (table && table.trick && table.trick.length) bits.push('Karten im Stich ' + table.trick.length);
+    if (g.scores) bits.push('Punkte ' + g.scores.join(', '));
+    return bits.join('. ');
+  }
+  function remark(seat, event, opts) {
+    var gate = window.SpielpartnerSprueche;
+    if (gate && !gate.allow({ force: !!(opts && opts.force) })) return false;
+    var person = Seats[seat];
+    if (!person || person.id === 'du') return false;
+    var fallback = function () { return Talk.line(person.id, event); };
+    if (!gate || typeof gate.freshComment !== 'function') {
+      say(seat, fallback(), opts || {});
+      return true;
+    }
+    gate.freshComment({
+      character: person.id,
+      event: event,
+      situation: tableFacts(seat, event),
+      game: publicGame(),
+      fallback: fallback
+    }).then(function (text) { if (text) say(seat, text, opts || {}); });
+    return true;
+  }
 
   function publicGame() {
     if (!table) return null;
@@ -301,15 +332,15 @@
   function applyEvents(events) {
     var ended = false;
     (events || []).forEach(function (ev) {
-      if (ev.type === 'exchange') say(ev.seat, Talk.line(Seats[ev.seat].id, 'exchange'));
-      if (ev.type === 'close') say(ev.seat, Talk.line(Seats[ev.seat].id, 'close'));
+      if (ev.type === 'exchange') remark(ev.seat, 'exchange');
+      if (ev.type === 'close') remark(ev.seat, 'close');
       if (ev.type === 'marriage' && !ev.reason) {
         var word = ev.points >= 40 ? 'Vierzig' : 'Zwanzig';
         say(ev.seat, word + (ev.pending ? ', noch ohne Stich.' : '.'));
       }
       if (ev.type === 'trick') {
         lastTrick = ev.cards;
-        if (ev.winner !== 0 && Math.random() < 0.4) say(ev.winner, Talk.line(Seats[ev.winner].id, 'trick'));
+        if (ev.winner !== 0 && Math.random() < 0.28) remark(ev.winner, 'trick');
       }
       if (ev.type === 'handEnd' && !ended) {
         ended = true;
@@ -397,7 +428,7 @@
     table = E.newTable(opts(), Math.random);
     lastTrick = null;
     sys('Geber: ' + nameOf(table.dealer) + '. Vorhand: ' + nameOf(table.forehand) + '. Trumpf ' + E.suitName(table.trump, settings.deck) + '.');
-    if (table.turn !== 0) say(table.turn, Talk.line(Seats[table.turn].id, 'welcome'));
+    if (table.turn !== 0) remark(table.turn, 'welcome', { force: true });
     poke();
     return true;
   }
