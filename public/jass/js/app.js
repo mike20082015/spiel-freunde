@@ -134,6 +134,15 @@
     if (seat !== 0 && settings.sound && opts.voice !== false) Voice.speak(Seats[seat].id, text, { priority: !!opts.priority });
   }
 
+
+  function remark(seat, event, opts) {
+    var gate = window.SpielpartnerSprueche;
+    if (gate && !gate.allow({ force: !!(opts && opts.force) })) return false;
+    var person = Seats[seat];
+    if (!person || person.id === 'du') return false;
+    say(seat, Talk.line(person.id, event), opts || {});
+    return true;
+  }
   function publicGame() {
     if (!table) return null;
     return {
@@ -298,9 +307,9 @@
   function applyEvents(events) {
     (events || []).forEach(function (ev) {
       if (ev.type === 'ansage') say(ev.seat, E.spokenWeis(ev.points));
-      if (ev.type === 'schieben') say(ev.seat, Talk.line(Seats[ev.seat].id, 'schieben'));
+      if (ev.type === 'schieben') remark(ev.seat, 'schieben');
       if (ev.type === 'trump') say(ev.seat, E.trumpName(ev.trump, settings.deck) + '.');
-      if (ev.type === 'stoeck') say(ev.seat, Talk.line(Seats[ev.seat].id, 'stoeck'));
+      if (ev.type === 'stoeck') remark(ev.seat, 'stoeck');
       if (ev.type === 'trick') lastTrick = ev.cards;
       if (ev.type === 'weis' && ev.raw) sys('Weis: ' + teamName(ev.team) + ' schreiben ' + ev.raw + '.');
       if (ev.type === 'score' && ev.reason === 'stoeck') sys('Stöck: ' + ev.points + ' für ' + teamName(ev.team) + '.');

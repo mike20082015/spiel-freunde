@@ -231,6 +231,7 @@
   const KIND_EVENTS = { weakPlay: 'weakPlayKind', humanLoses: 'encourage' };
   function talk(p, event, prob, force) {
     if (prob != null && Math.random() > prob) return false;
+    if (typeof window !== 'undefined' && window.SpielpartnerSprueche && !window.SpielpartnerSprueche.allow({ force: !!force })) return false;
     if (S.level === 'anfaenger' && KIND_EVENTS[event]) event = KIND_EVENTS[event];
     const text = Talk.line(WHO[p], event);
     const ok = say(p, text, { force });

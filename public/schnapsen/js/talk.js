@@ -51,12 +51,31 @@
     }
   };
 
+
+  function spruecheApi() {
+    var g = typeof globalThis !== 'undefined' ? globalThis : root;
+    if (g && g.SpielpartnerSprueche) return g.SpielpartnerSprueche;
+    if (typeof require === 'function') {
+      try {
+        var api = require('../../assets/sprueche.js');
+        if (g) g.SpielpartnerSprueche = api;
+        return api;
+      } catch (err) { return null; }
+    }
+    return null;
+  }
   function pick(arr, rng) {
     if (!arr || !arr.length) return null;
     return arr[Math.floor((rng || Math.random)() * arr.length)];
   }
   function line(character, event, rng) {
-    return pick((LINES[character] || {})[event], rng);
+    var local = (LINES[character] || {})[event];
+    var api = spruecheApi();
+    if (api && typeof api.line === 'function') {
+      var said = api.line(character, event, local, rng);
+      if (said) return said;
+    }
+    return pick(local, rng);
   }
   function classify(text) {
     var t = ' ' + String(text || '').toLowerCase() + ' ';
@@ -66,8 +85,15 @@
     return 'default';
   }
   function cannedReply(character, text, rng) {
-    var pool = (REPLIES[character] || {})[classify(text)] || (REPLIES[character] || {}).default;
-    return pick(pool, rng);
+    var kind = classify(text);
+    var bank = (typeof REPLIES !== 'undefined' && REPLIES[character]) || {};
+    var local = bank[kind] || bank.default || [];
+    var api = spruecheApi();
+    if (api && typeof api.reply === 'function') {
+      var said = api.reply(character, kind, local, rng);
+      if (said) return said;
+    }
+    return pick(local, rng) || 'Mhm.';
   }
 
   var PATHS = {

@@ -1,6 +1,6 @@
 /*
  * Stimmen am Wattentisch.
- * Zuerst /api/sf/tts über Talk.speakAI, danach die Browserstimme.
+ * Zuerst /api/sf/tts über Talk.speakAI, sonst bleibt der Text in der Blase.
  * Es spricht immer nur eine Figur. Ton erst nach der ersten Nutzeraktion.
  */
 (function (root) {
@@ -85,7 +85,7 @@
   function playItem(item) {
     return remote(item).then(function (url) {
       if (url) return playUrl(url);
-      return synth(item);
+      return holdText(item);
     });
   }
   function remote(item) {
@@ -114,21 +114,11 @@
     if (!list.length) return null;
     return list.find(function (v) { return (male ? MALE : FEMALE).test(v.name); }) || list[male ? 0 : list.length - 1] || null;
   }
-  function synth(item) {
+  function holdText(item) {
     return new Promise(function (resolve) {
-      if (!root.speechSynthesis || typeof root.SpeechSynthesisUtterance !== 'function') { resolve(); return; }
-      var utter = new root.SpeechSynthesisUtterance(item.text);
-      utter.lang = 'de-DE';
-      var profile = tone(item.character) || { pitch: 1, rate: 1 };
-      utter.pitch = profile.pitch;
-      utter.rate = profile.rate;
-      utter.volume = volume();
-      var voice = pickVoice(item.character);
-      if (voice) utter.voice = voice;
-      utter.onend = function () { resolve(); };
-      utter.onerror = function () { resolve(); };
-      try { root.speechSynthesis.cancel(); root.speechSynthesis.speak(utter); }
-      catch (e) { resolve(); }
+      var ms = Math.min(4200, 1400 + String((item && item.text) || '').length * 38);
+      var timer = setTimeout(resolve, ms);
+      if (item) item.stop = function () { clearTimeout(timer); resolve(); };
     });
   }
 

@@ -210,23 +210,42 @@
     return arr[n];
   }
 
+  function spruecheApi() {
+    var g = root || (typeof globalThis !== 'undefined' ? globalThis : null);
+    if (g && g.SpielpartnerSprueche) return g.SpielpartnerSprueche;
+    if (typeof require === 'function') {
+      try { return require('../assets/sprueche.js'); } catch (err) { return null; }
+    }
+    return null;
+  }
+
   function line(id, event, rng) {
-    var bank = BANKS[canonical(id)];
-    if (!bank) return null;
+    var bank = BANKS[canonical(id)] || {};
     var key = bank[event] ? event : (ALIAS[event] || 'default');
     if (!bank[key]) key = 'default';
-    return pick(bank[key], rng);
+    var local = bank[key] || bank.default || [];
+    var api = spruecheApi();
+    if (api && typeof api.line === 'function') {
+      var said = api.line(id, event, local, rng);
+      if (said) return said;
+    }
+    return pick(local, rng);
   }
 
   function canned(id, text, rng) {
-    var bank = REPLIES[canonical(id)];
-    if (!bank) return line(id, 'default', rng);
+    var bank = REPLIES[canonical(id)] || {};
     var t = ' ' + String(text || '').toLowerCase() + ' ';
     var kind = 'default';
     if (/hallo|moin|servus|guten|hoi|hi |grüß|gruess/.test(t)) kind = 'greet';
     else if (/danke|merci/.test(t)) kind = 'thanks';
     else if (/tschü|tschu|ciao|gute nacht|bis bald/.test(t)) kind = 'bye';
-    return pick(bank[kind] || bank.default, rng);
+    var local = bank[kind] || bank.default || [];
+    var api = spruecheApi();
+    if (api && typeof api.reply === 'function') {
+      var said = api.reply(id, kind, local, rng);
+      if (said) return said;
+    }
+    return pick(local, rng) || line(id, 'default', rng);
   }
 
   function mentions(text, id) {
@@ -373,16 +392,7 @@
         if (played && typeof played.catch === 'function') played.catch(function () {});
         return { ok: true, via: 'tts', text: text };
       }
-      if (g.speechSynthesis && typeof g.SpeechSynthesisUtterance === 'function') {
-        var utter = new g.SpeechSynthesisUtterance(text);
-        var tone = synth(id) || { pitch: 1, rate: 1 };
-        utter.lang = 'de-DE';
-        utter.pitch = tone.pitch;
-        utter.rate = tone.rate;
-        try { g.speechSynthesis.cancel(); g.speechSynthesis.speak(utter); } catch (err) { /* gesperrt */ }
-        return { ok: true, via: 'browser', text: text };
-      }
-      return { ok: false, via: '', text: text };
+      return { ok: true, via: 'text', text: text };
     });
   }
 

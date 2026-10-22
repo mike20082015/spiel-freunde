@@ -141,6 +141,14 @@
     if (seat !== 0 && optsSay.log !== false) logLine('<b>' + esc(nameOf(seat)) + ':</b> ' + esc(text));
     if (seat !== 0 && settings.sound && optsSay.voice !== false) Voice.speak(Seats[seat].id, text, { priority: !!optsSay.priority });
   }
+  function remark(seat, event, opts) {
+    var gate = window.SpielpartnerSprueche;
+    if (gate && !gate.allow({ force: !!(opts && opts.force) })) return false;
+    var person = Seats[seat];
+    if (!person || person.id === 'du') return false;
+    say(seat, Talk.line(person.id, event), opts || {});
+    return true;
+  }
 
   function publicGame() {
     if (!table) return null;
@@ -301,15 +309,15 @@
   function applyEvents(events) {
     var ended = false;
     (events || []).forEach(function (ev) {
-      if (ev.type === 'exchange') say(ev.seat, Talk.line(Seats[ev.seat].id, 'exchange'));
-      if (ev.type === 'close') say(ev.seat, Talk.line(Seats[ev.seat].id, 'close'));
+      if (ev.type === 'exchange') remark(ev.seat, 'exchange');
+      if (ev.type === 'close') remark(ev.seat, 'close');
       if (ev.type === 'marriage' && !ev.reason) {
         var word = ev.points >= 40 ? 'Vierzig' : 'Zwanzig';
         say(ev.seat, word + (ev.pending ? ', noch ohne Stich.' : '.'));
       }
       if (ev.type === 'trick') {
         lastTrick = ev.cards;
-        if (ev.winner !== 0 && Math.random() < 0.4) say(ev.winner, Talk.line(Seats[ev.winner].id, 'trick'));
+        if (ev.winner !== 0 && Math.random() < 0.28) remark(ev.winner, 'trick');
       }
       if (ev.type === 'handEnd' && !ended) {
         ended = true;

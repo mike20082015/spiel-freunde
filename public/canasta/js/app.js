@@ -149,6 +149,7 @@
   }
   function talk(seat, event, prob, force) {
     if (prob != null && Math.random() > prob) return false;
+    if (typeof window !== 'undefined' && window.SpielpartnerSprueche && !window.SpielpartnerSprueche.allow({ force: !!force })) return false;
     const who = Seats.seats[seat];
     if (!who || who.id === 'du') return false;
     let ev = event;
