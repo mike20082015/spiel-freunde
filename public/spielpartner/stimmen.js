@@ -259,7 +259,11 @@
     try {
       if (typeof AbortSignal !== 'undefined' && AbortSignal.timeout) return AbortSignal.timeout(ms);
     } catch (err) { /* alter Browser */ }
-    return undefined;
+    try {
+      var ctrl = new AbortController();
+      setTimeout(function () { try { ctrl.abort(); } catch (e) { /* schon weg */ } }, ms);
+      return ctrl.signal;
+    } catch (e2) { return undefined; }
   }
 
   function endpoint(kind) {
@@ -307,13 +311,13 @@
         headers: { 'Content-Type': 'application/json' },
         cache: 'no-store',
         body: JSON.stringify({ character: canon, message: message, game: context.game || null, history: history }),
-        signal: abortSignal(9000)
+        signal: abortSignal(11500)
       }).then(function (res) {
         if (!res || !res.ok) throw new Error('status');
         return res.json();
       }).then(function (data) {
         var text = data && typeof data.text === 'string' ? data.text.trim() : '';
-        if (!text) throw new Error('leer');
+        if (!text || /nicht erreichbar|gateway timeout/i.test(text)) throw new Error('leer');
         failures = 0;
         return text;
       });

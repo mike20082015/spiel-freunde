@@ -106,6 +106,25 @@ test.describe('askAI und speakAI', { concurrency: 1 }, () => {
     assert.equal(posts, 2);
   });
 
+  test('504 und Abbruch werden ein fester deutscher Spruch, kein Fehlertext', async () => {
+    global.fetch = async (url, opts) => {
+      if (!opts || opts.method !== 'POST') return jsonRes({ ok: true });
+      return { ok: false, status: 504, json: async () => ({ error: 'nicht erreichbar', reason: 'timeout' }) };
+    };
+    const gone = await Talk.askAI('horst', { message: 'hallo' });
+    assert.ok(Talk.REPLIES.horst.greet.includes(gone));
+    assert.doesNotMatch(gone, /nicht erreichbar|504|timeout|error/i);
+
+    Talk.resetForTests();
+    global.fetch = async (url, opts) => {
+      if (!opts || opts.method !== 'POST') return jsonRes({ ok: true });
+      return jsonRes({ text: 'Gateway Timeout' });
+    };
+    const leaked = await Talk.askAI('horst', { message: 'hallo' });
+    assert.ok(Talk.REPLIES.horst.greet.includes(leaked));
+    assert.doesNotMatch(leaked, /gateway timeout/i);
+  });
+
   test('speakAI liefert eine Objekt-URL und bleibt stumm, wenn abgeschaltet', async () => {
     global.fetch = async (url, opts) => {
       if (!opts || opts.method !== 'POST') return jsonRes({ ok: true });

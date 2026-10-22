@@ -140,7 +140,11 @@
     try {
       if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') return AbortSignal.timeout(ms);
     } catch (e) { /* älterer Browser */ }
-    return undefined;
+    try {
+      var ctrl = new AbortController();
+      setTimeout(function () { try { ctrl.abort(); } catch (err) { /* schon weg */ } }, ms);
+      return ctrl.signal;
+    } catch (e2) { return undefined; }
   }
   function endpoint(kind) { return PATHS[kind][base] || PATHS[kind][0]; }
   function pushHistory(role, text) {
@@ -207,12 +211,12 @@
           game: context.game || null,
           history: prior
         }),
-        signal: abortSignal(9000)
+        signal: abortSignal(11500)
       });
       if (!res || !res.ok) throw new Error('status');
       var data = await res.json();
       var text = data && typeof data.text === 'string' ? data.text.trim() : '';
-      if (!text) throw new Error('leer');
+      if (!text || /nicht erreichbar|gateway timeout/i.test(text)) throw new Error('leer');
       failures = 0;
       remember(message, character, text);
       return text;
