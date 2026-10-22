@@ -61,7 +61,38 @@
     state: null, gen: 0, busy: false, humanWait: null, kontraWait: null, nextWait: null,
     started: false, lastTalk: [0, 0, 0, 0], bubbleTimers: [], settled: false,
     showLast: false, contractSaid: '', watch: params.get('watch') === '1',
+    learn: false,
   };
+  function zui() { return window.SpielpartnerZuschauen; }
+  function lernen() { return !!(S.learn && zui() && zui().aktiv()); }
+  function autoPlatz() { return !!(S.watch || lernen()); }
+  function lern(text, platz) { if (lernen() && text) zui().kommentar(text, { platz: platz }); }
+  function schafSatz(seat, phase, beforeTrick, handBefore) {
+    if (!zui()) return '';
+    const st = S.state;
+    const name = who(seat) ? who(seat).name : 'Jemand';
+    if (phase !== 'play') {
+      if (st.game && E.describeGame) return zui().erklaere('schafkopf', { art: 'spiel', name: name, text: E.describeGame(st.game) });
+      if (phase === 'legen') return zui().erklaere('schafkopf', { art: 'klopfen', name: name, ja: true });
+      return zui().erklaere('schafkopf', { art: 'mitgehen', name: name, ja: phase !== 'bid' });
+    }
+    const after = (st.hands && st.hands[seat]) || [];
+    const played = (handBefore || []).filter((c) => after.indexOf(c) < 0)[0];
+    if (!played) return zui().erklaere('schafkopf', { art: 'ansage', name: name, text: 'eine Stufe' });
+    const lead = beforeTrick && beforeTrick[0] ? beforeTrick[0].card : null;
+    const trump = (c) => E.isTrump(c, st.game);
+    const leading = !lead;
+    const bedient = !leading && (trump(lead) ? trump(played) : (!trump(played) && E.suitOf(played) === E.suitOf(lead)));
+    return zui().erklaere('stich', {
+      name: name,
+      karte: E.cardName(played),
+      art: leading ? 'raus' : bedient ? 'bedienen' : (!leading && trump(played) && !trump(lead) ? 'stechen' : 'abwerfen'),
+      raus: leading,
+      trumpf: leading ? trump(played) : trump(lead),
+      bedienen: bedient,
+      stechen: !leading && !bedient && trump(played) && !trump(lead)
+    });
+  }
 
   function delay(ms) {
     const g = S.gen;
@@ -436,7 +467,7 @@
     return new Promise((res) => { S.humanWait = res; });
   }
   function humanToMove(st) {
-    return st && st.turn === 0 && st.phase !== 'done' && !S.watch;
+    return st && st.turn === 0 && st.phase !== 'done' && !autoPlatz();
   }
   function offerKontra() {
     const st = S.state;
@@ -475,7 +506,7 @@
   function aiKontra() {
     const st = S.state;
     if (!st || st.phase !== 'play' || !E.windowOpen(st)) return false;
-    for (let s = 1; s < 4; s++) {
+    for (let s = autoPlatz() ? 0 : 1; s < 4; s++) {
       if (AI.wantStoss(st, s, settings.level)) { E.actStoss(st, s); talk(s, 'stoss', 1, true); return true; }
       if (AI.wantRetour(st, s, settings.level)) { E.actRetour(st, s); talk(s, 'retour', 1, true); return true; }
       if (AI.wantSupra(st, s, settings.level)) { E.actSupra(st, s); return true; }
@@ -502,7 +533,10 @@
       commentContract(S.state);
       if (aiKontra()) {
         render();
-        await delay(320);
+        if (lernen()) {
+          lern(zui().erklaere('schafkopf', { art: 'ansage', name: 'Die Runde', text: 'eine Stufe' }), 1);
+          await zui().takt();
+        } else await delay(320);
         continue;
       }
       if (humanToMove(S.state)) {
@@ -511,19 +545,24 @@
         continue;
       }
       render();
-      await offerKontra();
+      if (!autoPlatz()) await offerKontra();
       if (gen !== S.gen) throw CANCEL;
       if (humanToMove(S.state)) continue;
       const seat = S.state.turn;
       const phase = S.state.phase;
+      const beforeTrick = S.state.trick ? S.state.trick.slice() : [];
+      const handBefore = S.state.hands && S.state.hands[seat] ? S.state.hands[seat].slice() : [];
+      if (lernen()) await zui().takt();
+      if (humanToMove(S.state)) continue;
       const res = AI.apply(S.state, seat, settings.level);
       if (!res || !res.ok) {
         sys((res && res.reason) || 'Der Zug geht nicht.');
         break;
       }
-      if (phase === 'bid' && Math.random() < 0.35) talk(seat, 'bid', 1);
+      lern(schafSatz(seat, phase, beforeTrick, handBefore), seat);
+      if (phase === 'bid' && !lernen() && Math.random() < 0.35) talk(seat, 'bid', 1);
       if (S.state.phase === 'done' && S.state.result && S.state.result.kind === 'throw') talk(2, 'throw', 0.9, true);
-      await delay(S.state.phase === 'play' ? 420 : 280);
+      if (!lernen()) await delay(S.state.phase === 'play' ? 420 : 280);
     }
   }
 
@@ -543,6 +582,7 @@
       $('modal-summary').hidden = true;
       if (S.nextWait) { const fn = S.nextWait; S.nextWait = null; fn(); }
     });
+    if (lernen()) zui().nachRunde(() => { const btn = $('btn-next'); if (btn) btn.click(); });
   }
   function showSession() {
     const seat = match.winner;
@@ -958,13 +998,38 @@
   document.addEventListener('pointerdown', () => { if (Voice) Voice.unlock(); MIC.gesture = true; }, { once: true, capture: true });
 
   function start() {
-    if (S.started) return;
-    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
+    if (S.started) return false;
+    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return false;
     S.started = true;
     $('intro').hidden = true;
     if (Voice) Voice.unlock();
     sys('Die Karten sind gemischt. Sepp sitzt gegenüber.');
     dealAndPlay();
+    return true;
+  }
+  if (zui()) {
+    zui().mount({
+      start: function () {
+        const vorher = S.watch;
+        S.learn = true;
+        S.watch = true;
+        const ok = start();
+        if (!ok) { S.learn = false; S.watch = vorher; }
+        return ok;
+      },
+      uebernehmen: function () {
+        S.learn = false;
+        S.watch = params.get('watch') === '1';
+        render();
+      },
+      sprich: function (platz, text) {
+        const person = who(platz);
+        const id = person && person.id && person.id !== 'du' ? person.id : (who(1) && who(1).id);
+        if (!id || !Voice || !settings.sound) return false;
+        Voice.unlock();
+        return Voice.speak(id, text, { priority: true });
+      }
+    });
   }
 
   function showShot() {

@@ -62,7 +62,28 @@
     state: null, gen: 0, started: false, humanWait: null, nextWait: null,
     selected: [], meld: null, joker: null, pending: null,
     lastTalk: [0, 0, 0, 0], bubbleTimers: [], note: '', watch: params.get('watch') === '1',
+    learn: false,
   };
+  function zui() { return window.SpielpartnerZuschauen; }
+  function lernen() { return !!(S.learn && zui() && zui().aktiv()); }
+  function autoPlatz() { return !!(S.watch || lernen()); }
+  function lern(text, platz) { if (lernen() && text) zui().kommentar(text, { platz: platz }); }
+  function rommeSatz(seat, steps) {
+    if (!zui()) return '';
+    const name = who(seat) ? who(seat).name : 'Jemand';
+    const ops = (steps || []).map((s) => s.op);
+    let art = 'ziehen';
+    let karte = 'eine Karte';
+    if (ops.indexOf('lay') >= 0) art = 'meld';
+    else if (ops.indexOf('layoff') >= 0) art = 'anlegen';
+    else if (ops.indexOf('take') >= 0) art = 'nehmen';
+    else if (ops.indexOf('discard') >= 0) {
+      art = 'abwerfen';
+      const d = (steps || []).filter((s) => s.op === 'discard')[0];
+      if (d && d.card && E.cardName) karte = E.cardName(d.card);
+    }
+    return zui().erklaere('romme', { art: art, name: name, karte: karte });
+  }
 
   function delay(ms) {
     const g = S.gen;
@@ -298,7 +319,7 @@
   }
   function renderActions() {
     const st = S.state;
-    const mine = !!(st && st.turn === 0 && st.phase !== 'done' && !S.watch);
+    const mine = !!(st && st.turn === 0 && st.phase !== 'done' && !autoPlatz());
     const draw = mine && st.phase === 'draw';
     const meld = mine && st.phase === 'meld';
     const n = S.selected.length;
@@ -470,15 +491,18 @@
   }
   async function playHand() {
     while (S.state && S.state.phase !== 'done') {
-      if (S.state.turn === 0 && !S.watch) {
+      if (S.state.turn === 0 && !autoPlatz()) {
         await waitHuman();
         continue;
       }
-      await delay(S.watch ? 40 : 720);
+      if (lernen()) await zui().takt();
+      else await delay(S.watch ? 40 : 720);
+      if (S.state.turn === 0 && !autoPlatz()) continue;
       const seat = S.state.turn;
-      if (!S.watch && Math.random() < 0.1) talk(seat, 'thinking', 1);
+      if (!autoPlatz() && Math.random() < 0.1) talk(seat, 'thinking', 1);
       const steps = AI.playTurn(S.state, seat, settings.level);
       narrate(seat, steps);
+      lern(rommeSatz(seat, steps), seat);
       render();
     }
   }
@@ -506,6 +530,7 @@
       $('modal-summary').hidden = true;
       if (S.nextWait) { const go = S.nextWait; S.nextWait = null; go(); }
     });
+    if (lernen()) zui().nachRunde(() => { const btn = $('btn-next'); if (btn) btn.click(); });
   }
   function showCeremony(winner) {
     const names = Seats.seats.map((p) => p.name);
@@ -948,13 +973,38 @@
   document.addEventListener('pointerdown', () => { if (Voice) Voice.unlock(); MIC.gesture = true; }, { once: true, capture: true });
 
   function start() {
-    if (S.started) return;
-    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
+    if (S.started) return false;
+    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return false;
     S.started = true;
     $('intro').hidden = true;
     if (Voice) Voice.unlock();
     sys('Rommé am Küchentisch. Horst links, Margarethe gegenüber, Oma Hilde rechts.');
     dealAndPlay();
+    return true;
+  }
+  if (zui()) {
+    zui().mount({
+      start: function () {
+        const vorher = S.watch;
+        S.learn = true;
+        S.watch = true;
+        const ok = start();
+        if (!ok) { S.learn = false; S.watch = vorher; }
+        return ok;
+      },
+      uebernehmen: function () {
+        S.learn = false;
+        S.watch = params.get('watch') === '1';
+        render();
+      },
+      sprich: function (platz, text) {
+        const person = who(platz);
+        const id = person && person.id && person.id !== 'du' ? person.id : (who(1) && who(1).id);
+        if (!id || !Voice || !settings.sound) return false;
+        Voice.unlock();
+        return Voice.speak(id, text, { priority: true });
+      }
+    });
   }
 
   mountPortraits();

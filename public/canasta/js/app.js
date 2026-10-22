@@ -53,7 +53,36 @@
     humanWait: null, askWait: null, nextWait: null, started: false,
     lastTalk: [0, 0, 0, 0], bubbleTimers: [], watchSteps: 0, settled: false,
     watch: params.get('watch') === '1' || params.get('demo') === '1',
+    learn: false,
   };
+
+  function zui() { return window.SpielpartnerZuschauen; }
+  function lernen() { return !!(S.learn && zui() && zui().aktiv()); }
+  function autoPlatz() { return !!(S.watch || lernen()); }
+  function lern(text, platz) { if (lernen() && text) zui().kommentar(text, { platz: platz }); }
+  function canastaSatz(seat, action) {
+    if (!action || !zui()) return '';
+    const who = Seats.seats[seat];
+    const name = who ? who.name : 'Jemand';
+    const info = { name: name, art: 'talon' };
+    if (action.type === 'take') info.art = 'nehmen';
+    else if (action.type === 'meld' || action.type === 'layoff') {
+      info.art = S.state && S.state.completedCanastaThisTurn ? 'canasta' : (action.type === 'layoff' ? 'anlegen' : 'meld');
+      const group = action.groups && action.groups[0];
+      const sample = (group && group[0]) || action.rank;
+      if (action.rank) info.rang = String(action.rank);
+      else if (sample && E.cardName) info.rang = E.cardName(sample);
+    } else if (action.type === 'discard') {
+      info.art = 'abwerfen';
+      info.karte = action.card ? E.cardName(action.card) : 'eine Karte';
+      info.wild = !!(action.card && E.isWild(action.card));
+      info.sperre = !!(action.card && E.isBlackThree(action.card));
+    } else if (action.type === 'goOut') info.art = 'aus';
+    else if (action.type === 'ask') info.art = 'frage';
+    else if (action.type === 'answer') { info.art = 'antwort'; info.ja = !!action.yes; }
+    else if (action.type === 'stock') info.art = 'talon';
+    return zui().erklaere('canasta', info);
+  }
 
   function delay(ms) {
     const g = S.gen;
@@ -515,36 +544,42 @@
       if (++guard > 900) { E.finish(st, 'stock'); break; }
       render();
       const melds = st.melds[0].length + st.melds[1].length;
-      if (S.watch && S.watchSteps >= 14 && (melds >= 1 || S.watchSteps >= 14)) {
+      if (S.watch && !S.learn && S.watchSteps >= 14 && (melds >= 1 || S.watchSteps >= 14)) {
         S.settled = true;
         if (window.__canasta) window.__canasta.settled = true;
         return;
       }
       if (st.phase === 'ask') {
         const partner = E.partnerSeat(st.asker);
-        if (partner === 0 && !S.watch) {
+        if (partner === 0 && !autoPlatz()) {
           talk(st.asker, 'partnerAsk', 1, true);
           await askHuman();
           render();
         } else {
-          await delay(640);
+          if (lernen()) await zui().takt();
+          else await delay(640);
+          if (partner === 0 && !autoPlatz()) continue;
           const out = AI.step(st, settings.level, rng);
           S.watchSteps += 1;
           narrate(partner, out.action, out.res);
+          lern(canastaSatz(partner, out.action), partner);
         }
         continue;
       }
-      if (st.turn === 0 && !S.watch) {
+      if (st.turn === 0 && !autoPlatz()) {
         S.fresh = null;
         await waitHuman();
         continue;
       }
-      await delay(S.watch ? 80 : 780);
+      if (lernen()) await zui().takt();
+      else await delay(S.watch ? 80 : 780);
+      if (st.turn === 0 && !autoPlatz()) continue;
       const seat = st.turn;
-      if (!S.watch && Math.random() < 0.12) talk(seat, 'thinking', 1);
+      if (!autoPlatz() && Math.random() < 0.12) talk(seat, 'thinking', 1);
       const out = AI.step(st, settings.level, rng);
       S.watchSteps += 1;
       narrate(seat, out.action, out.res);
+      lern(canastaSatz(seat, out.action), seat);
     }
   }
 
@@ -584,6 +619,7 @@
       $('modal-summary').hidden = true;
       if (S.nextWait) { const go = S.nextWait; S.nextWait = null; go(); }
     });
+    if (lernen()) zui().nachRunde(() => { const btn = $('btn-next'); if (btn) btn.click(); });
   }
   function showCeremony(winner) {
     const ours = winner === 0;
@@ -1013,13 +1049,38 @@
   document.addEventListener('pointerdown', () => { if (Voice) Voice.unlock(); MIC.gesture = true; }, { once: true, capture: true });
 
   function start() {
-    if (S.started) return;
-    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
+    if (S.started) return false;
+    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return false;
     S.started = true;
     $('intro').hidden = true;
     if (Voice) Voice.unlock();
     sys('Die Karten sind gemischt. Margarethe sitzt dir gegenüber.');
     dealAndPlay();
+    return true;
+  }
+  if (zui()) {
+    zui().mount({
+      start: function () {
+        const vorher = S.watch;
+        S.learn = true;
+        S.watch = true;
+        const ok = start();
+        if (!ok) { S.learn = false; S.watch = vorher; }
+        return ok;
+      },
+      uebernehmen: function () {
+        S.learn = false;
+        S.watch = params.get('watch') === '1' || params.get('demo') === '1';
+        if (S.watch) S.learn = false;
+        render();
+      },
+      sprich: function (platz, text) {
+        const who = Seats.seats[platz] && Seats.seats[platz].id !== 'du' ? Seats.seats[platz] : Seats.seats[1];
+        if (!who || !Voice || !settings.sound) return false;
+        Voice.unlock();
+        return Voice.speak(who.id, text, { priority: true });
+      }
+    });
   }
 
   mountPortraits();

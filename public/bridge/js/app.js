@@ -30,6 +30,28 @@
   var chatBusy = false;
 
   function $(id) { return document.getElementById(id); }
+  function zui() { return window.SpielpartnerZuschauen; }
+  function lernen() { return !!(zui() && zui().aktiv()); }
+  function lern(text, platz) { if (lernen() && text) zui().kommentar(text, { platz: platz }); }
+  function bridgeSatz(seat, call) {
+    var text = '';
+    try { text = AI.explain(table, seat, call) || ''; }
+    catch (err) { text = ''; }
+    text = String(text).replace('Vorschlag: ', '');
+    if (!text && call) text = E.callLabel(call);
+    return zui().erklaere('bridge', { art: 'reiz', name: NAMES[seat], text: text });
+  }
+  function bridgeKarte(seat, card) {
+    var name = NAMES[seat];
+    var karte = E.cardName(card);
+    var lead = table.trick && table.trick[0] && table.trick[0].card;
+    var strain = table.contract && table.contract.strain;
+    var trump = strain && strain !== 'NT' ? { C: 0, D: 1, H: 2, S: 3 }[strain] : null;
+    if (!lead) return zui().erklaere('stich', { art: 'raus', name: name, karte: karte, trumpf: trump != null && card.suit === trump, regel: 'Beim Bridge gilt Farbzwang. Der Strohmann liegt offen, die Gegner bleiben verdeckt.' });
+    if (card.suit === lead.suit) return zui().erklaere('stich', { art: 'bedienen', name: name, karte: karte, trumpf: trump != null && lead.suit === trump });
+    if (trump != null && card.suit === trump) return zui().erklaere('stich', { art: 'stechen', name: name, karte: karte });
+    return zui().erklaere('stich', { art: 'abwerfen', name: name, karte: karte });
+  }
   function loadSettings() {
     var out = Object.assign({}, DEFAULTS);
     try {
@@ -64,6 +86,7 @@
     return table.mode === 'chicago' ? table.chicago.scores : table.rubber.total;
   }
   function humanActs() {
+    if (lernen()) return false;
     if (!table || holdTrick) return false;
     if (table.phase === 'bidding') return table.turn === 0;
     if (table.phase !== 'play' || !table.contract) return false;
@@ -393,11 +416,15 @@
     var res = null;
     if (table.phase === 'bidding') {
       var call = AI.chooseBid(table, seat, settings.level);
+      if (lernen()) lern(bridgeSatz(seat, call), seat);
       res = E.call(table, seat, call);
       if (res && res.ok && seat !== 0) say(seat, spokenBid(call));
     } else if (table.phase === 'play') {
       var card = AI.chooseCard(table, seat, settings.level, Math.random);
-      if (card) res = E.playCard(table, seat, card.id);
+      if (card) {
+        if (lernen()) lern(bridgeKarte(seat, card), seat);
+        res = E.playCard(table, seat, card.id);
+      }
     }
     if (res && res.ok) applyEvents(res.events);
   }
@@ -429,11 +456,13 @@
       return;
     }
     if (humanActs()) return;
-    setTimeout(function () {
+    var warte = lernen() ? zui().takt() : new Promise(function (r) { setTimeout(r, stepDelay()); });
+    Promise.resolve(warte).then(function () {
       if (gen !== generation || !table) return;
+      if (humanActs()) { render(); return; }
       aiStep();
       poke();
-    }, stepDelay());
+    });
   }
 
   function showSummary() {
@@ -447,6 +476,7 @@
     html += '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next">' + (result.passed ? 'Neu geben' : 'Nächstes Blatt') + '</button></div>';
     $('summary').innerHTML = html;
     $('modal-summary').hidden = false;
+    if (lernen()) zui().nachRunde(function () { var btn = $('btn-next'); if (btn) btn.click(); });
     $('btn-next').addEventListener('click', function () {
       if (!roundsAllow()) return;
       $('modal-summary').hidden = true;
@@ -495,7 +525,7 @@
     return true;
   }
   function submitCall(call) {
-    if (!table || table.turn !== 0 || table.phase !== 'bidding') return;
+    if (lernen() || !table || table.turn !== 0 || table.phase !== 'bidding') return;
     var res = E.call(table, 0, call);
     if (!res.ok) return;
     say(0, spokenBid(call), { voice: false });
@@ -503,7 +533,7 @@
     poke();
   }
   function submitCard(cardId) {
-    if (!humanActs() || !table || table.phase !== 'play') return;
+    if (lernen() || !humanActs() || !table || table.phase !== 'play') return;
     var seat = table.turn;
     var res = E.playCard(table, seat, cardId);
     if (!res.ok) {
@@ -823,14 +853,28 @@
   $('chat-input').addEventListener('input', function () { if (!MIC.writing) MIC.userEdit = $('chat-input').value.length > 0; });
   document.addEventListener('pointerdown', function () { MIC.gesture = true; Voice.unlock(); if (shouldListen()) startHandsFree(); }, true);
 
-  $('btn-start').addEventListener('click', function () {
-    if (started) return;
-    if (!roundsAllow()) return;
+  function start() {
+    if (started) return false;
+    if (!roundsAllow()) return false;
     started = true;
     $('intro').hidden = true;
     Voice.unlock();
     begin();
-  });
+    return true;
+  }
+  $('btn-start').addEventListener('click', start);
+  if (zui()) {
+    zui().mount({
+      start: start,
+      uebernehmen: function () { render(); },
+      sprich: function (platz, text) {
+        var person = Seats[platz] && Seats[platz].id !== 'du' ? Seats[platz] : Seats[1];
+        if (!person || !settings.sound) return false;
+        Voice.unlock();
+        return Voice.speak(person.id, text, { priority: true });
+      }
+    });
+  }
 
   Voice.setGetter(function () { return { sound: settings.sound, volume: settings.volume }; });
   refreshFaces();

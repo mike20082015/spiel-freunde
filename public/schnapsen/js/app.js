@@ -35,6 +35,23 @@
   var handClosed = false;
 
   function $(id) { return document.getElementById(id); }
+  function zui() { return window.SpielpartnerZuschauen; }
+  function lernen() { return !!(zui() && zui().aktiv()); }
+  function lern(text, platz) { if (lernen() && text) zui().kommentar(text, { platz: platz }); }
+  function schnapsenSatz(seat, action) {
+    var name = nameOf(seat);
+    if (!action || !zui()) return '';
+    if (action.type === 'exchange') return zui().erklaere('schnapsen', { art: 'tausch', name: name });
+    if (action.type === 'close') return zui().erklaere('schnapsen', { art: 'zudrehen', name: name });
+    if (action.type === 'marriage') return zui().erklaere('schnapsen', { art: 'ansage', name: name, text: action.suit === table.trump ? 'Vierzig' : 'Zwanzig' });
+    var card = (table.hands[seat] || []).filter(function (c) { return c.id === action.id; })[0];
+    var karte = card ? E.cardName(card, settings.deck) : 'eine Karte';
+    if (!E.isStrict(table) || !table.trick.length) return zui().erklaere('schnapsen', { art: 'frei', name: name, karte: karte });
+    var lead = table.trick[0].card;
+    if (card && card.suit === lead.suit) return zui().erklaere('schnapsen', { art: 'bedienen', name: name, karte: karte });
+    if (card && card.suit === table.trump) return zui().erklaere('schnapsen', { art: 'trumpf', name: name, karte: karte });
+    return zui().erklaere('schnapsen', { art: 'abwerfen', name: name, karte: karte });
+  }
   function loadSettings() {
     var out = Object.assign({}, DEFAULTS);
     try {
@@ -160,7 +177,7 @@
     });
     mine.forEach(function (card) {
       var el = Cards.cardEl(card, { deck: settings.deck });
-      var playable = table.phase === 'play' && table.turn === 0 && legal[card.id];
+      var playable = table.phase === 'play' && table.turn === 0 && !lernen() && legal[card.id];
       el.classList.toggle('playable', !!playable);
       el.classList.toggle('blocked', table.phase === 'play' && table.turn === 0 && !legal[card.id]);
       el.disabled = !playable;
@@ -239,7 +256,7 @@
   }
   function renderActions() {
     var box = $('actions');
-    if (!table || table.turn !== 0 || table.phase !== 'play') { box.hidden = true; box.innerHTML = ''; return; }
+    if (!table || table.turn !== 0 || lernen() || table.phase !== 'play') { box.hidden = true; box.innerHTML = ''; return; }
     var legal = E.legalState(table, 0);
     var bits = [];
     if (legal.exchange) bits.push('<button type="button" class="choice" data-act="exchange">Trumpf tauschen</button>');
@@ -310,16 +327,20 @@
   function poke() {
     var gen = ++generation;
     render();
-    if (!table || table.turn === 0 || table.phase !== 'play') return;
-    setTimeout(function () {
-      if (gen !== generation || !table || table.turn === 0 || table.phase !== 'play') return;
+    if (!table || table.phase !== 'play') return;
+    if (table.turn === 0 && !lernen()) return;
+    var warte = lernen() ? zui().takt() : new Promise(function (r) { setTimeout(r, delay()); });
+    Promise.resolve(warte).then(function () {
+      if (gen !== generation || !table || table.phase !== 'play') return;
+      if (table.turn === 0 && !lernen()) { render(); return; }
       var seat = table.turn;
       var action = AI.choose(table, seat, settings.level, Math.random);
+      lern(schnapsenSatz(seat, action), seat);
       var res = action && E.applyAction(table, seat, action);
       if (res && res.ok) applyEvents(res.events);
-      else sys('Sepp setzt aus.');
+      else sys(nameOf(seat) + ' setzt aus.');
       poke();
-    }, delay());
+    });
   }
 
   function showSummary() {
@@ -331,6 +352,7 @@
     html += '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next">Nächstes Spiel</button></div>';
     $('summary').innerHTML = html;
     $('modal-summary').hidden = false;
+    if (lernen()) zui().nachRunde(function () { var btn = $('btn-next'); if (btn) btn.click(); });
     $('btn-next').addEventListener('click', function () {
       if (!roundsAllow()) return;
       $('modal-summary').hidden = true;
@@ -466,7 +488,7 @@
   });
   $('actions').addEventListener('click', function (e) {
     var btn = e.target.closest('[data-act]');
-    if (!btn || !table || table.turn !== 0) return;
+    if (!btn || !table || table.turn !== 0 || lernen()) return;
     var act = btn.getAttribute('data-act');
     var action = act === 'marriage' ? { type: 'marriage', suit: Number(btn.getAttribute('data-suit')) } : { type: act };
     var res = E.applyAction(table, 0, action);
@@ -476,7 +498,7 @@
   });
   $('hand').addEventListener('click', function (e) {
     var btn = e.target.closest('[data-card]');
-    if (!btn || !table || table.turn !== 0 || table.phase !== 'play') return;
+    if (!btn || !table || table.turn !== 0 || lernen() || table.phase !== 'play') return;
     var res = E.applyAction(table, 0, { type: 'card', id: btn.dataset.card });
     if (!res.ok) {
       $('hint-box').hidden = false;
@@ -710,14 +732,28 @@
   $('chat-input').addEventListener('input', function () { if (!MIC.writing) MIC.userEdit = $('chat-input').value.length > 0; });
   document.addEventListener('pointerdown', function () { MIC.gesture = true; Voice.unlock(); if (shouldListen()) startHandsFree(); }, true);
 
-  $('btn-start').addEventListener('click', function () {
-    if (started) return;
-    if (!roundsAllow()) return;
+  function start() {
+    if (started) return false;
+    if (!roundsAllow()) return false;
     started = true;
     $('intro').hidden = true;
     Voice.unlock();
     begin();
-  });
+    return true;
+  }
+  $('btn-start').addEventListener('click', start);
+  if (zui()) {
+    zui().mount({
+      start: start,
+      uebernehmen: function () { render(); },
+      sprich: function (platz, text) {
+        var person = Seats[platz] && Seats[platz].id !== 'du' ? Seats[platz] : Seats[1];
+        if (!person || !settings.sound) return false;
+        Voice.unlock();
+        return Voice.speak(person.id, text, { priority: true });
+      }
+    });
+  }
 
   Voice.setGetter(function () { return { sound: settings.sound, volume: settings.volume }; });
   refreshFaces();

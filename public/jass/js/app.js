@@ -26,6 +26,26 @@
   var chatBusy = false;
 
   function $(id) { return document.getElementById(id); }
+  function zui() { return window.SpielpartnerZuschauen; }
+  function lernen() { return !!(zui() && zui().aktiv()); }
+  function lern(text, platz) { if (lernen() && text) zui().kommentar(text, { platz: platz }); }
+  function jassSatz(seat, phase, choice, card) {
+    var name = NAMES[seat] || 'Jemand';
+    if (!zui()) return '';
+    if (phase === 'trump' || phase === 'trumpPartner') {
+      if (choice === 'schieben') return zui().erklaere('jass', { art: 'schieben', name: name });
+      var label = choice === 'obenabe' ? 'Obenabe' : choice === 'undenufe' ? 'Undenufe' : E.trumpName({ mode: 'suit', suit: choice }, settings.deck);
+      return zui().erklaere('jass', { art: 'trumpfwahl', name: name, trumpf: label });
+    }
+    var karte = card ? E.cardName(card, settings.deck) : 'eine Karte';
+    var lead = table.trick[0] && table.trick[0].card;
+    var trumpSuit = table.trump && table.trump.mode === 'suit' ? table.trump.suit : null;
+    if (!lead) return zui().erklaere('stich', { art: 'raus', name: name, karte: karte, trumpf: !!(card && trumpSuit != null && card.suit === trumpSuit), regel: 'Beim Jass gilt Farbzwang.' });
+    var trumpf = trumpSuit != null && lead.suit === trumpSuit;
+    if (card && (card.suit === lead.suit || (trumpf && card.suit === trumpSuit))) return zui().erklaere('stich', { art: 'bedienen', name: name, karte: karte, trumpf: trumpf });
+    if (card && trumpSuit != null && card.suit === trumpSuit) return zui().erklaere('stich', { art: 'stechen', name: name, karte: karte });
+    return zui().erklaere('stich', { art: 'abwerfen', name: name, karte: karte });
+  }
   function loadSettings() {
     var out = Object.assign({}, DEFAULTS);
     try {
@@ -139,7 +159,7 @@
     hand.innerHTML = '';
     if (!table) return;
     var legal = {};
-    if (table.phase === 'play' && table.turn === 0) {
+    if (table.phase === 'play' && table.turn === 0 && !lernen()) {
       E.legalCards(table, 0).forEach(function (c) { legal[c.id] = 1; });
     }
     var mine = table.hands[0].slice().sort(function (a, b) {
@@ -215,7 +235,7 @@
   }
   function renderPanel() {
     var panel = $('panel');
-    var humanChoice = table && table.turn === 0 && (table.phase === 'trump' || table.phase === 'trumpPartner');
+    var humanChoice = table && table.turn === 0 && !lernen() && (table.phase === 'trump' || table.phase === 'trumpPartner');
     panel.hidden = !humanChoice;
     if (!humanChoice) return;
     var deck = settings.deck;
@@ -295,20 +315,30 @@
   function poke() {
     var gen = ++generation;
     render();
-    if (!table || table.turn === 0 || table.phase === 'handEnd' || table.phase === 'matchEnd') return;
-    setTimeout(function () {
-      if (gen !== generation || !table || table.turn === 0) return;
+    if (!table || table.phase === 'handEnd' || table.phase === 'matchEnd') return;
+    if (table.turn === 0 && !lernen()) return;
+    var warte = lernen() ? zui().takt() : new Promise(function (r) { setTimeout(r, delay()); });
+    Promise.resolve(warte).then(function () {
+      if (gen !== generation || !table) return;
+      if (table.turn === 0 && !lernen()) { render(); return; }
+      if (table.phase === 'handEnd' || table.phase === 'matchEnd') return;
       var seat = table.turn;
+      var phase = table.phase;
       var res = null;
-      if (table.phase === 'trump' || table.phase === 'trumpPartner') {
-        res = E.chooseTrump(table, seat, AI.chooseTrump(table, seat, settings.level, Math.random));
-      } else if (table.phase === 'play') {
+      if (phase === 'trump' || phase === 'trumpPartner') {
+        var choice = AI.chooseTrump(table, seat, settings.level, Math.random);
+        lern(jassSatz(seat, phase, choice, null), seat);
+        res = E.chooseTrump(table, seat, choice);
+      } else if (phase === 'play') {
         var card = AI.chooseCard(table, seat, settings.level, Math.random);
-        if (card) res = E.playCard(table, seat, card.id);
+        if (card) {
+          lern(jassSatz(seat, phase, null, card), seat);
+          res = E.playCard(table, seat, card.id);
+        }
       }
       if (res && res.ok) applyEvents(res.events);
       poke();
-    }, delay());
+    });
   }
 
   function showSummary() {
@@ -320,6 +350,7 @@
     html += '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next">Nächstes Spiel</button></div>';
     $('summary').innerHTML = html;
     $('modal-summary').hidden = false;
+    if (lernen()) zui().nachRunde(function () { var btn = $('btn-next'); if (btn) btn.click(); });
     $('btn-next').addEventListener('click', function () {
       if (!roundsAllow()) return;
       $('modal-summary').hidden = true;
@@ -443,7 +474,7 @@
   });
   $('panel').addEventListener('click', function (e) {
     var btn = e.target.closest('[data-choice]');
-    if (!btn || !table || table.turn !== 0) return;
+    if (!btn || !table || table.turn !== 0 || lernen()) return;
     var raw = btn.getAttribute('data-choice');
     var choice = raw === 'obenabe' || raw === 'undenufe' || raw === 'schieben' ? raw : Number(raw);
     var res = E.chooseTrump(table, 0, choice);
@@ -453,7 +484,7 @@
   });
   $('hand').addEventListener('click', function (e) {
     var btn = e.target.closest('[data-card]');
-    if (!btn || !table || table.turn !== 0 || table.phase !== 'play') return;
+    if (!btn || !table || table.turn !== 0 || lernen() || table.phase !== 'play') return;
     var res = E.playCard(table, 0, btn.dataset.card);
     if (!res.ok) {
       notes.show('Die Karte ist nicht erlaubt.');
@@ -686,14 +717,28 @@
   $('chat-input').addEventListener('input', function () { if (!MIC.writing) MIC.userEdit = $('chat-input').value.length > 0; });
   document.addEventListener('pointerdown', function () { MIC.gesture = true; Voice.unlock(); if (shouldListen()) startHandsFree(); }, true);
 
-  $('btn-start').addEventListener('click', function () {
-    if (started) return;
-    if (!roundsAllow()) return;
+  function start() {
+    if (started) return false;
+    if (!roundsAllow()) return false;
     started = true;
     $('intro').hidden = true;
     Voice.unlock();
     begin();
-  });
+    return true;
+  }
+  $('btn-start').addEventListener('click', start);
+  if (zui()) {
+    zui().mount({
+      start: start,
+      uebernehmen: function () { render(); },
+      sprich: function (platz, text) {
+        var person = Seats[platz] && Seats[platz].id !== 'du' ? Seats[platz] : Seats[1];
+        if (!person || !settings.sound) return false;
+        Voice.unlock();
+        return Voice.speak(person.id, text, { priority: true });
+      }
+    });
+  }
 
   Voice.setGetter(function () { return { sound: settings.sound, volume: settings.volume }; });
   refreshFaces();

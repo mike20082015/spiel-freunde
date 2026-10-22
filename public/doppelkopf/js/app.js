@@ -61,7 +61,44 @@
     started: false, lastTalk: [0, 0, 0, 0], bubbleTimers: [], settled: false,
     showLast: false, contractSaid: '', evAt: 0, pick: [],
     watch: params.get('watch') === '1',
+    learn: false,
   };
+
+  function zui() { return window.SpielpartnerZuschauen; }
+  function lernen() { return !!(S.learn && zui() && zui().aktiv()); }
+  function autoPlatz() { return !!(S.watch || lernen()); }
+  function lern(text, platz) { if (lernen() && text) zui().kommentar(text, { platz: platz }); }
+  function dkSatz(seat, phase, beforeTrick, handBefore) {
+    if (!zui()) return '';
+    const st = S.state;
+    const name = who(seat) ? who(seat).name : 'Jemand';
+    if (phase === 'reserve') {
+      const bid = (st.bids && st.bids[seat]) || { kind: 'gesund' };
+      return zui().erklaere('doppelkopf', { art: 'vorbehalt', name: name, text: bid.kind });
+    }
+    const ev = st.events && st.events[st.events.length - 1];
+    if (ev && ev.type === 'ansage' && ev.seat === seat) {
+      return zui().erklaere('doppelkopf', { art: 'ansage', name: name, text: E.announceName(ev.kind) });
+    }
+    const after = (st.hands && st.hands[seat]) || [];
+    const played = (handBefore || []).filter((c) => after.indexOf(c) < 0)[0];
+    if (!played) return name + ' ist am Zug. Erst wird das Spiel klar, dann kommen die Stiche.';
+    const lead = beforeTrick && beforeTrick[0] ? beforeTrick[0].card : null;
+    const game = st.game;
+    const trump = (c) => E.isTrump(c, game, st.rules, st.pigsOn);
+    const leading = !lead;
+    const bedient = !leading && (trump(lead) ? trump(played) : (!trump(played) && E.suitOf(played) === E.suitOf(lead)));
+    return zui().erklaere('stich', {
+      name: name,
+      karte: E.cardName(played),
+      raus: leading,
+      trumpf: leading ? trump(played) : trump(lead),
+      bedienen: bedient,
+      stechen: !leading && !bedient && trump(played) && !trump(lead),
+      abwerfen: !leading && !bedient && !(trump(played) && !trump(lead)),
+      art: leading ? 'raus' : bedient ? 'bedienen' : (!leading && trump(played) && !trump(lead) ? 'stechen' : 'abwerfen')
+    });
+  }
 
   function delay(ms) {
     const g = S.gen;
@@ -472,7 +509,7 @@
     if (fn) fn();
   }
   function humanToMove(st) {
-    return st && st.turn === 0 && st.phase !== 'done' && !S.watch;
+    return st && st.turn === 0 && st.phase !== 'done' && !autoPlatz();
   }
   function drainEvents() {
     const st = S.state;
@@ -525,7 +562,10 @@
       render();
       const phase = S.state.phase;
       const seat = S.state.turn;
-      await delay(phase === 'play' ? 420 : 260);
+      const beforeTrick = S.state.trick ? S.state.trick.slice() : [];
+      const handBefore = S.state.hands && S.state.hands[seat] ? S.state.hands[seat].slice() : [];
+      if (lernen()) await zui().takt();
+      else await delay(phase === 'play' ? 420 : 260);
       if (gen !== S.gen) throw CANCEL;
       if (humanToMove(S.state)) continue;
       const res = AI.apply(S.state, seat, settings.level);
@@ -533,6 +573,7 @@
         sys((res && res.reason) || 'Der Zug geht nicht.');
         break;
       }
+      lern(dkSatz(seat, phase, beforeTrick, handBefore), seat);
     }
     drainEvents();
   }
@@ -555,6 +596,7 @@
       $('modal-summary').hidden = true;
       if (S.nextWait) { const fn = S.nextWait; S.nextWait = null; fn(); }
     });
+    if (lernen()) zui().nachRunde(() => { const btn = $('btn-next'); if (btn) btn.click(); });
   }
   function showSession() {
     const seat = match.winner;
@@ -954,13 +996,38 @@
   document.addEventListener('pointerdown', () => { if (Voice) Voice.unlock(); MIC.gesture = true; }, { once: true, capture: true });
 
   function start() {
-    if (S.started) return;
-    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;
+    if (S.started) return false;
+    if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return false;
     S.started = true;
     $('intro').hidden = true;
     if (Voice) Voice.unlock();
     sys('Die Karten sind gemischt. Rüdiger sitzt gegenüber.');
     dealAndPlay();
+    return true;
+  }
+  if (zui()) {
+    zui().mount({
+      start: function () {
+        const vorher = S.watch;
+        S.learn = true;
+        S.watch = true;
+        const ok = start();
+        if (!ok) { S.learn = false; S.watch = vorher; }
+        return ok;
+      },
+      uebernehmen: function () {
+        S.learn = false;
+        S.watch = params.get('watch') === '1';
+        render();
+      },
+      sprich: function (platz, text) {
+        const person = who(platz);
+        const id = person && person.id && person.id !== 'du' ? person.id : (who(1) && who(1).id);
+        if (!id || !Voice || !settings.sound) return false;
+        Voice.unlock();
+        return Voice.speak(id, text, { priority: true });
+      }
+    });
   }
 
   function showShot() {

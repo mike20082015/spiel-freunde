@@ -141,6 +141,26 @@
     return new Promise((res) => setTimeout(res, ms * (SPEEDS[settings.speed] || 1))).then(() => { if (g !== S.gen) throw CANCEL; });
   }
   const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+  function zui() { return window.SpielpartnerZuschauen; }
+  function lernen() { return !!(zui() && zui().aktiv()); }
+  function lern(text, platz) { if (lernen() && text) zui().kommentar(text, { platz: platz }); }
+  function skatSatz(st, player, card) {
+    const game = st.game;
+    const leading = !st.trick.length;
+    const mine = E.effSuit(card, game);
+    const lead = leading ? null : E.effSuit(st.trick[0].card, game);
+    const nullspiel = !!(game && game.type === 'null');
+    return zui().erklaere('skat', {
+      name: NAMES[player],
+      art: 'karte',
+      karte: E.cardName(card),
+      raus: leading,
+      trumpf: !nullspiel && (leading ? mine === 'T' : lead === 'T'),
+      bedienen: !leading && mine === lead,
+      stechen: !nullspiel && !leading && lead !== 'T' && mine === 'T',
+      abwerfen: !leading && mine !== lead && (nullspiel || mine !== 'T')
+    });
+  }
 
   /* ---------- Sprechblasen und Chat ---------- */
   function logLine(html, cls) {
@@ -666,9 +686,12 @@
       render();
       if (st.phase === 'bidding') {
         const t = E.biddingTurn(st);
-        if (t.player === 0) { showBidPanel(t); return; }
+        if (t.player === 0 && !lernen()) { showBidPanel(t); return; }
         hidePanel();
-        await delay(750 + Math.random() * 400);
+        if (lernen()) await zui().takt();
+        else await delay(750 + Math.random() * 400);
+        if (!S.st || S.st.phase !== 'bidding') continue;
+        if (t.player === 0 && !lernen()) { showBidPanel(t); return; }
         const yes = AI.decideBid(E.viewFor(st, t.player), t, aiWho(t.player));
         const value = t.value;
         const word = yes ? (t.role === 'hear' ? 'Ja!' : String(value)) : 'Passe';
@@ -676,17 +699,20 @@
         say(t.player, word, { kind: 'bid', speech: callFor(t.player, token) });
         sys(NAMES[t.player] + ' ' + (yes ? (t.role === 'hear' ? 'hält ' + value : 'sagt ' + value) : 'passt') + '.');
         E.bidAction(st, yes);
+        lern(zui().erklaere('skat', { art: 'reiz', name: NAMES[t.player], passe: !yes, hoeren: t.role === 'hear', wert: value }), t.player);
         if (yes && value >= 30) setTimeout(() => talk(t.player, 'bidHigh', 0.35), 1600);
         if (!yes && Math.random() < 0.3) setTimeout(() => talk(t.player, 'passBid', 1), 1600);
         afterBidding();
-        await delay(450);
+        if (!lernen()) await delay(450);
         continue;
       }
       if (st.phase === 'skat') {
-        if (st.declarer === 0) { showSkatPanel(); return; }
+        if (st.declarer === 0 && !lernen()) { showSkatPanel(); return; }
         hidePanel();
         const d = st.declarer;
-        await delay(1000);
+        if (lernen()) await zui().takt();
+        else await delay(1000);
+        if (st.declarer === 0 && !lernen()) { showSkatPanel(); return; }
         const dec = AI.decideSkat(E.viewFor(st, d), aiWho(d));
         if (dec.hand) {
           E.playHand(st);
@@ -695,25 +721,29 @@
           E.takeSkat(st);
           sys(NAMES[d] + ' nimmt den Skat auf.');
           render();
-          await delay(1100);
+          if (lernen()) await zui().takt();
+          else await delay(1100);
           const dd = AI.chooseDiscardAndGame(E.viewFor(st, d), aiWho(d));
           E.discard(st, dd.discard);
           E.declare(st, dd.game);
         }
         sys(NAMES[d] + ' spielt ' + E.gameLabel(st.game) + '.');
         say(d, E.gameLabel(st.game) + '!', { kind: 'bid', speech: callFor(d, E.gameLabel(st.game)) });
+        lern(zui().erklaere('skat', { art: 'skat', name: NAMES[d], hand: !!dec.hand, spiel: E.gameLabel(st.game) }), d);
         setTimeout(() => talk(d, 'declare', 0.5), 1700);
-        await delay(1300);
+        if (!lernen()) await delay(1300);
         continue;
       }
-      if (st.phase === 'discard') { if (st.declarer === 0) { showDiscardPanel(); renderHand(); } return; }
-      if (st.phase === 'declare') { if (st.declarer === 0) showDeclarePanel(); return; }
+      if (st.phase === 'discard') { if (st.declarer === 0 && !lernen()) { showDiscardPanel(); renderHand(); } return; }
+      if (st.phase === 'declare') { if (st.declarer === 0 && !lernen()) showDeclarePanel(); return; }
       if (st.phase === 'play') {
         const dbl = E.doublingTurn(st);
         if (dbl) {
-          if (dbl.player === 0) { showDoublePanel(dbl); return; }
+          if (dbl.player === 0 && !lernen()) { showDoublePanel(dbl); return; }
           hidePanel();
-          await delay(700);
+          if (lernen()) await zui().takt();
+          else await delay(700);
+          if (dbl.player === 0 && !lernen()) { showDoublePanel(dbl); return; }
           const yes = dbl.kind === 'kontra'
             ? AI.decideKontra(E.viewFor(st, dbl.player), aiWho(dbl.player))
             : AI.decideRe(E.viewFor(st, dbl.player), aiWho(dbl.player));
@@ -724,16 +754,20 @@
             say(dbl.player, word + '!', { kind: 'bid', speech: word + '.' });
             sys(NAMES[dbl.player] + ' sagt ' + word + '.');
           } else E.declineDouble(st, dbl.player);
-          await delay(450);
+          lern(zui().erklaere('skat', { art: dbl.kind === 'kontra' ? 'kontra' : 're', name: NAMES[dbl.player], ja: !!yes }), dbl.player);
+          if (!lernen()) await delay(450);
           continue;
         }
         hidePanel();
         const p = st.turn;
-        if (p === 0) { render(); return; }
+        if (p === 0 && !lernen()) { render(); return; }
         let ms = 650 + Math.random() * 350;
-        if (E.legalFor(st, p).length > 2 && Math.random() < 0.1) { if (talk(p, 'thinking', 1)) ms += 1400; }
-        await delay(ms);
+        if (!lernen() && E.legalFor(st, p).length > 2 && Math.random() < 0.1) { if (talk(p, 'thinking', 1)) ms += 1400; }
+        if (lernen()) await zui().takt();
+        else await delay(ms);
+        if (p === 0 && !lernen()) { render(); return; }
         const { card } = AI.chooseCard(E.viewFor(st, p), aiWho(p));
+        lern(skatSatz(st, p, card), p);
         await doPlay(p, card);
         continue;
       }
@@ -751,10 +785,12 @@
     S.winIdx = info.trick.cards.findIndex((x) => x.player === info.winner);
     render();
     trickTalk(info, p === 0 ? { card, legal, leading } : null, info.trick.cards.find((x) => x.player === 0));
-    await delay(1150);
+    if (lernen()) await sleep(320);
+    else await delay(1150);
     S.collectTo = info.winner;
     renderCenter();
-    await delay(420);
+    if (lernen()) await sleep(180);
+    else await delay(420);
     S.collectTo = null; S.displayTrick = []; S.winIdx = -1;
     render();
   }
@@ -972,6 +1008,12 @@
     $('summary').querySelector('[data-a=next]').addEventListener('click', () => (done ? showSession(sessionWinner) : newGame()));
     const lb = $('summary').querySelector('[data-a=last]');
     if (lb) lb.addEventListener('click', openLastTrick);
+    if (lernen() && !done && zui()) {
+      zui().nachRunde(() => {
+        const next = $('summary') && $('summary').querySelector('[data-a=next]');
+        if (next) next.click();
+      });
+    }
   }
 
   /* ---------- Modale ---------- */
@@ -1615,18 +1657,31 @@
   else if (Talk.probe) Talk.probe();
 
   function start() {
-    if (S.started) return;
-    if (!roundGate()) return;
+    if (S.started) return false;
+    if (!roundGate()) return false;
     S.started = true;
     unlockOnce();
     $('intro').hidden = true;
     say(2, Talk.line(WHO[2], 'welcome'), { force: true });
     setTimeout(() => say(1, Talk.line(WHO[1], 'welcome'), { force: true }), 250);
     const w = E.sessionWinner(match.scores, targetValue());
-    if (w != null && match.rows.length) { S.st = null; showSession(w); return; }
+    if (w != null && match.rows.length) { S.st = null; showSession(w); return true; }
     newGame();
+    return true;
   }
   $('btn-start').addEventListener('click', start);
+  if (zui()) {
+    zui().mount({
+      start: start,
+      uebernehmen: function () { render(); },
+      sprich: function (platz, text) {
+        const id = WHO[platz] || WHO[1] || WHO[2];
+        if (!id || !settings.sound || !Voice) return false;
+        Voice.unlock();
+        return Voice.speak(id, text, { priority: true });
+      }
+    });
+  }
 
   // Besetzung steht, bevor eine Runde (auch per autostart) losgeht.
   if (window.SpielpartnerRunde) {
