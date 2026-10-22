@@ -99,9 +99,9 @@
     lena: {
       welcome: ['Hi. Ich bin gerade erst vom Training, aber die Karten können los.'],
       gameStart: ['Alles klar. Fair spielen, und dann sehen wir.'],
-      trick: ['Der Stich ist meiner. Sorry.'],
+      trick: ['Der Stich ist meiner. Tut mir leid.'],
       win: ['Läuft. Nächstes Mal darfst du.'],
-      lose: ['Okay, das war deins. Respekt.'],
+      lose: ['Gut, das war deins. Respekt.'],
       encourage: ['Kopf hoch. Eine Karte macht noch kein Spiel.'],
       default: ['Echt?', 'Alles gut.', 'Ich bin dabei.']
     },

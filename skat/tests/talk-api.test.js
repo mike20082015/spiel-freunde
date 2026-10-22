@@ -730,4 +730,45 @@ test.describe('Tisch-API', { concurrency: 1 }, () => {
     assert.equal(limited.json.reason, 'rate_limited');
     assert.equal(calls, 1);
   });
+
+  test('jede Figur bekommt deutsche Sprachkennung und deutsche Ansagen', () => {
+    const names = Object.keys(H.PERSONA);
+    assert.ok(names.length >= 12);
+    for (const name of names) {
+      const req = H.buildTtsRequest({ character: name, text: 'Achtzehn.' }, {
+        ELEVENLABS_API_KEY: 'test-eleven',
+        VOICE_HORST: 'HorstVoiceId01',
+      });
+      assert.ok(req, name);
+      const body = JSON.parse(req.init.body);
+      assert.equal(body.language_code, 'de', name);
+      assert.equal(body.model_id, 'eleven_v3', name);
+      assert.equal(body.text, 'Achtzehn.', name);
+      assert.deepEqual(Object.keys(body).sort(), ['language_code', 'model_id', 'text']);
+    }
+    const samples = {
+      '18': 'achtzehn',
+      '18.': 'achtzehn.',
+      '22': 'zweiundzwanzig',
+      Passe: 'Ich passe.',
+      'passe!': 'Ich passe!',
+      'Re.': 'Reh.',
+      'Kein Re': 'Kein Reh',
+      'Kontra.': 'Kontra.',
+      'Rekontra.': 'Rekontra.',
+      '1 Sans Atout.': 'eins ohne Trumpf.',
+      'keine 90': 'keine neunzig',
+      'Aber Schätzchen.': 'Aber Schätzchen.',
+      'Ich passe.': 'Ich passe.',
+    };
+    for (const raw of Object.keys(samples)) assert.equal(H.germanSpoken(raw), samples[raw], raw);
+    const chat = H.buildChatBody({ character: 'oemer', message: '18?', history: [], game: {} }, {});
+    const system = chat.messages[0].content;
+    assert.match(system, /nur auf Deutsch/);
+    assert.match(system, /Köln/);
+    assert.match(system, /Kölsch/);
+    assert.doesNotMatch(system, /türkisch|Türkisch|elevenlabs|grok|openai/i);
+    assert.match(H.PERSONA.oemer, /deutsch/);
+    assert.doesNotMatch(H.PERSONA.oemer, /türkisch/);
+  });
 });

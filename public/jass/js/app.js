@@ -297,7 +297,7 @@
 
   function applyEvents(events) {
     (events || []).forEach(function (ev) {
-      if (ev.type === 'ansage') say(ev.seat, 'Weis ' + ev.points + '.');
+      if (ev.type === 'ansage') say(ev.seat, E.spokenWeis(ev.points));
       if (ev.type === 'schieben') say(ev.seat, Talk.line(Seats[ev.seat].id, 'schieben'));
       if (ev.type === 'trump') say(ev.seat, E.trumpName(ev.trump, settings.deck) + '.');
       if (ev.type === 'stoeck') say(ev.seat, Talk.line(Seats[ev.seat].id, 'stoeck'));

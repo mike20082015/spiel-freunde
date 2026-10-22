@@ -139,6 +139,18 @@
     return call.level + ' ' + STRAIN_NAME[call.strain];
   }
 
+  var LEVEL_WORD = { 1: 'Eins', 2: 'Zwei', 3: 'Drei', 4: 'Vier', 5: 'Fünf', 6: 'Sechs', 7: 'Sieben' };
+  function spokenCall(call) {
+    if (!call) return '';
+    if (call.kind === 'pass') return 'Passen.';
+    if (call.kind === 'double') return 'Kontra.';
+    if (call.kind === 'redouble') return 'Rekontra.';
+    var level = LEVEL_WORD[call.level] || '';
+    var strain = call.strain === 'NT' ? 'ohne Trumpf' : (STRAIN_NAME[call.strain] || '');
+    if (!level || !strain) return 'Ich reize.';
+    return level + ' ' + strain + '.';
+  }
+
   function callShort(call) {
     if (!call) return '';
     if (call.kind === 'pass') return 'Pass';
@@ -692,6 +704,7 @@
     cardName: cardName,
     bidRank: bidRank,
     callLabel: callLabel,
+    spokenCall: spokenCall,
     callShort: callShort,
     contractLabel: contractLabel,
     legalCalls: legalCalls,

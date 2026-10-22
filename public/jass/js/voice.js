@@ -111,9 +111,9 @@
     var vs = (root.speechSynthesis && root.speechSynthesis.getVoices && root.speechSynthesis.getVoices()) || [];
     var profile = tone(character) || { male: false };
     var male = profile.male;
-    var list = vs.filter(function (v) { return /de/i.test(v.lang || ''); });
-    var pool = list.length ? list : vs;
-    return pool.find(function (v) { return (male ? MALE : FEMALE).test(v.name); }) || pool[male ? 0 : pool.length - 1] || null;
+    var list = vs.filter(function (v) { return /^de([_-]|$)/i.test(v.lang || ''); });
+    if (!list.length) return null;
+    return list.find(function (v) { return (male ? MALE : FEMALE).test(v.name); }) || list[male ? 0 : list.length - 1] || null;
   }
   function synth(item) {
     return new Promise(function (resolve) {

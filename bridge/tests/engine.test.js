@@ -367,3 +367,16 @@ test('Vorführblätter sind vollständig und liegen in Reizung und Spiel', () =>
   assert.equal(play.trick.length, 1);
   assert.equal(play.trick[0].card.id, '1:J');
 });
+
+test('gesprochene Gebote sind deutsche Wörter, die Anzeige bleibt kurz', () => {
+  assert.equal(E.callLabel({ kind: 'bid', level: 1, strain: 'S' }), '1 Pik');
+  assert.equal(E.callLabel({ kind: 'bid', level: 1, strain: 'NT' }), '1 Sans Atout');
+  assert.equal(E.spokenCall({ kind: 'pass' }), 'Passen.');
+  assert.equal(E.spokenCall({ kind: 'double' }), 'Kontra.');
+  assert.equal(E.spokenCall({ kind: 'redouble' }), 'Rekontra.');
+  assert.equal(E.spokenCall({ kind: 'bid', level: 1, strain: 'S' }), 'Eins Pik.');
+  assert.equal(E.spokenCall({ kind: 'bid', level: 2, strain: 'H' }), 'Zwei Herz.');
+  assert.equal(E.spokenCall({ kind: 'bid', level: 4, strain: 'NT' }), 'Vier ohne Trumpf.');
+  assert.equal(E.spokenCall({ kind: 'bid', level: 7, strain: 'C' }), 'Sieben Kreuz.');
+  assert.doesNotMatch(E.spokenCall({ kind: 'bid', level: 1, strain: 'NT' }), /\d|Sans Atout/);
+});
