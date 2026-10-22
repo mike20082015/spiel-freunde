@@ -15,6 +15,25 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   var GUEST_KEY = 'sf-ort';
   var SESSION_KEY = 'sf-account';
+  /* Asia/Bangkok hat keinen Sommerzeitversatz, deshalb +07:00.
+     from und until sind inklusive. Ein abgelaufener Saison-Tisch
+     verschwindet aus der Auswahl, und eine gespeicherte Wahl fällt
+     auf den normalen Look zurück. Neue Saison: Eintrag ergänzen und
+     die Szene in orte.css anlegen, zum Beispiel
+     { id: 'weihnachten', name: 'Weihnachtstisch', scene: 'weihnachten',
+       from: '2026-12-01T00:00:00+07:00', until: '2026-12-26T23:59:59+07:00',
+       badge: 'Nur bis 26. Dezember' }. */
+  var SEASON_ZONE = 'Asia/Bangkok';
+  var SEASONS = [
+    {
+      id: 'halloween',
+      name: 'Halloween-Tisch',
+      scene: 'halloween',
+      from: '2026-10-22T00:00:00+07:00',
+      until: '2026-11-05T23:59:59+07:00',
+      badge: 'Nur bis 5. November'
+    }
+  ];
   var ORTE = [
     { id: '', name: 'Wie bisher', scene: 'default' },
     { id: 'stammtisch', name: 'Gemütlicher Stammtisch', scene: 'stammtisch', image: '/assets/stammtisch-szene.jpg' },
@@ -26,13 +45,48 @@
     { id: 'anden', name: 'Berghütte in den Anden', scene: 'anden', image: '/assets/ort-anden.jpg' }
   ];
 
-  function byId(id) {
+  function timeOf(now) {
+    if (now instanceof Date) return now.getTime();
+    if (typeof now === 'number') return now;
+    if (typeof now === 'string') return Date.parse(now);
+    return Date.now();
+  }
+
+  function seasonById(id) {
+    for (var i = 0; i < SEASONS.length; i++) if (SEASONS[i].id === id) return SEASONS[i];
+    return null;
+  }
+
+  function seasonOpen(id, now) {
+    var season = typeof id === 'object' ? id : seasonById(id);
+    if (!season) return false;
+    var t = timeOf(now);
+    var from = Date.parse(season.from);
+    var until = Date.parse(season.until);
+    return t >= from && t <= until;
+  }
+
+  function permanent(id) {
     for (var i = 0; i < ORTE.length; i++) if (ORTE[i].id === id) return ORTE[i];
+    return null;
+  }
+
+  function catalog(now) {
+    var open = [];
+    for (var i = 0; i < SEASONS.length; i++) if (seasonOpen(SEASONS[i], now)) open.push(SEASONS[i]);
+    return [ORTE[0]].concat(open).concat(ORTE.slice(1));
+  }
+
+  function byId(id, now) {
+    var list = catalog(now);
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
     return ORTE[0];
   }
 
-  function known(id) {
-    return !!byId(id) && (id === '' || byId(id).id === id);
+  function known(id, now) {
+    if (id === '') return true;
+    if (permanent(id)) return true;
+    return seasonOpen(id, now);
   }
 
   function storageOf(storage) {
@@ -79,7 +133,7 @@
     return null;
   }
 
-  function read(storage) {
+  function read(storage, now) {
     storage = storageOf(storage);
     var key = storageKey(storage);
     var raw = getRaw(storage, key);
@@ -87,13 +141,17 @@
       raw = sessionOrt(storage);
       if (raw == null) raw = getRaw(storage, GUEST_KEY);
     }
-    if (raw == null || !known(raw)) return '';
+    if (raw == null) return '';
+    if (!known(raw, now)) {
+      if (seasonById(raw)) write(storage, '', now);
+      return '';
+    }
     return raw;
   }
 
-  function write(storage, id) {
+  function write(storage, id, now) {
     storage = storageOf(storage);
-    if (!known(id)) id = '';
+    if (!known(id, now)) id = '';
     if (!storage) return id;
     try { storage.setItem(storageKey(storage), id); }
     catch (err) { /* privat */ }
@@ -107,10 +165,10 @@
     return id;
   }
 
-  function apply(id, doc) {
+  function apply(id, doc, now) {
     var root = (doc || document).documentElement;
     if (!root) return '';
-    if (!known(id)) id = '';
+    if (!known(id, now)) id = '';
     if (!id) {
       if (root.removeAttribute) root.removeAttribute('data-ort');
       if (root.dataset) delete root.dataset.ort;
@@ -136,6 +194,12 @@
     var thumb = el(doc, 'span', 'ort-thumb is-' + ort.scene);
     thumb.setAttribute('aria-hidden', 'true');
     if (ort.image) thumb.style.backgroundImage = 'url("' + ort.image + '")';
+    if (ort.badge) {
+      var badge = el(doc, 'span', 'ort-badge');
+      badge.textContent = ort.badge;
+      thumb.appendChild(badge);
+      button.title = ort.name + ', ' + ort.badge;
+    }
     var name = el(doc, 'span', 'ort-name');
     name.textContent = ort.name;
     button.appendChild(thumb);
@@ -143,9 +207,9 @@
     return button;
   }
 
-  function fillGrid(doc, grid) {
+  function fillGrid(doc, grid, now) {
     grid.textContent = '';
-    ORTE.forEach(function (ort) {
+    catalog(now).forEach(function (ort) {
       grid.appendChild(choiceButton(doc, ort));
     });
   }
@@ -214,13 +278,23 @@
 
     var room = doc.querySelector('.room');
     if (room && !doc.getElementById('ort-banner')) {
+      var glow = el(doc, 'div', 'ort-glow');
+      glow.id = 'ort-glow';
+      glow.setAttribute('aria-hidden', 'true');
       var banner = el(doc, 'p', 'ort-banner');
       banner.id = 'ort-banner';
       banner.hidden = true;
       room.insertBefore(banner, room.firstChild);
+      room.insertBefore(glow, room.firstChild);
     }
 
     function paint() {
+      var sig = catalog().map(function (ort) { return ort.id; }).join('|');
+      if (sig !== paint.sig) {
+        paint.sig = sig;
+        var grids = doc.querySelectorAll('[data-ort-grid]');
+        for (var g = 0; g < grids.length; g++) fillGrid(doc, grids[g]);
+      }
       var current = read(storage);
       apply(current, doc);
       var meta = byId(current);
@@ -284,13 +358,31 @@
         if (event.key && event.key.indexOf('sf-ort') === 0) paint();
       });
     }
+    function arm() {
+      if (typeof setTimeout !== 'function') return;
+      var now = Date.now();
+      var next = null;
+      for (var i = 0; i < SEASONS.length; i++) {
+        var points = [Date.parse(SEASONS[i].from), Date.parse(SEASONS[i].until) + 1];
+        for (var p = 0; p < points.length; p++) {
+          if (points[p] > now && (next == null || points[p] < next)) next = points[p];
+        }
+      }
+      if (next == null) return;
+      setTimeout(function () { paint(); arm(); }, Math.min(next - Date.now() + 30, 2147483647));
+    }
     paint();
+    arm();
     return true;
   }
 
   return {
     ORTE: ORTE,
+    SEASONS: SEASONS,
+    SEASON_ZONE: SEASON_ZONE,
     GUEST_KEY: GUEST_KEY,
+    catalog: catalog,
+    seasonOpen: seasonOpen,
     byId: byId,
     known: known,
     playerId: playerId,

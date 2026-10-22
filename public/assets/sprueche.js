@@ -2692,11 +2692,77 @@
     return chosen;
   }
 
-  function line(id, event, local, rng) {
+  /* Kurze Saison-Zeilen. Sie kommen nur dazu, solange der passende
+     Tisch in SpielpartnerOrte offen ist, und ersetzen den Vorrat nicht. */
+  var SEASON_LINES = {
+    halloween: {
+      horst: [
+        "Na, Kürbis aufm Tisch. Is warm hier, keen Schreck.",
+        "Kerzen an, Karten her. Halloween bleibt gemütlich."
+      ],
+      margarethe: [
+        "Ein Kürbis und Kerzenlicht. Wie hübsch das ist, Schätzchen.",
+        "Herbstblätter, warmes Licht. Setz Dich, es ist friedlich."
+      ],
+      urs: [
+        "Grüezi. Der Kürbis darf bleiben, das Spiel bleibt ruhig.",
+        "Kerzenlicht und Karten. Mehr Halloween braucht es nicht."
+      ],
+      vreni: [
+        "Hoi. Der Kürbis lächelt, und ich auch.",
+        "Kerzen an, Tee dazu. So mag ich Halloween."
+      ],
+      sepp: [
+        "Servus. Der Kürbis ist freundlich, die Karten auch.",
+        "Kerzenlicht und Herbstlaub. Passt zum Stammtisch."
+      ],
+      hilde: [
+        "Na, Kind. Kürbis, Kerze, und der Kuchen ist auch da.",
+        "Halloween, aber gemütlich. Der Abend bleibt freundlich."
+      ],
+      lena: [
+        "Hallo. Kürbislaterne an, und dann ganz normal Karten.",
+        "Schönes warmes Licht. Halloween darf freundlich sein."
+      ],
+      jonas: [
+        "Die Laterne brennt, der Platz ist frei. Ganz ohne Aufregung.",
+        "Kürbis auf dem Tisch, Karten in der Hand. So bleibt es nett."
+      ],
+      oemer: [
+        "Komm rein. Der Kürbis ist Schmuck, die Tür bleibt offen.",
+        "Kerzenlicht und ein freier Platz. Halloween, ganz friedlich."
+      ],
+      ruediger: [
+        "Guten Abend. Ein Kürbis, Kerzen, und ein faires Spiel.",
+        "Herbstlicht am Tisch. Mehr braucht dieser Abend nicht."
+      ],
+      chantal: [
+        "Hömma, Kürbis steht, Kerze brennt. Dat wird gemütlich.",
+        "Nur warmes Licht, kein Schreck. Rück den Stuhl ran."
+      ]
+    }
+  };
+
+  function seasonOpen(id, now) {
+    var g = typeof globalThis !== 'undefined' ? globalThis : null;
+    var Orte = g && g.SpielpartnerOrte;
+    if (!Orte || typeof Orte.seasonOpen !== 'function') return false;
+    return Orte.seasonOpen(id, now);
+  }
+
+  function seasonLines(id, season) {
+    var bank = SEASON_LINES[season || 'halloween'] || {};
+    return (bank[canon(id)] || []).slice();
+  }
+
+  function line(id, event, local, rng, now) {
     var situation = situationOf(event);
     var extra = pool(id, situation);
     var merged = unique([].concat(local || [], extra));
     if (!merged.length) merged = pool(id, 'banter');
+    if ((situation === 'greetings' || situation === 'banter') && seasonOpen('halloween', now)) {
+      merged = unique(merged.concat(seasonLines(id, 'halloween')));
+    }
     return draw(id, event || situation, merged, rng);
   }
 
@@ -2839,6 +2905,7 @@
     replyPool: replyPool,
     callPool: callPool,
     line: line,
+    seasonLines: seasonLines,
     reply: reply,
     call: call,
     allow: allow,
