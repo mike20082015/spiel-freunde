@@ -243,6 +243,20 @@
     return href === '#' || href === '#anmelden';
   }
 
+  function loginControl(node) {
+    var current = node;
+    if (current && current.nodeType !== 1) current = current.parentNode;
+    while (current && current.nodeType === 1) {
+      if (current.id === 'btn-anmelden') return current;
+      if (current.classList && current.classList.contains('link-login')) {
+        var href = current.getAttribute('href');
+        if (href == null || loginHref(href)) return current;
+      }
+      current = current.parentNode;
+    }
+    return null;
+  }
+
   function messageFor(code) {
     if (code === 'invalid_request') return 'Prüfe E-Mail und Spielername.';
     if (code === 'origin_not_allowed') return 'Die Anmeldung ist von hier gerade nicht erlaubt.';
@@ -612,6 +626,17 @@
     });
   }
 
+  function revealSignup(modal) {
+    if (!modal) return;
+    modal.hidden = false;
+    if (modal.removeAttribute) modal.removeAttribute('hidden');
+    modal.style.display = 'grid';
+    var card = modal.querySelector('.modal-card');
+    if (card && typeof card.scrollIntoView === 'function') {
+      try { card.scrollIntoView({ block: 'center' }); } catch (err) { /* altes Handy */ }
+    }
+  }
+
   function openSignup(storage, fetcher) {
     var modal = ensureModal();
     if (!modal) return false;
@@ -621,9 +646,14 @@
       try { store = window.localStorage; }
       catch (err) { store = null; }
     }
-    if (!store || !fetchFn) return false;
+    if (!store || !fetchFn) {
+      revealSignup(modal);
+      var note = modal.querySelector('[data-status]');
+      if (note) note.textContent = messageFor('session_unavailable');
+      return false;
+    }
     bindSignup(modal, store, fetchFn);
-    modal.hidden = false;
+    revealSignup(modal);
     var field = modal.querySelector('[data-email]');
     if (field && typeof field.focus === 'function') {
       try { field.focus(); } catch (err) { /* egal */ }
@@ -822,9 +852,9 @@
     if (typeof document === 'undefined') return;
     var session = storage ? readSession(storage, Date.now()) : null;
     var on = !!(session && session.player && session.player.displayName);
-    var links = document.querySelectorAll('a.link-login');
+    var links = document.querySelectorAll('#btn-anmelden, .link-login');
     for (var i = 0; i < links.length; i++) {
-      if (!loginHref(links[i].getAttribute('href'))) continue;
+      if (!loginControl(links[i])) continue;
       if (on) links[i].setAttribute('hidden', '');
       else links[i].removeAttribute('hidden');
     }
@@ -834,13 +864,14 @@
     if (typeof document === 'undefined' || !document.documentElement) return;
     if (document.documentElement.getAttribute('data-sf-login') === '1') return;
     document.documentElement.setAttribute('data-sf-login', '1');
-    document.addEventListener('click', function (event) {
-      var node = event.target;
-      var link = node && node.closest ? node.closest('a.link-login') : null;
-      if (!link || !loginHref(link.getAttribute('href'))) return;
-      event.preventDefault();
+    var open = function (event) {
+      if (!loginControl(event && event.target)) return;
+      if (event && event.preventDefault) event.preventDefault();
       openSignup(storage);
-    });
+    };
+    document.addEventListener('click', open, true);
+    var button = document.getElementById('btn-anmelden');
+    if (button) button.addEventListener('click', open);
   }
 
   function boot(storage, now) {
@@ -850,8 +881,8 @@
       try { store = typeof localStorage !== 'undefined' ? localStorage : null; }
       catch (err) { store = null; }
     }
-    if (!store) return null;
     bindLogin(store);
+    if (!store) return null;
     paintLoginLink(store);
     mountHeader(store);
     showWillkommen(store);

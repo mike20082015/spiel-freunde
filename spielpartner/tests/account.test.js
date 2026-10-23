@@ -143,9 +143,13 @@ test('Anmelden auf der Startseite öffnet die Karte und bleibt auf dem Handy sic
   const home = fs.readFileSync(path.join(__dirname, '../../public/index.html'), 'utf8');
   const css = fs.readFileSync(path.join(__dirname, '../../public/assets/style.css'), 'utf8');
   const card = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/account.css'), 'utf8');
-  assert.match(home, /class="link-login" href="#anmelden">Anmelden</);
+  const account = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/account.js'), 'utf8');
+  assert.match(home, /<button type="button" class="link-login" id="btn-anmelden">Anmelden<\/button>/);
+  assert.match(home, /href="\/skat\/">Kostenlos testen</);
   assert.doesNotMatch(css, /\.nav-links,\s*\.link-login\{display:\s*none\}/);
   assert.match(css, /@media \(max-width:860px\)\{\s*\.nav-links\{display:none\}/);
+  assert.match(account, /getElementById\('btn-anmelden'\)/);
+  assert.match(account, /addEventListener\('click', open, true\)/);
   assert.match(card, /#modal-signup/);
   assert.match(card, /#modal-signup\[hidden\]\{display:none !important\}/);
   assert.doesNotMatch(home + css + card, /—/);

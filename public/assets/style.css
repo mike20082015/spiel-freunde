@@ -55,8 +55,11 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;letter-spacin
 .nav-links a:hover{color:var(--cream)}.nav-links a:hover::after{transform:scaleX(1)}
 .nav-brand{display:flex;align-items:center;gap:12px;min-width:0}
 .nav-cta{display:flex;align-items:center;gap:18px}
-.link-login{color:rgba(247,241,227,.82);font-size:.95rem;white-space:nowrap}
+.link-login{position:relative;z-index:2;color:rgba(247,241,227,.82);font-size:.95rem;white-space:nowrap}
+button.link-login{font-family:inherit;font-weight:inherit;line-height:inherit;background:none;border:0;padding:0;cursor:pointer}
+button.link-login:hover{color:var(--cream)}
 .link-login[hidden]{display:none !important}
+.nav-cta{position:relative;z-index:2}
 
 /* hero */
 .hero{position:relative;overflow:hidden;padding:40px 0 60px;color:var(--cream);background:radial-gradient(ellipse at 75% 35%,rgba(255,170,80,.18),transparent 55%),radial-gradient(ellipse at 10% 100%,rgba(138,47,47,.25),transparent 55%),linear-gradient(160deg,#3d2616,#2b1a0f 55%,#1f130b)}
