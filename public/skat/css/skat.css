@@ -39,7 +39,7 @@ img{display:block;max-width:100%}
 .layout{flex:1;min-height:0;display:grid;grid-template-columns:1fr 340px;gap:16px;padding:14px 16px 16px}
 .table-area{display:flex;flex-direction:column;min-height:0;min-width:0}
 .statusbar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:rgba(30,18,10,.82);border:1px solid rgba(212,168,75,.3);border-radius:14px;padding:9px 16px;margin-bottom:12px;min-height:46px}
-.st-main{font-weight:600;font-size:1rem;color:var(--cream)}
+.st-main{font-weight:600;font-size:1rem;color:var(--cream);line-height:1.45;min-height:2.9em}
 .st-main em{font-style:normal;color:var(--gold-2)}
 .st-chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{display:inline-flex;align-items:center;gap:5px;font-size:.8rem;font-weight:600;padding:3px 10px;border-radius:999px;background:rgba(247,241,227,.08);border:1px solid rgba(247,241,227,.16);color:rgba(247,241,227,.9);white-space:nowrap}
@@ -102,16 +102,19 @@ img{display:block;max-width:100%}
 .skat-pile{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:6px;z-index:3;--cw:62px}
 .skat-pile .card:nth-child(1){transform:rotate(-6deg)}.skat-pile .card:nth-child(2){transform:rotate(5deg) translateX(-26px)}
 .trick{position:absolute;inset:0;z-index:4;--cw:92px}
-.trick .card{position:absolute;left:50%;top:50%;margin-left:calc(var(--cw) / -2);margin-top:calc(var(--cw) * -0.725);box-shadow:0 10px 22px -6px rgba(0,0,0,.6);transition:transform .45s ease,opacity .45s ease}
-.trick .p0{transform:translate(0,48px) rotate(3deg);animation:in0 .35s ease-out}
-.trick .p1{transform:translate(-92px,-26px) rotate(-10deg);animation:in1 .35s ease-out}
-.trick .p2{transform:translate(92px,-26px) rotate(9deg);animation:in2 .35s ease-out}
-@keyframes in0{from{transform:translate(0,220px) rotate(0);opacity:0}}
-@keyframes in1{from{transform:translate(-320px,-160px) rotate(-30deg);opacity:0}}
-@keyframes in2{from{transform:translate(320px,-160px) rotate(30deg);opacity:0}}
-.trick.collect-0 .card{transform:translate(0,320px) scale(.6)!important;opacity:0}
-.trick.collect-1 .card{transform:translate(-420px,-220px) scale(.6)!important;opacity:0}
-.trick.collect-2 .card{transform:translate(420px,-220px) scale(.6)!important;opacity:0}
+.trick .card{position:absolute;left:50%;top:50%;margin-left:calc(var(--cw) / -2);margin-top:calc(var(--cw) * -0.725);box-shadow:0 10px 22px -6px rgba(0,0,0,.6);transition:transform .42s ease,opacity .42s ease}
+.trick .p0{transform:translate(0,48px) rotate(3deg)}
+.trick .p1{transform:translate(-92px,-26px) rotate(-10deg)}
+.trick .p2{transform:translate(92px,-26px) rotate(9deg)}
+.trick .card.arriving.p0{animation:in0 .36s ease-out}
+.trick .card.arriving.p1{animation:in1 .36s ease-out}
+.trick .card.arriving.p2{animation:in2 .36s ease-out}
+@keyframes in0{from{transform:translate(0,220px) rotate(0)}}
+@keyframes in1{from{transform:translate(-320px,-160px) rotate(-30deg)}}
+@keyframes in2{from{transform:translate(320px,-160px) rotate(30deg)}}
+.trick.collect-0 .card{transform:translate(0,320px) scale(.6);opacity:0}
+.trick.collect-1 .card{transform:translate(-420px,-220px) scale(.6);opacity:0}
+.trick.collect-2 .card{transform:translate(420px,-220px) scale(.6);opacity:0}
 .trick .card.win{box-shadow:0 0 0 3px var(--gold-2),0 12px 26px -6px rgba(0,0,0,.7)}
 
 /* Aktionspanel */
