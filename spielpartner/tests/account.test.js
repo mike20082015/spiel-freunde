@@ -170,6 +170,10 @@ test('Anmelden auf der Startseite öffnet die Karte und bleibt auf dem Handy sic
   assert.match(css, /@media \(max-width:860px\)\{\s*\.nav-links\{display:none\}/);
   assert.match(account, /getElementById\('btn-anmelden'\)/);
   assert.match(account, /addEventListener\('click', open, true\)/);
+  assert.match(card, /\.pw-horst-line\{[^}]*font-family:var\(--serif, Fraunces, Georgia, serif\)/);
+  assert.match(card, /\.pw-horst-line\{[^}]*font-style:italic/);
+  assert.match(card, /\.pw-horst-line\{[^}]*font-weight:500/);
+  assert.doesNotMatch(card, /\.pw-horst-line\{[^}]*font-family:Georgia,serif/);
   assert.match(card, /#modal-signup/);
   assert.match(card, /#modal-signup\[hidden\]\{display:none !important\}/);
   assert.doesNotMatch(home + css + card, /—/);

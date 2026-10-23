@@ -190,7 +190,7 @@ test('Bemerkungen haben Abstand, erzwungene Ansagen bleiben', () => {
   assert.ok(spoken > 0 && spoken < 12, 'spoken ' + spoken);
 });
 
-test('die Stimme fällt auf Text zurück und der Cache heißt sf-pwa-v14', () => {
+test('die Stimme fällt auf Text zurück und der Cache heißt sf-pwa-v15', () => {
   const games = ['skat', 'doppelkopf', 'bridge', 'jass', 'watten', 'schnapsen', 'romme', 'canasta', 'maumau', 'schafkopf', 'schwimmen', 'elfer-raus'];
   for (const game of games) {
     const voice = fs.readFileSync(path.join(root, 'public', game, 'js/voice.js'), 'utf8');
@@ -208,5 +208,5 @@ test('die Stimme fällt auf Text zurück und der Cache heißt sf-pwa-v14', () =>
   const stimmen = fs.readFileSync(path.join(root, 'public/spielpartner/stimmen.js'), 'utf8');
   assert.doesNotMatch(stimmen, /speechSynthesis\.speak/);
   const sw = fs.readFileSync(path.join(root, 'public/sw.js'), 'utf8');
-  assert.match(sw, /sf-pwa-v14/);
+  assert.match(sw, /sf-pwa-v15/);
 });

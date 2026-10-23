@@ -134,13 +134,24 @@
   let rng = E.cryptoRng();
   if (params.get('seed')) rng = E.seededRng(+params.get('seed'));
 
-  const S = { level: settings.level, st: null, gen: 0, displayTrick: [], winIdx: -1, collectTo: null, selected: [], busy: false, declareSel: null, fresh: [], lastTalk: [0, 0, 0], bubbleTimers: [], prevLastTrick: null };
+  const S = { level: settings.level, st: null, gen: 0, displayTrick: [], winIdx: -1, collectTo: null, ringHold: null, trickFlight: null, selected: [], busy: false, declareSel: null, fresh: [], lastTalk: [0, 0, 0], bubbleTimers: [], prevLastTrick: null };
+  const FLIGHT_MS = 380;
+  const TRICK_REST_MS = 1000;
+  const COLLECT_MS = 420;
 
   function delay(ms) {
     const g = S.gen;
     return new Promise((res) => setTimeout(res, ms * (SPEEDS[settings.speed] || 1))).then(() => { if (g !== S.gen) throw CANCEL; });
   }
   const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+  function hold(ms) {
+    const g = S.gen;
+    return new Promise((res) => setTimeout(res, ms)).then(() => { if (g !== S.gen) throw CANCEL; });
+  }
+  function motionReduced() {
+    try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+    catch (e) { return false; }
+  }
   function zui() { return window.SpielpartnerZuschauen; }
   function lernen() { return !!(zui() && zui().aktiv()); }
   function lern(text, platz) { if (lernen() && text) zui().kommentar(text, { platz: platz }); }
@@ -314,7 +325,8 @@
     if (st.phase === 'play') {
       const dbl = E.doublingTurn(st);
       if (dbl) return dbl.player === p;
-      return st.turn === p && S.displayTrick.length < 3;
+      if (S.ringHold != null) return S.ringHold === p;
+      return st.turn === p;
     }
     return false;
   }
@@ -325,12 +337,26 @@
     pile.innerHTML = '';
     if (st.phase === 'bidding' || st.phase === 'skat') { pile.appendChild(C.backEl()); pile.appendChild(C.backEl()); }
     const tr = $('trick');
-    tr.className = 'trick' + (S.collectTo != null ? ' collect-' + S.collectTo : '');
-    tr.innerHTML = '';
-    S.displayTrick.forEach((x, i) => {
-      const el = C.cardEl(x.card, { cls: 'p' + x.player + (i === S.winIdx ? ' win' : '') });
-      el.style.zIndex = i + 1;
-      tr.appendChild(el);
+    const nextClass = 'trick' + (S.collectTo != null ? ' collect-' + S.collectTo : '');
+    if (tr.className !== nextClass) tr.className = nextClass;
+    const shown = S.displayTrick;
+    const keep = new Set(shown.map((x) => x.card));
+    Array.from(tr.children).forEach((node) => {
+      if (!keep.has(node.dataset.card)) node.remove();
+    });
+    shown.forEach((x, i) => {
+      let el = null;
+      for (const node of tr.children) if (node.dataset.card === x.card) { el = node; break; }
+      const seat = 'p' + x.player;
+      const win = i === S.winIdx;
+      if (!el) {
+        el = C.cardEl(x.card, { cls: seat + (win ? ' win' : '') + (S.trickFlight === x.card ? ' arriving' : '') });
+        tr.appendChild(el);
+      } else {
+        el.classList.toggle('win', win);
+        if (S.trickFlight !== x.card) el.classList.remove('arriving');
+      }
+      el.style.zIndex = String(i + 1);
     });
     $('center').classList.toggle('busy', S.displayTrick.length > 0 || st.phase === 'bidding' || st.phase === 'skat');
   }
@@ -702,7 +728,7 @@
     if (!roundGate()) return;
     S.gen++;
     S.prevLastTrick = S.st && S.st.lastTrick ? { trick: S.st.lastTrick, game: S.st.game } : S.prevLastTrick;
-    S.displayTrick = []; S.collectTo = null; S.winIdx = -1; S.selected = []; S.fresh = []; S.busy = false; S.declareSel = null;
+    S.displayTrick = []; S.collectTo = null; S.winIdx = -1; S.ringHold = null; S.trickFlight = null; S.selected = []; S.fresh = []; S.busy = false; S.declareSel = null;
     hideModal('modal-summary');
     hidePanel();
     match.rules.mode = settings.mode;
@@ -824,17 +850,33 @@
     const legal = E.legalFor(st, p);
     const leading = st.trick.length === 0;
     const info = E.playCard(st, p, card);
-    if (!info.trickComplete) { S.displayTrick = st.trick.slice(); render(); return; }
+    const fly = !motionReduced();
+    S.ringHold = p;
+    S.trickFlight = card;
+    if (!info.trickComplete) {
+      S.displayTrick = st.trick.slice();
+      render();
+      if (fly) await hold(FLIGHT_MS);
+      S.ringHold = null;
+      S.trickFlight = null;
+      renderSeats();
+      renderCenter();
+      return;
+    }
     S.displayTrick = info.trick.cards.slice();
-    S.winIdx = info.trick.cards.findIndex((x) => x.player === info.winner);
+    S.winIdx = -1;
     render();
     trickTalk(info, p === 0 ? { card, legal, leading } : null, info.trick.cards.find((x) => x.player === 0));
-    if (lernen()) await sleep(320);
-    else await delay(1150);
+    if (fly) await hold(FLIGHT_MS);
+    S.ringHold = null;
+    S.trickFlight = null;
+    S.winIdx = info.trick.cards.findIndex((x) => x.player === info.winner);
+    renderSeats();
+    renderCenter();
+    await hold(TRICK_REST_MS);
     S.collectTo = info.winner;
     renderCenter();
-    if (lernen()) await sleep(180);
-    else await delay(420);
+    if (fly) await hold(COLLECT_MS);
     S.collectTo = null; S.displayTrick = []; S.winIdx = -1;
     render();
   }
