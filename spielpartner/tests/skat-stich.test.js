@@ -50,4 +50,5 @@ test('der Einflug startet sichtbar und ohne Wiederholung', () => {
   assert.doesNotMatch(frames, /opacity:\s*0/);
   assert.match(css, /prefers-reduced-motion:reduce/);
   assert.match(css, /\.st-main\{[^}]*min-height:2\.9em/);
+  assert.match(css, /\.statusbar\{[^}]*flex-direction:column/);
 });

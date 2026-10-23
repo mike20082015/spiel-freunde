@@ -38,8 +38,8 @@ img{display:block;max-width:100%}
 /* Grundlayout */
 .layout{flex:1;min-height:0;display:grid;grid-template-columns:1fr 340px;gap:16px;padding:14px 16px 16px}
 .table-area{display:flex;flex-direction:column;min-height:0;min-width:0}
-.statusbar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:rgba(30,18,10,.82);border:1px solid rgba(212,168,75,.3);border-radius:14px;padding:9px 16px;margin-bottom:12px;min-height:46px}
-.st-main{font-weight:600;font-size:1rem;color:var(--cream);line-height:1.45;min-height:2.9em}
+.statusbar{flex:none;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px;background:rgba(30,18,10,.82);border:1px solid rgba(212,168,75,.3);border-radius:14px;padding:9px 16px;margin-bottom:12px}
+.st-main{font-weight:600;font-size:1rem;color:var(--cream);line-height:1.45;min-height:2.9em;width:100%}
 .st-main em{font-style:normal;color:var(--gold-2)}
 .st-chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{display:inline-flex;align-items:center;gap:5px;font-size:.8rem;font-weight:600;padding:3px 10px;border-radius:999px;background:rgba(247,241,227,.08);border:1px solid rgba(247,241,227,.16);color:rgba(247,241,227,.9);white-space:nowrap}
@@ -337,7 +337,9 @@ img{display:block;max-width:100%}
   .games-grid{grid-template-columns:repeat(2,1fr)}
   .panel{padding:16px;top:47%}
   .panel h3{font-size:1.15rem}
-  .statusbar{padding:6px 10px}.st-main{font-size:.88rem}.chip{font-size:.7rem}
+  .statusbar{padding:6px 10px;gap:6px}
+  .st-main{font-size:.88rem}
+  .chip{font-size:.7rem}
   .hint-box{font-size:.8rem}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
