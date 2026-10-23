@@ -266,6 +266,10 @@
     if (code === 'invalid_token') return 'Dieser Anmeldelink gilt nicht.';
     if (code === 'token_expired') return 'Der Anmeldelink ist abgelaufen. Fordere einen neuen an.';
     if (code === 'token_used') return 'Dieser Anmeldelink wurde schon benutzt.';
+    if (code === 'invalid_code') return 'Der Code ist falsch.';
+    if (code === 'code_expired') return 'Der Code ist abgelaufen. Fordere einen neuen an.';
+    if (code === 'code_used') return 'Der Code wurde schon benutzt. Fordere einen neuen an.';
+    if (code === 'too_many_attempts') return 'Zu viele Versuche. Fordere einen neuen Code an.';
     if (code === 'unauthorized') return 'Die Anmeldung ist abgelaufen. Hol Dir einen neuen Link.';
     if (code === 'netz') return 'Wir erreichen den Server gerade nicht. Du kannst weiter spielen.';
     return 'Das hat gerade nicht geklappt. Du kannst weiter spielen.';
@@ -375,6 +379,29 @@
     });
   }
 
+  function digitsFrom(value) {
+    var digits = String(value == null ? '' : value).replace(/\D/g, '');
+    return digits.length === 6 ? digits : '';
+  }
+
+  function acceptSession(storage, result, now, fetcher, fallback) {
+    if (!result.ok) {
+      var code = errorCode(result) || fallback || 'invalid_token';
+      var error = new Error(code);
+      error.code = code;
+      error.status = result.status;
+      error.userMessage = messageFor(code);
+      throw error;
+    }
+    var session = storeVerified(storage, result.body);
+    return refresh(storage, now, fetcher).then(function () {
+      var current = readSession(storage, now) || session;
+      noteWillkommen(storage, current, result.body, now);
+      showWillkommen(storage);
+      return current;
+    });
+  }
+
   function verify(storage, token, now, fetcher) {
     var clean = String(token || '').trim();
     if (!clean) {
@@ -384,20 +411,7 @@
       return Promise.reject(missing);
     }
     return post(fetcher, apiBase() + '/verify', { token: clean }, '').then(function (result) {
-      if (!result.ok) {
-        var code = errorCode(result) || 'invalid_token';
-        var error = new Error(code);
-        error.code = code;
-        error.userMessage = messageFor(code);
-        throw error;
-      }
-      var session = storeVerified(storage, result.body);
-      return refresh(storage, now, fetcher).then(function () {
-        var current = readSession(storage, now) || session;
-        noteWillkommen(storage, current, result.body, now);
-        showWillkommen(storage);
-        return current;
-      });
+      return acceptSession(storage, result, now, fetcher, 'invalid_token');
     }).catch(function (err) {
       if (err && err.message === 'netz') {
         markFailOpen(storage, now);
@@ -406,6 +420,29 @@
         err.userMessage = messageFor('netz');
       }
       if (err && !err.userMessage) err.userMessage = messageFor(err.code || 'invalid_token');
+      throw err;
+    });
+  }
+
+  function verifyCode(storage, input, now, fetcher) {
+    var email = validEmail(input && input.email);
+    var code = digitsFrom(input && input.code);
+    if (!email || !code) {
+      var missing = new Error('invalid_code');
+      missing.code = 'invalid_code';
+      missing.userMessage = messageFor('invalid_code');
+      return Promise.reject(missing);
+    }
+    return post(fetcher, apiBase() + '/verify-code', { email: email, code: code }, '').then(function (result) {
+      return acceptSession(storage, result, now, fetcher, 'invalid_code');
+    }).catch(function (err) {
+      if (err && err.message === 'netz') {
+        markFailOpen(storage, now);
+        logFail('Anmeldecode', err);
+        err.code = 'netz';
+        err.userMessage = messageFor('netz');
+      }
+      if (err && !err.userMessage) err.userMessage = messageFor(err.code || 'invalid_code');
       throw err;
     });
   }
@@ -474,10 +511,18 @@
       '<p class="pw-status" data-resend-status role="status"></p>';
   }
 
+  var LOCK_ICON = '<svg class="pw-lock" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+
+  function trustMarkup() {
+    return '<p class="pw-trust">' + LOCK_ICON +
+      '<span>Sichere Anmeldung per Link oder Code. Ohne Passwort, es wird keins gespeichert.</span></p>';
+  }
+
   function signupMarkup() {
     return '<p class="pw-kicker">Eine Runde hast Du</p>' +
       '<h3 id="signup-title">Setz Dich richtig dazu</h3>' +
-      '<p class="pw-lead">Wir schicken Dir einen Anmeldelink, kein Passwort nötig.</p>' +
+      '<p class="pw-lead">Wir schicken Dir einen Anmeldecode und einen Anmeldelink, kein Passwort nötig.</p>' +
+      trustMarkup() +
       '<form data-signup>' +
       '<label class="pw-field">E-Mail' +
       '<input data-email type="email" autocomplete="email" inputmode="email" maxlength="200" required placeholder="du@example.com">' +
@@ -532,16 +577,55 @@
       '</form>';
   }
 
+  function codeMarkup() {
+    return '<form data-code>' +
+      '<p class="pw-lead" id="code-title">Code aus der E-Mail eingeben</p>' +
+      '<label class="pw-field pw-code">Anmeldecode' +
+      '<input data-code-input type="text" inputmode="numeric" autocomplete="one-time-code" enterkeyhint="done" maxlength="16" spellcheck="false" placeholder="123 456">' +
+      '</label>' +
+      '<button type="submit" class="btn btn-gold">Code einlösen</button>' +
+      '<p class="pw-status" data-code-status role="status"></p>' +
+      '</form>';
+  }
+
   function sentMarkup(email, options) {
     var standalone = !!(options && options.standalone);
     return '<p class="pw-kicker">Postfach</p>' +
       '<h3 id="signup-title">Der Link ist unterwegs</h3>' +
       '<p class="pw-lead">Schau in Dein Postfach' + (email ? ' bei ' + escapeText(email) : '') +
-      '. Wir schicken Dir einen Anmeldelink, kein Passwort nötig.</p>' +
+      '. Dort sind Dein Anmeldecode und ein Anmeldelink.</p>' +
+      trustMarkup() +
+      codeMarkup() +
       mailHintMarkup() +
       resendButton() +
       (standalone ? pasteMarkup() : '') +
       '<div class="pw-actions"><button type="button" class="btn btn-ghost-dark" data-signup-close>Später</button></div>';
+  }
+
+  function bindCode(root, storage, fetcher, email, onOk) {
+    if (!root) return;
+    var form = root.querySelector('[data-code]');
+    if (!form || form.getAttribute('data-bound') === '1') return;
+    form.setAttribute('data-bound', '1');
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      var status = root.querySelector('[data-code-status]');
+      var field = form.querySelector('[data-code-input]');
+      var button = form.querySelector('button[type="submit"]');
+      var typed = digitsFrom(field ? field.value : '');
+      if (!typed) {
+        if (status) status.textContent = 'Der Code hat sechs Ziffern.';
+        return;
+      }
+      if (button) button.disabled = true;
+      if (status) status.textContent = '';
+      verifyCode(storage, { email: email, code: typed }, Date.now(), fetcher).then(function (session) {
+        if (typeof onOk === 'function') onOk(session);
+      }).catch(function (err) {
+        if (button) button.disabled = false;
+        if (status) status.textContent = (err && err.userMessage) || messageFor(err && err.code);
+      });
+    });
   }
 
   function bindResend(root, storage, fetcher, input) {
@@ -608,7 +692,7 @@
         var later = root.querySelector('[data-signup-close]');
         if (later) later.addEventListener('click', function () { modal.hidden = true; });
         bindResend(root, storage, fetcher, { email: result.email, name: result.name });
-        bindPaste(root, storage, fetcher, function (session) {
+        var welcome = function (session) {
           var name = session && session.player ? session.player.displayName : '';
           root.innerHTML = '<p class="pw-kicker">Angemeldet</p>' +
             '<h3 id="signup-title">Willkommen</h3>' +
@@ -617,7 +701,9 @@
           var next = root.querySelector('[data-signup-close]');
           if (next) next.addEventListener('click', function () { modal.hidden = true; });
           mountHeader(storage);
-        });
+        };
+        bindCode(root, storage, fetcher, result.email, welcome);
+        bindPaste(root, storage, fetcher, welcome);
       }).catch(function (err) {
         if (button) button.disabled = false;
         if (status) status.textContent = err.userMessage || messageFor(err.code);
@@ -965,6 +1051,8 @@
     signupBody: signupBody,
     requestLink: requestLink,
     verify: verify,
+    verifyCode: verifyCode,
+    digitsFrom: digitsFrom,
     refresh: refresh,
     logout: logout,
     accessFromMe: accessFromMe,
@@ -976,6 +1064,8 @@
     MAIL_HINT: MAIL_HINT,
     signupMarkup: signupMarkup,
     sentMarkup: sentMarkup,
+    codeMarkup: codeMarkup,
+    bindCode: bindCode,
     pasteMarkup: pasteMarkup,
     tokenFrom: tokenFrom,
     redeem: redeem,
