@@ -288,6 +288,23 @@
     if (ref) body.ref = ref;
     var invite = inviteCode(storage, now);
     if (invite) body.invite = invite;
+    var Ent = entitlement();
+    if (Ent && typeof Ent.readSource === 'function') {
+      var source = Ent.readSource(storage, now);
+      if (source) {
+        body.source = {
+          utmSource: source.utmSource || null,
+          utmMedium: source.utmMedium || null,
+          utmCampaign: source.utmCampaign || null,
+          utmContent: source.utmContent || null,
+          referrerDomain: source.referrerDomain || null
+        };
+      }
+    }
+    if (Ent && typeof Ent.readClientId === 'function') {
+      var clientId = Ent.readClientId(storage);
+      if (clientId) body.clientId = clientId;
+    }
     return body;
   }
 

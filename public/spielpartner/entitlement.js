@@ -29,6 +29,11 @@
  * Einladungscode: ?invite= wird unter INVITE_KEY gespeichert, der erste gilt,
  * 90 Tage lang. Er geht an die Konto-Anmeldung und an den Checkout,
  * und er wird nirgends angezeigt. Die Einladung selbst liegt beim Konto-Server.
+ *
+ * Herkunft: utm_source, utm_medium, utm_campaign, utm_content und die Domain
+ * des Referrers werden beim ersten Besuch unter SOURCE_KEY gespeichert.
+ * Auch ein direkter Besuch zählt, damit ein späterer Link nichts überschreibt.
+ * Ein offener Spiel-Tab meldet sich etwa jede Minute, solange er sichtbar ist.
  */
 (function (root, factory) {
   var api = factory();
@@ -42,6 +47,14 @@
   var ROUNDS_KEY = 'sf-spielpartner-rounds';
   var REF_KEY = 'sf-ref';
   var INVITE_KEY = 'sf-invite';
+  var SOURCE_KEY = 'sf-source';
+  var CLIENT_KEY = 'sf-client';
+  var PRESENCE_HEARTBEAT_MS = 60000;
+  var CLIENT_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  var GAME_NAMES = {
+    skat: 1, doppelkopf: 1, schafkopf: 1, romme: 1, canasta: 1, schnapsen: 1,
+    watten: 1, jass: 1, maumau: 1, schwimmen: 1, 'elfer-raus': 1, bridge: 1, tisch: 1
+  };
   var TRIAL_DAYS = 14;
   var DAY_MS = 24 * 60 * 60 * 1000;
   var TRIAL_MS = TRIAL_DAYS * DAY_MS;
@@ -499,6 +512,204 @@
     return code;
   }
 
+  function cleanUtm(value) {
+    if (value == null) return null;
+    var trimmed = String(value).trim();
+    if (!trimmed || trimmed.length > 80) return null;
+    if (!/^[\w .\u00C0-\u024F~+-]+$/.test(trimmed)) return null;
+    return trimmed;
+  }
+
+  function referrerHost(referrer) {
+    if (!referrer) return null;
+    var raw = String(referrer).trim();
+    if (!raw) return null;
+    var host = raw;
+    if (raw.indexOf('://') >= 0) {
+      try { host = new URL(raw).hostname.toLowerCase(); }
+      catch (err) { return null; }
+    }
+    host = host.toLowerCase().replace(/:\d+$/, '').replace(/\.$/, '').replace(/^www\./, '');
+    if (!host || host.length > 253 || host === 'localhost' || host.slice(-6) === '.local') return null;
+    if (!/^[a-z0-9.-]+$/.test(host) || host.indexOf('.') < 0) return null;
+    if (host === 'spiel-freunde.com' || host.slice(-18) === '.spiel-freunde.com') return null;
+    if (host === 'lead-monster.net' || host.slice(-17) === '.lead-monster.net') return null;
+    return host;
+  }
+
+  function sourceFrom(search, referrer) {
+    var params;
+    try { params = new URLSearchParams(search || ''); }
+    catch (err) { params = new URLSearchParams(); }
+    return {
+      utmSource: cleanUtm(params.get('utm_source')),
+      utmMedium: cleanUtm(params.get('utm_medium')),
+      utmCampaign: cleanUtm(params.get('utm_campaign')),
+      utmContent: cleanUtm(params.get('utm_content')),
+      referrerDomain: referrerHost(referrer)
+    };
+  }
+
+  function readSource(storage) {
+    if (!storage) return null;
+    try {
+      var raw = JSON.parse(storage.getItem(SOURCE_KEY));
+      if (!raw || raw.v !== 1) return null;
+      return {
+        utmSource: cleanUtm(raw.utmSource),
+        utmMedium: cleanUtm(raw.utmMedium),
+        utmCampaign: cleanUtm(raw.utmCampaign),
+        utmContent: cleanUtm(raw.utmContent),
+        referrerDomain: referrerHost(raw.referrerDomain)
+      };
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function captureSource(storage, now, search, referrer) {
+    var current = readSource(storage);
+    if (current) return current;
+    var fresh = sourceFrom(search, referrer);
+    try {
+      storage.setItem(SOURCE_KEY, JSON.stringify({
+        v: 1,
+        at: now,
+        utmSource: fresh.utmSource,
+        utmMedium: fresh.utmMedium,
+        utmCampaign: fresh.utmCampaign,
+        utmContent: fresh.utmContent,
+        referrerDomain: fresh.referrerDomain
+      }));
+    } catch (err) {
+      return fresh;
+    }
+    return fresh;
+  }
+
+  function readClientId(storage) {
+    if (!storage) return '';
+    try {
+      var value = storage.getItem(CLIENT_KEY);
+      if (value && CLIENT_RE.test(value)) return value.toLowerCase();
+    } catch (err) { /* privat */ }
+    return '';
+  }
+
+  function makeClientId() {
+    try {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+    } catch (err) { /* alter Browser */ }
+    var hex = '0123456789abcdef';
+    var out = '';
+    for (var i = 0; i < 16; i++) {
+      var byte = Math.floor(Math.random() * 256);
+      if (i === 6) byte = (byte & 0x0f) | 0x40;
+      if (i === 8) byte = (byte & 0x3f) | 0x80;
+      out += hex[byte >> 4] + hex[byte & 0xf];
+      if (i === 3 || i === 5 || i === 7 || i === 9) out += '-';
+    }
+    return out;
+  }
+
+  function clientId(storage) {
+    var existing = readClientId(storage);
+    if (existing) return existing;
+    var id = makeClientId();
+    try { storage.setItem(CLIENT_KEY, id); }
+    catch (err) { return ''; }
+    return id;
+  }
+
+  function gameFromPath(path) {
+    var clean = String(path || '').split('?')[0].split('#')[0];
+    var parts = clean.split('/');
+    var first = '';
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i]) { first = parts[i].toLowerCase(); break; }
+    }
+    if (!first || first === 'index.html') return 'startseite';
+    if (GAME_NAMES[first]) return first;
+    return '';
+  }
+
+  function presenceBody(storage, path) {
+    var id = clientId(storage);
+    if (!id) return null;
+    var source = readSource(storage) || {
+      utmSource: null, utmMedium: null, utmCampaign: null, utmContent: null, referrerDomain: null
+    };
+    var body = {
+      clientId: id,
+      source: {
+        utmSource: source.utmSource,
+        utmMedium: source.utmMedium,
+        utmCampaign: source.utmCampaign,
+        utmContent: source.utmContent,
+        referrerDomain: source.referrerDomain
+      }
+    };
+    var game = gameFromPath(path);
+    if (game) body.game = game;
+    return body;
+  }
+
+  function sessionToken(storage, now) {
+    if (!storage) return '';
+    try {
+      var raw = JSON.parse(storage.getItem('sf-account'));
+      if (!raw || typeof raw.token !== 'string' || !raw.token || raw.token.length > 500) return '';
+      if (raw.expiresAt) {
+        var exp = Date.parse(raw.expiresAt);
+        if (isFinite(exp) && now >= exp) return '';
+      }
+      return raw.token;
+    } catch (err) {
+      return '';
+    }
+  }
+
+  function startPresence(env) {
+    var doc = env && env.document;
+    var fetchFn = env && env.fetch;
+    var storage = env && env.storage;
+    var base = env && env.base;
+    if (!doc || !fetchFn || !storage || !base) return { stop: function () {} };
+    var intervalMs = env.intervalMs || PRESENCE_HEARTBEAT_MS;
+    var pathOf = function () {
+      if (env.path) return env.path;
+      return env.location && env.location.pathname ? env.location.pathname : '/';
+    };
+    var timer = null;
+    function send() {
+      if (doc.visibilityState === 'hidden') return;
+      var body = presenceBody(storage, pathOf());
+      if (!body || !body.game) return;
+      var headers = { 'content-type': 'application/json' };
+      var token = sessionToken(storage, Date.now());
+      if (token) headers.Authorization = 'Bearer ' + token;
+      try {
+        var pending = fetchFn(base + '/presence', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(body),
+          keepalive: true
+        });
+        if (pending && typeof pending.catch === 'function') pending.catch(function () {});
+      } catch (err) { /* Netz */ }
+    }
+    function arm() {
+      if (timer) clearInterval(timer);
+      timer = null;
+      if (doc.visibilityState === 'hidden') return;
+      send();
+      timer = setInterval(send, intervalMs);
+    }
+    if (typeof doc.addEventListener === 'function') doc.addEventListener('visibilitychange', arm);
+    arm();
+    return { stop: function () { if (timer) clearInterval(timer); timer = null; } };
+  }
+
   function validEmail(value) {
     var email = String(value || '').trim();
     if (!email) return '';
@@ -639,6 +850,9 @@
     ROUNDS_KEY: ROUNDS_KEY,
     REF_KEY: REF_KEY,
     INVITE_KEY: INVITE_KEY,
+    SOURCE_KEY: SOURCE_KEY,
+    CLIENT_KEY: CLIENT_KEY,
+    PRESENCE_HEARTBEAT_MS: PRESENCE_HEARTBEAT_MS,
     TRIAL_DAYS: TRIAL_DAYS,
     TRIAL_MS: TRIAL_MS,
     FREE_DAILY_ROUNDS: FREE_DAILY_ROUNDS,
@@ -665,6 +879,13 @@
     readRef: readRef,
     captureInvite: captureInvite,
     readInvite: readInvite,
+    captureSource: captureSource,
+    readSource: readSource,
+    clientId: clientId,
+    readClientId: readClientId,
+    gameFromPath: gameFromPath,
+    presenceBody: presenceBody,
+    startPresence: startPresence,
     validEmail: validEmail,
     checkoutBody: checkoutBody,
     startCheckout: startCheckout,
@@ -685,12 +906,25 @@ function boot(api) {
   catch (err) { /* Speicher gesperrt */ }
   try { api.captureInvite(window.localStorage, Date.now(), window.location.search || ''); }
   catch (err) { /* Speicher gesperrt */ }
+  try {
+    api.captureSource(window.localStorage, Date.now(), window.location.search || '', document.referrer || '');
+    api.clientId(window.localStorage);
+  } catch (err) { /* Speicher gesperrt */ }
   function run() {
     if (!window.fetch) return;
     api.maybeVerify(window.localStorage, Date.now(), window.fetch.bind(window)).then(function () {
       try { window.dispatchEvent(new CustomEvent('sf-entitlement')); }
       catch (err) { /* alter Browser */ }
     });
+    try {
+      api.startPresence({
+        document: document,
+        fetch: window.fetch.bind(window),
+        storage: window.localStorage,
+        base: api.BILLING_API_BASE,
+        location: window.location
+      });
+    } catch (err) { /* ohne Netz */ }
   }
   if (typeof document !== 'undefined' && document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', run);
