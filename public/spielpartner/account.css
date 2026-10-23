@@ -1,4 +1,32 @@
-/* Anmeldekarte: dasselbe Holz und Gold wie die Sperre, nur größere Schrift */
+/* Anmeldekarte: dasselbe Holz und Gold wie die Sperre, nur größere Schrift.
+   Die Startseite hat kein Spiel-Modal. Die Karte liegt deshalb selbst über der Navigation. */
+#modal-signup{
+  position:fixed;
+  inset:0;
+  z-index:80;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:rgba(15,8,4,.62);
+}
+#modal-signup[hidden]{display:none !important}
+#modal-signup .modal-card{
+  width:min(640px,100%);
+  max-height:min(92dvh,760px);
+  overflow:auto;
+  background:linear-gradient(170deg,#fffaf0,#efe5cf);
+  color:#2a2420;
+  border-radius:20px;
+  padding:24px 26px;
+  box-shadow:0 0 0 1px rgba(176,133,50,.5),0 0 0 7px rgba(58,36,20,.7),0 40px 80px -20px rgba(0,0,0,.85);
+}
+.signup-card .btn-ghost-dark{
+  background:transparent;
+  border:1.5px solid rgba(42,36,32,.3);
+  color:#2a2420;
+  border-radius:999px;
+  cursor:pointer;
+}
 .signup-card h3{font-size:2.15rem;line-height:1.12}
 .signup-card .pw-kicker{font-size:.95rem}
 .signup-card .pw-lead{font-size:1.28rem;line-height:1.45}

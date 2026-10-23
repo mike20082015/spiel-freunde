@@ -232,7 +232,15 @@
   }
 
   function errorCode(result) {
-    return result && result.body && result.body.error ? String(result.body.error) : '';
+    var code = result && result.body && result.body.error ? String(result.body.error) : '';
+    if (code) return code;
+    if (result && result.status >= 500) return 'session_unavailable';
+    return '';
+  }
+
+  function loginHref(value) {
+    var href = String(value == null ? '' : value).trim();
+    return href === '#' || href === '#anmelden';
   }
 
   function messageFor(code) {
@@ -741,6 +749,7 @@
     var host = document.querySelector('.topbar-actions') || document.querySelector('.nav-cta');
     var session = storage ? readSession(storage, Date.now()) : null;
     var existing = document.querySelector('[data-sf-account]');
+    paintLoginLink(storage);
     if (!host || !session || !session.player || !session.player.displayName) {
       if (existing) existing.remove();
       return;
@@ -809,6 +818,31 @@
     document.head.appendChild(link);
   }
 
+  function paintLoginLink(storage) {
+    if (typeof document === 'undefined') return;
+    var session = storage ? readSession(storage, Date.now()) : null;
+    var on = !!(session && session.player && session.player.displayName);
+    var links = document.querySelectorAll('a.link-login');
+    for (var i = 0; i < links.length; i++) {
+      if (!loginHref(links[i].getAttribute('href'))) continue;
+      if (on) links[i].setAttribute('hidden', '');
+      else links[i].removeAttribute('hidden');
+    }
+  }
+
+  function bindLogin(storage) {
+    if (typeof document === 'undefined' || !document.documentElement) return;
+    if (document.documentElement.getAttribute('data-sf-login') === '1') return;
+    document.documentElement.setAttribute('data-sf-login', '1');
+    document.addEventListener('click', function (event) {
+      var node = event.target;
+      var link = node && node.closest ? node.closest('a.link-login') : null;
+      if (!link || !loginHref(link.getAttribute('href'))) return;
+      event.preventDefault();
+      openSignup(storage);
+    });
+  }
+
   function boot(storage, now) {
     ensureCss();
     var store = storage;
@@ -817,6 +851,8 @@
       catch (err) { store = null; }
     }
     if (!store) return null;
+    bindLogin(store);
+    paintLoginLink(store);
     mountHeader(store);
     showWillkommen(store);
     if (booted) return readSession(store, now);
@@ -905,6 +941,7 @@
     finish: finish,
     hint: hint,
     openSignup: openSignup,
+    loginHref: loginHref,
     MAIL_HINT: MAIL_HINT,
     signupMarkup: signupMarkup,
     sentMarkup: sentMarkup,

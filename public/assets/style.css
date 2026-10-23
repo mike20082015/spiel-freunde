@@ -55,7 +55,8 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;letter-spacin
 .nav-links a:hover{color:var(--cream)}.nav-links a:hover::after{transform:scaleX(1)}
 .nav-brand{display:flex;align-items:center;gap:12px;min-width:0}
 .nav-cta{display:flex;align-items:center;gap:18px}
-.link-login{color:rgba(247,241,227,.82);font-size:.95rem}
+.link-login{color:rgba(247,241,227,.82);font-size:.95rem;white-space:nowrap}
+.link-login[hidden]{display:none !important}
 
 /* hero */
 .hero{position:relative;overflow:hidden;padding:40px 0 60px;color:var(--cream);background:radial-gradient(ellipse at 75% 35%,rgba(255,170,80,.18),transparent 55%),radial-gradient(ellipse at 10% 100%,rgba(138,47,47,.25),transparent 55%),linear-gradient(160deg,#3d2616,#2b1a0f 55%,#1f130b)}
@@ -313,7 +314,9 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;letter-spacin
   .game-feature{grid-column:span 3;grid-row:auto}
 }
 @media (max-width:860px){
-  .nav-links,.link-login{display:none}
+  .nav-links{display:none}
+  .nav-cta{gap:10px}
+  .link-login{white-space:nowrap;font-size:.9rem}
   .hero-ctas{order:3}
   .lead{order:4}
   .scene{order:5;margin:8px 0 18px}
@@ -340,6 +343,9 @@ h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.15;letter-spacin
   .tag{font-size:.58rem;padding:2px 7px}
   .you-tag{left:auto;right:3%;bottom:4%}.ava-you{width:26px;height:26px;font-size:.62rem}.chat-chip{font-size:.68rem;padding:3px 8px}
   .kicker{font-size:.72rem}
+  .nav-in{height:auto;min-height:58px;gap:8px;padding-top:8px;padding-bottom:8px}
+  .nav-cta{gap:8px}
+  .link-login{font-size:.82rem}
   .logo img{height:30px}
   .games{grid-template-columns:1fr 1fr;gap:12px}.game{padding:16px 14px 14px}.game h3{font-size:1.2rem}.game p{font-size:.84rem}.game .badge{font-size:.6rem;padding:2px 7px}.fl{width:22px;height:15px}.fl.ch{width:15px}
   .game-feature h3{font-size:2.1rem}

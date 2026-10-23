@@ -117,6 +117,40 @@ test('Proberunde, dann die Anmeldekarte, kein lokaler 14-Tage-Test', () => {
   }
 });
 
+test('ein Gateway-Fehler ist nicht eine falsche E-Mail', async () => {
+  const storage = E.memoryStorage();
+  const previous = global.window;
+  global.window = { SpielpartnerEntitlement: E };
+  try {
+    await assert.rejects(
+      () => Account.requestLink(storage, { email: 'helga@example.com', name: 'Helga' }, START, async () => ({
+        status: 504,
+        ok: false,
+        json: async () => { throw new Error('html'); }
+      })),
+      (err) => err.code === 'session_unavailable' && /nicht erreichbar/.test(err.userMessage)
+    );
+  } finally {
+    if (previous === undefined) delete global.window;
+    else global.window = previous;
+  }
+});
+
+test('Anmelden auf der Startseite öffnet die Karte und bleibt auf dem Handy sichtbar', () => {
+  assert.strictEqual(Account.loginHref('#anmelden'), true);
+  assert.strictEqual(Account.loginHref('#'), true);
+  assert.strictEqual(Account.loginHref('/#preise'), false);
+  const home = fs.readFileSync(path.join(__dirname, '../../public/index.html'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '../../public/assets/style.css'), 'utf8');
+  const card = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/account.css'), 'utf8');
+  assert.match(home, /class="link-login" href="#anmelden">Anmelden</);
+  assert.doesNotMatch(css, /\.nav-links,\s*\.link-login\{display:\s*none\}/);
+  assert.match(css, /@media \(max-width:860px\)\{\s*\.nav-links\{display:none\}/);
+  assert.match(card, /#modal-signup/);
+  assert.match(card, /#modal-signup\[hidden\]\{display:none !important\}/);
+  assert.doesNotMatch(home + css + card, /—/);
+});
+
 test('Anmeldelink schickt den gespeicherten Empfehlungscode mit', async () => {
   const storage = E.memoryStorage();
   const previous = global.window;
