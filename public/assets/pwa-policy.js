@@ -2,13 +2,15 @@
    API, Anmeldung, Uploads, der Avatar-Editor und fremde Server gehen
    immer direkt ins Netz und landen nicht im Cache. HTML und Skripte
    kommen aus dem Netz, damit eine installierte App die neue Fassung
-   beim Öffnen lädt. Bilder und CSS dürfen aus dem Cache. */
+   beim Öffnen lädt. Bilder und CSS dürfen aus dem Cache. Filme bleiben draußen,
+   damit Bereichsabfragen (Range) beim Vorspulen beim Server ankommen. */
 (function (root, factory) {
   var api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.SpielpartnerPwa = api;
 })(typeof self !== 'undefined' ? self : (typeof globalThis !== 'undefined' ? globalThis : null), function () {
   var STATIC = /\.(?:css|js|mjs|png|jpe?g|gif|webp|svg|ico|woff2?)$/i;
+  var VIDEO = /\.(?:mp4|m4v|webm|mov|m4a)$/i;
 
   function classify(requestUrl, options) {
     var opts = options || {};
@@ -24,6 +26,7 @@
     if (url.pathname === '/assets/avatar-store.js') return 'bypass';
     if (/(^|\/)(auth|session|login|account|anmelden)(\/|$)/i.test(url.pathname)) return 'bypass';
     if (url.searchParams.has('token') || url.searchParams.has('access_token') || url.searchParams.has('code')) return 'bypass';
+    if (VIDEO.test(url.pathname)) return 'bypass';
 
     var accept = opts.accept || '';
     var destination = opts.destination || '';

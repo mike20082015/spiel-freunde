@@ -218,7 +218,7 @@
       </article>
     </div>
     <div class="chat-demo">
-      <div class="chat-head"><span class="live"></span> So klingt es am Tisch</div>
+      <div class="chat-head"><span class="live"></span> So reden sie am Tisch</div>
       <div class="chat-lines">
         <p class="cl you"><b>Du:</b> Ich hätte Kreuz spielen sollen, oder?</p>
         <p class="cl h"><b>Horst:</b> Wat heißt hier sollen? Müssen! Mensch, streng dich mal mehr an!</p>
@@ -316,6 +316,44 @@
     <p class="legend"><span><i class="fl de"></i> Deutschland</span><span><i class="fl by"></i> Bayern</span><span><i class="fl at"></i> Österreich</span><span><i class="fl ch"></i> Schweiz</span></p>
   </div>
 </section>
+
+<section class="sec wood" id="klang" aria-labelledby="klang-title">
+  <div class="wrap klang">
+    <div class="klang-copy">
+      <p class="eyebrow">Eine Runde Skat</p>
+      <h2 id="klang-title">So klingt es am Tisch</h2>
+      <p>Mischen, ausspielen, Stich einsammeln: So hört sich eine Runde Skat mit Horst, Margarethe und Co. an.</p>
+      <p class="klang-note">Der Film startet erst, wenn Du auf Play drückst.</p>
+      <a class="btn btn-gold" href="/skat/">Kostenlos testen</a>
+    </div>
+    <div class="klang-phone">
+      <video id="tisch-klang" controls playsinline preload="none" poster="/video/skat-tisch-poster.webp" width="1080" height="1920" aria-label="Film einer Skatrunde mit Horst und Margarethe, mit Kartengeräuschen und Musik" title="So klingt eine Runde Skat am Tisch">
+        <source data-src="/video/skat-tisch-ton.mp4" type="video/mp4">
+      </video>
+    </div>
+  </div>
+</section>
+<script>
+(function () {
+  var video = document.getElementById('tisch-klang');
+  if (!video) return;
+  var source = video.querySelector('source');
+  if (!source || source.getAttribute('src')) return;
+  function arm() {
+    var url = source.getAttribute('data-src');
+    if (!url || source.getAttribute('src')) return;
+    source.setAttribute('src', url);
+    video.load();
+  }
+  if (!('IntersectionObserver' in window)) { arm(); return; }
+  var watch = new IntersectionObserver(function (entries) {
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].isIntersecting) { arm(); watch.disconnect(); return; }
+    }
+  }, { rootMargin: '240px' });
+  watch.observe(video);
+})();
+</script>
 
 <!-- LERNEN -->
 <section class="sec wine" id="lernen">

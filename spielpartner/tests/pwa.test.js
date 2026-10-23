@@ -81,7 +81,7 @@ test('der Service Worker fasst API und Anmeldung nicht an', () => {
   assert.equal(kind(ORIGIN + '/mein-avatar/avatar.js'), 'bypass');
   assert.equal(kind(ORIGIN + '/mein-avatar/avatar.css'), 'bypass');
   assert.equal(kind(ORIGIN + '/assets/avatar-store.js'), 'bypass');
-  assert.match(sw, /sf-pwa-v16/);
+  assert.match(sw, /sf-pwa-v17/);
   assert.match(sw, /client\.navigate\(client\.url\)/);
   assert.doesNotMatch(sw, /return Promise\.all\(clients\.map/);
   assert.match(sw, /cache: 'no-cache'/);
@@ -101,6 +101,34 @@ test('der Service Worker fasst API und Anmeldung nicht an', () => {
   assert.equal(kind(ORIGIN + '/manifest.json'), 'cache-first');
   assert.equal(kind(ORIGIN + '/skat/assets/voice/horst.mp3'), 'bypass');
   assert.equal(kind(ORIGIN + '/spielpartner/avatare.json'), 'bypass');
+  assert.equal(kind(ORIGIN + '/video/skat-tisch-ton.mp4'), 'bypass');
+  assert.equal(kind(ORIGIN + '/video/skat-tisch-ton.mp4', { destination: 'video', accept: 'video/mp4' }), 'bypass');
+  assert.equal(kind(ORIGIN + '/video/skat-tisch-ton.mp4', { mode: 'navigate', destination: 'document', accept: 'text/html' }), 'bypass');
+  assert.equal(kind(ORIGIN + '/video/skat-tisch-poster.webp'), 'cache-first');
+  assert.doesNotMatch(sw, /\.mp4/);
+  assert.doesNotMatch(sw, /\/video\//);
+});
+
+test('die Startseite zeigt den Tischfilm ohne Autoplay', () => {
+  const home = fs.readFileSync(path.join(root, 'public/index.html'), 'utf8');
+  const section = home.slice(home.indexOf('id="klang"'), home.indexOf('id="lernen"'));
+  assert.match(section, /So klingt es am Tisch/);
+  assert.match(section, /Mischen, ausspielen, Stich einsammeln: So hört sich eine Runde Skat mit Horst, Margarethe und Co\. an\./);
+  assert.match(section, /Der Film startet erst, wenn Du auf Play drückst\./);
+  assert.match(section, /href="\/skat\/">Kostenlos testen</);
+  assert.match(section, /<video[^>]*\scontrols\b/);
+  assert.match(section, /\splaysinline\b/);
+  assert.match(section, /preload="none"/);
+  assert.match(section, /poster="\/video\/skat-tisch-poster\.webp"/);
+  assert.match(section, /aria-label="Film einer Skatrunde mit Horst und Margarethe, mit Kartengeräuschen und Musik"/);
+  assert.match(section, /title="So klingt eine Runde Skat am Tisch"/);
+  assert.match(section, /data-src="\/video\/skat-tisch-ton\.mp4"/);
+  assert.match(section, /IntersectionObserver/);
+  assert.doesNotMatch(section, /autoplay/);
+  assert.doesNotMatch(section, /—|–/);
+  ['skat-tisch-ton.mp4', 'skat-tisch-poster.png', 'skat-tisch-poster.webp', 'skat-tisch-poster.jpg'].forEach((name) => {
+    assert.ok(fs.existsSync(path.join(root, 'public/video', name)), name);
+  });
 });
 
 test('die Werbebanner sind PNG und keine Seite', () => {
@@ -119,7 +147,7 @@ test('die Werbebanner sind PNG und keine Seite', () => {
   assert.match(spec, /error_document:\s*404\.html/);
   assert.doesNotMatch(spec, /^\s*catchall_document\s*:/m);
   const sw = fs.readFileSync(path.join(root, 'public/sw.js'), 'utf8');
-  assert.match(sw, /sf-pwa-v15/);
+  assert.match(sw, /sf-pwa-v17/);
   assert.doesNotMatch(sw, /\/werbung\//);
   htmlFiles(path.join(root, 'public'), []).forEach((file) => {
     assert.doesNotMatch(fs.readFileSync(file, 'utf8'), /\/werbung\//, path.relative(root, file));
