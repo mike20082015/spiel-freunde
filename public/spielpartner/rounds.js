@@ -124,6 +124,15 @@
     return result;
   }
 
+  function nextPlayLabel(label, storage, now) {
+    var Acc = account();
+    if (Acc && typeof Acc.nextPlayLabel === 'function') {
+      try { return Acc.nextPlayLabel(label, storage, now); }
+      catch (err) { return label || 'Nächstes Spiel'; }
+    }
+    return label || 'Nächstes Spiel';
+  }
+
   function paint(el, storage, now) {
     if (!el) return;
     var Acc = account();
@@ -161,5 +170,5 @@
     } catch (err) { el.textContent = ''; }
   }
 
-  return { gate: gate, finish: finish, paint: paint, boot: boot };
+  return { gate: gate, finish: finish, paint: paint, boot: boot, nextPlayLabel: nextPlayLabel };
 });

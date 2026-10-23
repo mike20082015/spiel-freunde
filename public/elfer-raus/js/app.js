@@ -505,6 +505,11 @@
       if (!lernen()) await delay(200);
     }
   }
+  function dealLabel(label) {
+    const rounds = window.SpielpartnerRounds;
+    if (rounds && typeof rounds.nextPlayLabel === 'function') return rounds.nextPlayLabel(label);
+    return label;
+  }
   function showSummary() {
     const st = S.state;
     const won = st.winner === 0;
@@ -515,7 +520,7 @@
       '<p class="sum-quote">' + esc(Talk.line((person(st.winner) || {}).id || 'hilde', st.reason === 'stall' ? 'stall' : 'win') || 'Weiter geht es.') + '</p>' +
       '<p>' + (penalty ? 'Die Restkarten sind Strafpunkte. ' : 'Gezählt wird der Sieg. ') + 'Kein Geld.</p>' +
       '<table class="sum-table"><thead><tr><th>Name</th><th>Rest</th><th>Stand</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<div class="modal-actions"><button class="btn btn-gold" type="button" data-next>Nächste Runde</button></div>';
+      '<div class="modal-actions"><button class="btn btn-gold" type="button" data-next data-play-label="Nächste Runde">' + dealLabel('Nächste Runde') + '</button></div>';
     $('modal-summary').hidden = false;
     if (st.winner != null && st.winner !== 0) talk(st.winner, 'win', 1, true);
     else if (st.winner === 0) talk(1, 'lose', 0.8, true);

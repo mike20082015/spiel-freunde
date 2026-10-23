@@ -527,6 +527,11 @@
     }
   }
 
+  function dealLabel(label) {
+    const rounds = window.SpielpartnerRounds;
+    if (rounds && typeof rounds.nextPlayLabel === 'function') return rounds.nextPlayLabel(label);
+    return label;
+  }
   function showSummary(result) {
     const names = Seats.seats.map((p) => p.name);
     const winner = result.winner;
@@ -543,7 +548,7 @@
       (quote ? '<p class="sum-quote">' + esc(quote) + '</p>' : '') +
       '<table class="sum-table"><thead><tr><th></th><th>Augen</th><th>Diese Runde</th><th>Stand</th></tr></thead><tbody>' +
       rows + '</tbody></table>' +
-      '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next">Weiter</button></div>';
+      '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next" data-play-label="Weiter">' + dealLabel('Weiter') + '</button></div>';
     $('modal-summary').hidden = false;
     $('btn-next').addEventListener('click', () => {
       if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;

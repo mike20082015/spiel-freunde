@@ -99,6 +99,12 @@
     return true;
   }
 
+  function dealLabel(label) {
+    const rounds = window.SpielpartnerRounds;
+    if (rounds && typeof rounds.nextPlayLabel === 'function') return rounds.nextPlayLabel(label);
+    return label;
+  }
+
   function paintRounds() {
     if (!window.SpielpartnerRounds) return;
     window.SpielpartnerRounds.paint($('home-rounds'));
@@ -472,7 +478,7 @@
     panel.hidden = false;
     if (view.phase === 'done') {
       const next = view.youAreHost
-        ? '<div class="panel-row"><button class="btn btn-gold" type="button" id="btn-next">Nächstes Spiel</button></div>'
+        ? '<div class="panel-row"><button class="btn btn-gold" type="button" id="btn-next" data-play-label="Nächstes Spiel">' + dealLabel('Nächstes Spiel') + '</button></div>'
         : '<p>Warte auf den Gastgeber.</p>';
       panel.innerHTML = '<h3>Spiel zu Ende</h3><p>' + esc(resultText(view)) + '</p>' + next;
       const button = $('btn-next');

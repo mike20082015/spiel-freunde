@@ -709,6 +709,11 @@
     }
   }
 
+  function dealLabel(label) {
+    const rounds = window.SpielpartnerRounds;
+    if (rounds && typeof rounds.nextPlayLabel === 'function') return rounds.nextPlayLabel(label);
+    return label;
+  }
   function showSummary(result) {
     const st = S.state;
     const won = st.winner === 0;
@@ -724,7 +729,7 @@
       (st.winReason === 'aces' ? 'Drei Asse, die Runde ist sofort zu Ende. ' : '') +
       'Gezählt werden Punkte, kein Geld.</p>' +
       '<table class="sum-table"><thead><tr><th>Name</th><th>Runde</th><th>Stand</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<div class="modal-actions"><button class="btn btn-gold" type="button" data-next>Nächste Runde</button></div>';
+      '<div class="modal-actions"><button class="btn btn-gold" type="button" data-next data-play-label="Nächste Runde">' + dealLabel('Nächste Runde') + '</button></div>';
     $('modal-summary').hidden = false;
     if (st.winner !== 0) talk(st.winner, 'win', 1, true);
     else {

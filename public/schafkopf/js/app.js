@@ -588,6 +588,11 @@
     }
   }
 
+  function dealLabel(label) {
+    const rounds = window.SpielpartnerRounds;
+    if (rounds && typeof rounds.nextPlayLabel === 'function') return rounds.nextPlayLabel(label);
+    return label;
+  }
   function showSummary(result) {
     const box = $('summary');
     const won = result.winners && result.winners.indexOf(0) >= 0;
@@ -597,7 +602,7 @@
       '<p>' + esc(result.note || '') + '</p>' +
       '<p class="sum-quote">' + esc(Talk.line(won ? 'sepp' : 'horst', won ? 'win' : 'lose') || '') + '</p>' +
       '<table class="sum-table"><tbody>' + rows + '</tbody></table>' +
-      '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next">Weiter</button></div>';
+      '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next" data-play-label="Weiter">' + dealLabel('Weiter') + '</button></div>';
     $('modal-summary').hidden = false;
     $('btn-next').addEventListener('click', () => {
       if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;

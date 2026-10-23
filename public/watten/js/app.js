@@ -76,6 +76,11 @@
   function roundsAllow() {
     return !window.SpielpartnerRounds || SpielpartnerRounds.gate();
   }
+  function dealLabel(label) {
+    var rounds = window.SpielpartnerRounds;
+    if (rounds && typeof rounds.nextPlayLabel === 'function') return rounds.nextPlayLabel(label);
+    return label;
+  }
   function nameOf(seat) {
     return Seats[seat] ? Seats[seat].name : NAMES[seat] || 'Spieler';
   }
@@ -435,7 +440,7 @@
     html += '<p>Wir ' + gained[0] + ', sie ' + gained[1] + '. Stand ' + table.scores[0] + ' zu ' + table.scores[1] + '.</p>';
     var speaker = gained[0] >= gained[1] ? Seats[2].id : Seats[1].id;
     html += '<p class="sum-quote">' + esc(Talk.line(speaker, gained[0] >= gained[1] ? 'handWin' : 'handLose') || '') + '</p>';
-    html += '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next">Nächstes Spiel</button></div>';
+    html += '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next" data-play-label="Nächstes Spiel">' + dealLabel('Nächstes Spiel') + '</button></div>';
     $('summary').innerHTML = html;
     $('modal-summary').hidden = false;
     if (lernen()) zui().nachRunde(function () { var btn = $('btn-next'); if (btn) btn.click(); });

@@ -613,6 +613,11 @@
     if (result.endReason === 'stock') return 'Der Talon ist leer, niemand konnte ausmachen.';
     return 'Die Runde ist zu Ende.';
   }
+  function dealLabel(label) {
+    const rounds = window.SpielpartnerRounds;
+    if (rounds && typeof rounds.nextPlayLabel === 'function') return rounds.nextPlayLabel(label);
+    return label;
+  }
   function showSummary(result) {
     const us = result.teams[0];
     const them = result.teams[1];
@@ -632,7 +637,7 @@
       row('Ausmachen', us.goingOut, them.goingOut) +
       '</tbody><tfoot>' + row('Runde', us.total, them.total) +
       row('Stand', match.scores[0], match.scores[1]) + '</tfoot></table>' +
-      '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next">Nächste Runde</button></div>';
+      '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next" data-play-label="Nächste Runde">' + dealLabel('Nächste Runde') + '</button></div>';
     $('modal-summary').hidden = false;
     $('btn-next').addEventListener('click', () => {
       if (window.SpielpartnerRounds && !SpielpartnerRounds.gate()) return;

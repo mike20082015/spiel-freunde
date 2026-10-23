@@ -100,8 +100,11 @@ test('Proberunde, dann die Anmeldekarte, kein lokaler 14-Tage-Test', () => {
     assert.match(Account.signupMarkup(), /<svg/);
     assert.doesNotMatch(Account.signupMarkup(), /—|–|absolut sicher/);
     assert.match(Account.signupMarkup(), /E-Mail/);
-    assert.match(Account.signupMarkup(), /Spielername/);
-    assert.match(Account.signupMarkup(), /Spam- oder Werbe-Ordner/);
+    assert.match(Account.signupMarkup(), /Code schicken/);
+    assert.match(Account.signupMarkup(), /Schöne Runde! Melde Dich an/);
+    assert.doesNotMatch(Account.signupMarkup(), /Spielername/);
+    assert.doesNotMatch(Account.signupMarkup(), /data-name/);
+    assert.match(Account.signupMarkup(), /Falls die Mail fehlt, schau kurz in den Spam-Ordner/);
     assert.match(Account.sentMarkup('helga@example.com'), /Der Link ist unterwegs/);
     assert.match(Account.sentMarkup('helga@example.com'), /helga@example.com/);
     assert.match(Account.sentMarkup('helga@example.com'), /E-Mail erneut senden/);
@@ -110,7 +113,8 @@ test('Proberunde, dann die Anmeldekarte, kein lokaler 14-Tage-Test', () => {
     assert.match(Account.sentMarkup('helga@example.com'), /es wird keins gespeichert/);
     assert.match(Account.sentMarkup('helga@example.com'), /inputmode="numeric"/);
     assert.match(Account.sentMarkup('helga@example.com'), /autocomplete="one-time-code"/);
-    assert.match(Account.sentMarkup('helga@example.com'), /Spam- oder Werbe-Ordner/);
+    assert.match(Account.sentMarkup('helga@example.com'), /Gib den Code hier ein/);
+    assert.match(Account.sentMarkup('helga@example.com'), /Falls die Mail fehlt, schau kurz in den Spam-Ordner/);
     assert.doesNotMatch(Account.sentMarkup('helga@example.com'), /data-paste/);
     assert.equal(Account.digitsFrom('123 456'), '123456');
     assert.equal(Account.digitsFrom('123456'), '123456');
@@ -119,9 +123,8 @@ test('Proberunde, dann die Anmeldekarte, kein lokaler 14-Tage-Test', () => {
     assert.equal(Account.messageFor('code_expired'), 'Der Code ist abgelaufen. Fordere einen neuen an.');
     assert.equal(Account.messageFor('too_many_attempts'), 'Zu viele Versuche. Fordere einen neuen Code an.');
     assert.equal(Account.messageFor('code_used'), 'Der Code wurde schon benutzt. Fordere einen neuen an.');
-    assert.match(Account.MAIL_HINT, /Gmail, GMX, web\.de und T-Online/);
-    assert.match(Account.MAIL_HINT, /„Kein Spam“/);
-    assert.doesNotMatch(Account.MAIL_HINT, /—/);
+    assert.equal(Account.MAIL_HINT, 'Falls die Mail fehlt, schau kurz in den Spam-Ordner.');
+    assert.doesNotMatch(Account.MAIL_HINT, /—|–/);
     const inApp = Account.sentMarkup('helga@example.com', { standalone: true });
     assert.match(inApp, /Link einlösen/);
     assert.match(inApp, /Tippe den Link in der Mail nicht an/);
@@ -160,7 +163,9 @@ test('Anmelden auf der Startseite öffnet die Karte und bleibt auf dem Handy sic
   const card = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/account.css'), 'utf8');
   const account = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/account.js'), 'utf8');
   assert.match(home, /<button type="button" class="link-login" id="btn-anmelden">Anmelden<\/button>/);
-  assert.match(home, /href="\/skat\/">Kostenlos testen</);
+  assert.match(home, /href="\/skat\/">Jetzt eine Runde spielen</);
+  assert.match(home, /Eine Runde sofort spielen, dann 14 Tage kostenlos per E-Mail/);
+  assert.doesNotMatch(home, /14 Tage kostenlos spielen/);
   assert.doesNotMatch(css, /\.nav-links,\s*\.link-login\{display:\s*none\}/);
   assert.match(css, /@media \(max-width:860px\)\{\s*\.nav-links\{display:none\}/);
   assert.match(account, /getElementById\('btn-anmelden'\)/);
@@ -361,5 +366,145 @@ test('ein eingefügter Anmeldelink gilt in der App, eine fremde Adresse nicht', 
   } finally {
     if (previous === undefined) delete global.window;
     else global.window = previous;
+  }
+});
+
+test('ohne Namen geht der Teil vor dem @ mit, ein echter Name bleibt', () => {
+  const storage = E.memoryStorage();
+  const previous = global.window;
+  global.window = { SpielpartnerEntitlement: E };
+  E.clientId(storage);
+  try {
+    const guessed = Account.signupBody(storage, { email: 'helga.berg@example.com' }, START);
+    assert.equal(guessed.email, 'helga.berg@example.com');
+    assert.equal(guessed.name, 'Helga Berg');
+    assert.equal(guessed.clientId, E.readClientId(storage));
+    const short = Account.signupBody(storage, { email: 'a@example.com' }, START);
+    assert.equal(short.name, 'Freund');
+    const kept = Account.signupBody(storage, { email: 'helga@example.com', name: '  Helga  ' }, START);
+    assert.equal(kept.name, 'Helga');
+    assert.throws(() => Account.signupBody(storage, { email: 'helga@example.com', name: 'X' }, START), (err) => err.code === 'invalid_request');
+  } finally {
+    if (previous === undefined) delete global.window;
+    else global.window = previous;
+  }
+});
+
+test('die Proberunde zählt einmal, Eingepasst gibt neu und der Knopf sagt die Wahrheit', () => {
+  const storage = E.memoryStorage();
+  const previousWindow = global.window;
+  const previousStorage = global.localStorage;
+  const calls = [];
+  global.window = {
+    SpielpartnerEntitlement: E,
+    location: { pathname: '/skat/' },
+    fetch: function (url, opts) {
+      calls.push({ url: url, body: JSON.parse(opts.body), headers: opts.headers || {} });
+      return Promise.resolve({ ok: true });
+    }
+  };
+  global.localStorage = storage;
+  try {
+    assert.equal(Account.probeStillFree(storage, START), true);
+    assert.equal(Account.nextPlayLabel('Nächstes Spiel', storage, START), 'Nächstes Spiel');
+    const first = Account.finish(storage, START);
+    assert.equal(first.proberunde, true);
+    assert.equal(storage.getItem(Account.PROBE_KEY), '1');
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].url, E.BILLING_API_BASE + '/event');
+    assert.equal(calls[0].body.type, 'trial_finished');
+    assert.equal(calls[0].body.game, 'skat');
+    assert.equal(calls[0].body.clientId, E.readClientId(storage));
+    assert.equal(Object.prototype.hasOwnProperty.call(calls[0].headers, 'Authorization'), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(calls[0].body, 'email'), false);
+    const second = Account.finish(storage, START + 1);
+    assert.equal(second.proberunde, false);
+    assert.equal(calls.length, 1);
+    assert.equal(Account.probeStillFree(storage, START), false);
+    assert.equal(Account.nextPlayLabel('Nächstes Spiel', storage, START), 'Anmelden und weiterspielen');
+    assert.equal(Account.nextPlayLabel('Weiter', storage, START), 'Anmelden und weiterspielen');
+    storage.setItem(Account.SESSION_KEY, JSON.stringify({ token: 'sf1.session', player: { displayName: 'Helga' } }));
+    assert.equal(Account.probeStillFree(storage, START), false);
+    assert.equal(Account.nextPlayLabel('Nächstes Spiel', storage, START), 'Nächstes Spiel');
+    const skat = fs.readFileSync(path.join(__dirname, '../../public/skat/js/app.js'), 'utf8');
+    const start = skat.indexOf('async function finishGame()');
+    const passed = skat.indexOf('r.passedIn && probeStillFree()', start);
+    const noted = skat.indexOf('noteFinishedRound();', start);
+    assert.ok(passed > start);
+    assert.ok(noted > passed);
+    assert.match(skat, /Deine kostenlose Runde zählt noch/);
+    assert.match(Account.hint(E.memoryStorage(), START), /Diese eine Runde geht ohne Anmeldung/);
+  } finally {
+    if (previousWindow === undefined) delete global.window;
+    else global.window = previousWindow;
+    if (previousStorage === undefined) delete global.localStorage;
+    else global.localStorage = previousStorage;
+  }
+});
+
+test('die Anmeldekarte meldet sich, ein kaputtes Netz bleibt still', () => {
+  const storage = E.memoryStorage();
+  const previousWindow = global.window;
+  const previousDocument = global.document;
+  const previousStorage = global.localStorage;
+  const calls = [];
+  const root = {
+    innerHTML: '',
+    querySelector: function () { return null; }
+  };
+  const modal = {
+    hidden: true,
+    style: {},
+    querySelector: function (sel) {
+      if (sel === '#signup-root') return root;
+      if (sel === '.pw-horst') return { ok: true };
+      return null;
+    },
+    removeAttribute: function () {}
+  };
+  global.document = {
+    getElementById: function (id) { return id === 'modal-signup' ? modal : null; },
+    body: { classList: { add: function () {}, remove: function () {} }, className: '' },
+    querySelector: function () { return { href: 'account.css' }; },
+    createElement: function () { return {}; },
+    head: { appendChild: function () {} }
+  };
+  global.window = {
+    SpielpartnerEntitlement: E,
+    location: { pathname: '/' },
+    document: global.document,
+    fetch: function (url, opts) {
+      calls.push({ url: url, body: JSON.parse(opts.body), headers: opts.headers || {} });
+      return Promise.reject(new Error('nicht da'));
+    },
+    SpielpartnerStimmen: {
+      speak: function () { throw new Error('keine stimme'); }
+    }
+  };
+  global.localStorage = storage;
+  try {
+    assert.equal(Account.openSignup(storage), true);
+    assert.equal(modal.hidden, false);
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].body.type, 'signup_prompt_shown');
+    assert.equal(calls[0].body.game, 'startseite');
+    assert.equal(Object.prototype.hasOwnProperty.call(calls[0].headers, 'Authorization'), false);
+    assert.doesNotThrow(function () {
+      E.trackEvent(storage, 'trial_finished', {
+        fetch: function () { throw new Error('netz'); },
+        path: '/skat/'
+      });
+      E.trackEvent(storage, 'anders', {
+        fetch: function () { throw new Error('soll nicht'); },
+        path: '/'
+      });
+    });
+  } finally {
+    if (previousWindow === undefined) delete global.window;
+    else global.window = previousWindow;
+    if (previousDocument === undefined) delete global.document;
+    else global.document = previousDocument;
+    if (previousStorage === undefined) delete global.localStorage;
+    else global.localStorage = previousStorage;
   }
 });

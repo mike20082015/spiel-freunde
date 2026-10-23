@@ -526,6 +526,11 @@
     }
   }
 
+  function dealLabel(label) {
+    const rounds = window.SpielpartnerRounds;
+    if (rounds && typeof rounds.nextPlayLabel === 'function') return rounds.nextPlayLabel(label);
+    return label;
+  }
   function showSummary() {
     const st = S.state;
     const rows = (st.labels || []).map((label, i) => '<tr><td>' + esc(nameOf(i)) + '</td><td>' + esc(label || '–') + '</td><td>' + (match.out[i] ? 'raus' : match.swimming[i] ? 'Schwimmt' : match.lives[i]) + '</td></tr>').join('');
@@ -535,7 +540,7 @@
       '<p class="sum-quote">' + esc(Talk.line('horst', st.reason === 'feuer' ? 'feuer' : 'close') || 'Weiter geht es.') + '</p>' +
       '<p>Gezählt werden Leben, kein Geld. ' + (st.losers && st.losers.length ? st.losers.map(nameOf).join(', ') + (st.losers.length > 1 ? ' verlieren' : ' verliert') + ' ein Leben.' : 'Niemand verliert ein Leben.') + '</p>' +
       '<table class="sum-table"><thead><tr><th>Name</th><th>Hand</th><th>Leben</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-      '<div class="modal-actions"><button class="btn btn-gold" type="button" data-next>Nächste Runde</button></div>';
+      '<div class="modal-actions"><button class="btn btn-gold" type="button" data-next data-play-label="Nächste Runde">' + dealLabel('Nächste Runde') + '</button></div>';
     $('modal-summary').hidden = false;
   }
   function showSession() {
