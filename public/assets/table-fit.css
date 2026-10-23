@@ -11,6 +11,12 @@
    (dvh) plus Safe Area, und eine Hand, deren Rang und Farbe ohne Hover
    lesbar und mit dem Finger treffbar sind. Gegner zeigen weiter nur Rückseiten. */
 
+.topbar .tswitch{flex:none;border-color:rgba(233,201,119,.7);color:#e9c977}
+@media (max-width:560px){
+  .topbar-actions{overflow-x:auto;flex-wrap:nowrap}
+  .topbar .tswitch{font-size:.75rem;padding:6px 8px}
+}
+
 .app{
   height:100vh;
   height:100dvh;
@@ -19,10 +25,11 @@
 }
 
 /* Eine Zeile, kurze Beschriftung, solange die langen Wörter den Kopf sprengen.
-   Ab 561px, also auch iPad mini und 7–8"-Tablets. Telefone im Hochformat
-   bleiben bei ihrer eigenen Leiste. Kurze Telefone im Querformat (unter 500px
-   hoch) ebenfalls. */
-@media (min-width:561px) and (max-width:1400px) and (min-height:500px){
+   Ab 561px, also auch iPad mini, 7–8"-Tablets und Laptops bis 1599px.
+   „Spiel wechseln“ braucht den Platz, den die langen Wörter sonst umbrechen.
+   Telefone im Hochformat bleiben bei ihrer eigenen Leiste. Kurze Telefone
+   im Querformat (unter 500px hoch) ebenfalls. */
+@media (min-width:561px) and (max-width:1599px) and (min-height:500px){
   .topbar,
   .topbar:has(.sf-report),
   .topbar:has([data-sf-account]){
@@ -42,6 +49,7 @@
     min-width:0;
     overflow-x:auto;
     row-gap:0;
+    gap:4px;
   }
   .topbar .sf-who{
     flex:0 1 auto;

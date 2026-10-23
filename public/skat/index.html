@@ -29,6 +29,7 @@
 <link rel="stylesheet" href="/assets/pwa.css">
 <script>(function(){try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.documentElement.classList.add('sf-standalone')}catch(e){}})();</script>
 <script src="/assets/pwa.js" defer></script>
+<script src="/assets/spiel-wechseln.js" defer></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -37,6 +38,7 @@
     <a class="logo" href="/" aria-label="Zur Startseite von Spiel-Freunde"><img src="assets/variante-a-lockup-dunkel-web.svg" alt="Spiel-Freunde" width="796" height="175"></a>
     <div class="topbar-title"><span class="suits"><span>♣</span><span class="r">♥</span><span>♠</span><span class="r">♦</span></span> Skat in der Eckkneipe</div>
     <nav class="topbar-actions" aria-label="Spielsteuerung">
+      <a class="tbtn tswitch" id="btn-spiel-wechseln" href="/#spiele">Spiel wechseln</a>
       <button class="tbtn tlevel" id="btn-level" title="Spielstärke der Mitspieler (Einstellungen)"><span class="lbl-long">Stärke: </span><b id="level-label">Kneipe</b></button>
       <button class="tbtn ticon" id="btn-sound" aria-pressed="true" title="Stimmen der Mitspieler an oder aus"><span class="ico" aria-hidden="true"></span><span class="lbl-long">Ton</span></button>
       <button class="tbtn ticon" id="btn-talk" aria-pressed="false" title="Mitreden: schreiben oder mit Mikrofon sprechen"><span class="ico" aria-hidden="true"></span><span class="lbl-long">Mitreden</span></button>
