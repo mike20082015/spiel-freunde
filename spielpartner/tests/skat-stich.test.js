@@ -41,15 +41,22 @@ test('ein fertiger Stich ruht und wird dann eingesammelt', () => {
   assert.match(play, /motionReduced\(\)/);
 });
 
-test('am Spielende bleibt die Chipzeile in der Höhe', () => {
+test('am Spielende bleibt die Chipzeile und der letzte Stich sichtbar', () => {
   const status = app.slice(app.indexOf('function renderStatus'), app.indexOf('function effName'));
-  assert.match(status, /if \(st\.phase === 'done'\) box\.classList\.add\('is-held'\)/);
-  assert.match(status, /box\.classList\.remove\('is-held'\)/);
-  assert.match(status, /box\.innerHTML = chips\.join\(''\)/);
-  assert.doesNotMatch(status, /\$\('st-chips'\)\.innerHTML = chips\.join\(''\)/);
-  const done = status.indexOf("box.classList.add('is-held')");
-  const write = status.indexOf('box.innerHTML = chips.join');
-  assert.ok(done > 0 && write > done);
+  assert.match(status, /if \(!chips\.length && box\.children\.length\) box\.classList\.add\('is-held'\)/);
+  assert.match(status, /playChips\(st\)/);
+  assert.match(status, /trickGot\(st\)/);
+  assert.match(status, /resultLine\(st\)/);
+  assert.match(app, /const RESULT_MS = 2000/);
+  assert.match(app, /S\.showResult = true/);
+  assert.match(app, /await hold\(RESULT_MS\)/);
+  const active = app.slice(app.indexOf('function isActive'), app.indexOf('function renderCenter'));
+  assert.match(active, /st\.phase === 'done'\) return false/);
+  assert.match(app, /if \(info\.gameOver\) S\.ringHold = null/);
+  const finish = app.slice(app.indexOf('async function finishGame'), app.indexOf('function endTalk'));
+  const score = finish.indexOf('renderScore()');
+  const signup = finish.indexOf('noteFinishedRound()');
+  assert.ok(score > 0 && signup > score, 'die Punkteliste steht, bevor die Anmeldekarte kommt');
   assert.match(css, /\.st-chips\.is-held\{visibility:hidden\}/);
 });
 

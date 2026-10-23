@@ -50,7 +50,9 @@
     if (!lead) return zui().erklaere('stich', { art: 'raus', name: name, karte: karte, trumpf: trump != null && card.suit === trump, regel: 'Beim Bridge gilt Farbzwang. Der Strohmann liegt offen, die Gegner bleiben verdeckt.' });
     if (card.suit === lead.suit) return zui().erklaere('stich', { art: 'bedienen', name: name, karte: karte, trumpf: trump != null && lead.suit === trump });
     if (trump != null && card.suit === trump) return zui().erklaere('stich', { art: 'stechen', name: name, karte: karte });
-    return zui().erklaere('stich', { art: 'abwerfen', name: name, karte: karte });
+    var hand = (table.hands && table.hands[seat]) || [];
+    var trumpDa = trump != null && hand.some(function (c) { return c !== card && c.suit === trump; });
+    return zui().erklaere('stich', { art: 'abwerfen', name: name, karte: karte, trumpDa: trumpDa, ohneTrumpf: trump != null && !trumpDa });
   }
   function loadSettings() {
     var out = Object.assign({}, DEFAULTS);

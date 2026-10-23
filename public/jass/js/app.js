@@ -44,7 +44,9 @@
     var trumpf = trumpSuit != null && lead.suit === trumpSuit;
     if (card && (card.suit === lead.suit || (trumpf && card.suit === trumpSuit))) return zui().erklaere('stich', { art: 'bedienen', name: name, karte: karte, trumpf: trumpf });
     if (card && trumpSuit != null && card.suit === trumpSuit) return zui().erklaere('stich', { art: 'stechen', name: name, karte: karte });
-    return zui().erklaere('stich', { art: 'abwerfen', name: name, karte: karte });
+    var hand = (table.hands && table.hands[seat]) || [];
+    var trumpDa = trumpSuit != null && hand.some(function (c) { return card && c !== card && c.suit === trumpSuit; });
+    return zui().erklaere('stich', { art: 'abwerfen', name: name, karte: karte, trumpDa: trumpDa, ohneTrumpf: trumpSuit != null && !trumpDa });
   }
   function loadSettings() {
     var out = Object.assign({}, DEFAULTS);

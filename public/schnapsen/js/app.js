@@ -50,7 +50,9 @@
     var lead = table.trick[0].card;
     if (card && card.suit === lead.suit) return zui().erklaere('schnapsen', { art: 'bedienen', name: name, karte: karte });
     if (card && card.suit === table.trump) return zui().erklaere('schnapsen', { art: 'trumpf', name: name, karte: karte });
-    return zui().erklaere('schnapsen', { art: 'abwerfen', name: name, karte: karte });
+    var hand = table.hands[seat] || [];
+    var trumpDa = hand.some(function (c) { return c !== card && c.suit === table.trump; });
+    return zui().erklaere('schnapsen', { art: 'abwerfen', name: name, karte: karte, trumpDa: trumpDa });
   }
   function loadSettings() {
     var out = Object.assign({}, DEFAULTS);
