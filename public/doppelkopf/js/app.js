@@ -88,6 +88,8 @@
     const trump = (c) => E.isTrump(c, game, st.rules, st.pigsOn);
     const leading = !lead;
     const bedient = !leading && (trump(lead) ? trump(played) : (!trump(played) && E.suitOf(played) === E.suitOf(lead)));
+    const abwurf = !leading && !bedient && !(trump(played) && !trump(lead));
+    const nochTrumpf = after.some(trump);
     return zui().erklaere('stich', {
       name: name,
       karte: E.cardName(played),
@@ -95,7 +97,9 @@
       trumpf: leading ? trump(played) : trump(lead),
       bedienen: bedient,
       stechen: !leading && !bedient && trump(played) && !trump(lead),
-      abwerfen: !leading && !bedient && !(trump(played) && !trump(lead)),
+      abwerfen: abwurf,
+      trumpDa: abwurf && nochTrumpf,
+      ohneTrumpf: abwurf && !nochTrumpf,
       art: leading ? 'raus' : bedient ? 'bedienen' : (!leading && trump(played) && !trump(lead) ? 'stechen' : 'abwerfen')
     });
   }

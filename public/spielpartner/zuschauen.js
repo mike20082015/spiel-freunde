@@ -91,14 +91,16 @@
       if (i.art === 'skat') return v(wer, 'nimmt', 'nimmst') + ' den Skat auf, ' + (wer === 'Du' ? 'drückst' : 'drückt') + ' zwei Karten und ' + (wer === 'Du' ? 'sagst' : 'sagt') + ' ' + i.spiel + '. Gedrückte Karten gehören zum Alleinspieler.';
       if (i.art === 'kontra' && i.ja) return v(wer, 'sagt', 'sagst') + ' Kontra. Die Gegenseite traut sich den Sieg zu, der Spielwert wird schärfer.';
       if (i.art === 'kontra') return v(wer, 'sagt', 'sagst') + ' kein Kontra. Das Spiel läuft mit einfachem Wert weiter.';
-      if (i.art === 're' && i.ja) return v(wer, 'sagt', 'sagst') + ' Re. Das ist die Antwort auf Kontra: der Alleinspieler bleibt bei der Ansage.';
+      if (i.art === 're' && i.ja) return v(wer, 'sagt', 'sagst') + ' Re. Kontra verdoppelt, Re verdoppelt noch einmal. Der Spielwert zählt vierfach.';
       if (i.art === 're') return v(wer, 'lässt') + ' das Re aus. Kontra bleibt stehen, es kommt keine weitere Stufe.';
       if (i.art === 'karte' && i.raus && i.trumpf) return v(wer, 'kommt', 'kommst') + ' mit ' + karte + ' heraus. Trumpf ist angespielt, wer Trumpf hat, muss ihn bedienen.';
       if (i.art === 'karte' && i.raus) return v(wer, 'kommt', 'kommst') + ' mit ' + karte + ' heraus. Diese Farbe ist angesagt, wer sie hat, muss bedienen.';
       if (i.art === 'karte' && i.bedienen && i.trumpf) return v(wer, 'legt', 'legst') + ' ' + karte + '. Trumpf bedienen: es liegt Trumpf, also kommt ein Trumpf.';
       if (i.art === 'karte' && i.bedienen) return v(wer, 'legt', 'legst') + ' ' + karte + '. Farbzwang: die angespielte Farbe ist noch auf der Hand, also wird sie bedient.';
       if (i.art === 'karte' && i.stechen) return v(wer, 'hat', 'hast') + ' die Farbe nicht und ' + (wer === 'Du' ? 'stichst' : 'sticht') + ' mit ' + karte + '. Wer nicht bedienen kann, darf einen Trumpf legen.';
-      if (i.art === 'karte' && i.abwerfen) return v(wer, 'hat', 'hast') + ' die Farbe nicht und ' + (wer === 'Du' ? 'wirfst' : 'wirft') + ' ' + karte + ' ab. Ohne passenden Trumpf bleibt eine andere Karte.';
+      if (i.art === 'karte' && i.abwerfen && i.nullspiel) return v(wer, 'hat', 'hast') + ' die Farbe nicht und ' + (wer === 'Du' ? 'wirfst' : 'wirft') + ' ' + karte + ' ab. Im Null gibt es keinen Trumpf.';
+      if (i.art === 'karte' && i.abwerfen && i.trumpDa) return v(wer, 'hat', 'hast') + ' die Farbe nicht und ' + (wer === 'Du' ? 'wirfst' : 'wirft') + ' ' + karte + ' ab, statt zu stechen.';
+      if (i.art === 'karte' && i.abwerfen) return v(wer, 'hat', 'hast') + ' die Farbe nicht und ' + (wer === 'Du' ? 'wirfst' : 'wirft') + ' ' + karte + ' ab. Ohne Trumpf bleibt eine andere Karte.';
       if (i.art === 'karte') return v(wer, 'spielt', 'spielst') + ' ' + karte + '.';
     }
 
@@ -162,7 +164,8 @@
       if (i.art === 'frei') return v(wer, 'legt', 'legst') + ' ' + karte + '. Der Talon ist noch offen, da darfst du jede Karte spielen. Farbzwang kommt erst nach dem Zudrehen oder bei leerem Talon.';
       if (i.art === 'bedienen') return v(wer, 'bedient', 'bedienst') + ' mit ' + karte + '. Der Talon ist zu: Farbe bedienen und stechen, wenn eine höhere Karte da ist.';
       if (i.art === 'trumpf') return v(wer, 'legt', 'legst') + ' ' + karte + '. Die Farbe fehlt. Trumpf bedienen und nach Möglichkeit überstechen.';
-      if (i.art === 'abwerfen') return v(wer, 'wirft', 'wirfst') + ' ' + karte + ' ab. Farbe und stechender Trumpf fehlen, also kommt eine andere Karte.';
+      if (i.art === 'abwerfen' && i.trumpDa) return v(wer, 'wirft', 'wirfst') + ' ' + karte + ' ab. Die Farbe fehlt. Trumpf liegt noch auf der Hand, sticht diesen Stich aber nicht.';
+      if (i.art === 'abwerfen') return v(wer, 'wirft', 'wirfst') + ' ' + karte + ' ab. Farbe und Trumpf fehlen, also kommt eine andere Karte.';
     }
 
     if (spiel === 'jass') {
@@ -203,6 +206,8 @@
     if (i.art === 'bedienen' && i.trumpf) return v(wer, 'bedient', 'bedienst') + ' mit ' + karte + '. Trumpf bedienen: Trumpf liegt, also kommt Trumpf.' + extra;
     if (i.art === 'bedienen') return v(wer, 'bedient', 'bedienst') + ' mit ' + karte + '. Farbzwang: die angespielte Farbe muss gelegt werden, solange du sie hast.' + extra;
     if (i.art === 'stechen') return v(wer, 'sticht', 'stichst') + ' mit ' + karte + '. Die Farbe fehlt, ein Trumpf darf den Stich holen.' + extra;
+    if (i.art === 'abwerfen' && i.trumpDa) return v(wer, 'hat', 'hast') + ' die Farbe nicht und ' + (wer === 'Du' ? 'wirfst' : 'wirft') + ' ' + karte + ' ab, statt zu stechen.' + extra;
+    if (i.art === 'abwerfen' && i.ohneTrumpf) return v(wer, 'wirft', 'wirfst') + ' ' + karte + ' ab. Die Farbe fehlt, ohne Trumpf bleibt eine andere Karte.' + extra;
     if (i.art === 'abwerfen') return v(wer, 'wirft', 'wirfst') + ' ' + karte + ' ab. Die Farbe fehlt, und es wird kein Trumpf gelegt.' + extra;
     if (i.art === 'ansage') return v(wer, 'sagt', 'sagst') + ' ' + (i.text || 'die Ansage') + '.' + extra;
     if (i.art === 'trumpfwahl') return v(wer, 'wählt', 'wählst') + ' ' + (i.trumpf || 'Trumpf') + '. Diese Farbe sticht die anderen.' + extra;

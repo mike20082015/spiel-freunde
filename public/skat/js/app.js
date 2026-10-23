@@ -134,9 +134,10 @@
   let rng = E.cryptoRng();
   if (params.get('seed')) rng = E.seededRng(+params.get('seed'));
 
-  const S = { level: settings.level, st: null, gen: 0, displayTrick: [], winIdx: -1, collectTo: null, ringHold: null, trickFlight: null, selected: [], busy: false, declareSel: null, fresh: [], lastTalk: [0, 0, 0], bubbleTimers: [], prevLastTrick: null };
+  const S = { level: settings.level, st: null, gen: 0, displayTrick: [], winIdx: -1, collectTo: null, ringHold: null, trickFlight: null, showResult: false, selected: [], busy: false, declareSel: null, fresh: [], lastTalk: [0, 0, 0], bubbleTimers: [], prevLastTrick: null };
   const FLIGHT_MS = 380;
   const TRICK_REST_MS = 1000;
+  const RESULT_MS = 2000;
   const COLLECT_MS = 420;
 
   function delay(ms) {
@@ -161,6 +162,7 @@
     const mine = E.effSuit(card, game);
     const lead = leading ? null : E.effSuit(st.trick[0].card, game);
     const nullspiel = !!(game && game.type === 'null');
+    const trumpDa = !nullspiel && st.hands[player].some((c) => c !== card && E.isTrump(c, game));
     return zui().erklaere('skat', {
       name: NAMES[player],
       art: 'karte',
@@ -169,7 +171,9 @@
       trumpf: !nullspiel && (leading ? mine === 'T' : lead === 'T'),
       bedienen: !leading && mine === lead,
       stechen: !nullspiel && !leading && lead !== 'T' && mine === 'T',
-      abwerfen: !leading && mine !== lead && (nullspiel || mine !== 'T')
+      abwerfen: !leading && mine !== lead && (nullspiel || mine !== 'T'),
+      nullspiel: nullspiel,
+      trumpDa: trumpDa
     });
   }
 
@@ -305,9 +309,10 @@
       if (st.declarer === p) tags.push('<span class="tag decl">' + (st.game ? 'Spielt ' + esc(E.gameLabel(st.game)) : 'Alleinspieler') + '</span>');
       if (st.dealer === p && st.phase === 'bidding') tags.push('<span class="tag dealer">Geber</span>');
       $('role-' + p).innerHTML = tags.join('');
+      const seat = $('seat-' + p);
       const active = isActive(p);
-      if (p === 0) $('seat-0').classList.toggle('active', active);
-      else $('seat-' + p).classList.toggle('active', active);
+      seat.classList.toggle('active', active);
+      if (st.phase === 'done') seat.classList.remove('speaking');
     }
     for (const p of [1, 2]) {
       const box = $('opp-' + p);
@@ -320,6 +325,7 @@
   }
   function isActive(p) {
     const st = S.st;
+    if (!st || st.phase === 'done') return false;
     if (st.phase === 'bidding') { const t = E.biddingTurn(st); return t && t.player === p; }
     if (st.phase === 'skat' || st.phase === 'discard' || st.phase === 'declare') return st.declarer === p;
     if (st.phase === 'play') {
@@ -399,11 +405,53 @@
     return pts;
   }
 
+  function trickGot(st) {
+    const w = st.lastTrick.winner;
+    return NAMES[w] + (w === 0 ? ' bekommst den Stich' : ' bekommt den Stich') + ' (' + st.lastTrick.points + ' Augen).';
+  }
+
+  function resultLine(st) {
+    const r = st.result;
+    if (!r || r.passedIn) return 'Alle haben gepasst.';
+    if (r.ramsch) return 'Ramsch vorbei.';
+    const d = r.declarer;
+    let head;
+    if (r.won) head = d === 0 ? 'Du gewinnst' : NAMES[d] + ' gewinnt';
+    else head = d === 0 ? 'Du verlierst' : 'Die Gegenseite gewinnt';
+    const bits = [];
+    if (!r.game || r.game.type !== 'null') bits.push(r.declarerPoints + ' : ' + r.defenderPoints);
+    if (r.re) bits.push('Kontra und Re');
+    else if (r.kontra) bits.push('Kontra');
+    return head + (bits.length ? ', ' + bits.join(', ') : '') + '.';
+  }
+
+  function playChips(st) {
+    const chips = [];
+    if (st.special === 'bock') chips.push('<span class="chip bock">Bock: zählt doppelt</span>');
+    if (st.game.type === 'ramsch') {
+      chips.push('<span class="chip ramsch">Ramsch</span>');
+      chips.push('<span class="chip">Augen <b>Du ' + trickPointsFor([0]) + '</b> · Horst ' + trickPointsFor([1]) + ' · Marg. ' + trickPointsFor([2]) + '</span>');
+    } else {
+      chips.push('<span class="chip">Spiel <b>' + esc(E.gameLabel(st.game)) + '</b> (' + (st.declarer === 0 ? 'Du' : NAMES[st.declarer]) + ')</span>');
+      if (st.kontra) chips.push('<span class="chip kontra">' + (st.re ? 'Kontra · Re' : 'Kontra') + '</span>');
+      chips.push('<span class="chip">Reizwert <b>' + st.bid + '</b></span>');
+      if (st.game.type !== 'null') {
+        const d = st.declarer;
+        const fertig = st.phase === 'done' && st.result;
+        const solo = fertig ? st.result.declarerPoints : trickPointsFor([d]);
+        const gegner = fertig ? st.result.defenderPoints : trickPointsFor([0, 1, 2].filter((x) => x !== d));
+        chips.push('<span class="chip">Augen <b>' + (d === 0 ? 'Du' : NAMES[d]) + ' ' + solo + '</b> · Gegner ' + gegner + '</span>');
+      } else chips.push('<span class="chip">Stiche Alleinspieler <b>' + st.tricks.filter((t) => t.winner === st.declarer).length + '</b></span>');
+    }
+    chips.push('<span class="chip">Stich <b>' + Math.min(10, st.tricks.length + (st.trick.length ? 1 : 0) || 1) + '/10</b></span>');
+    return chips;
+  }
+
   function renderStatus() {
     const st = S.st;
     let main = '';
     const chips = [];
-    if (st.special === 'bock') chips.push('<span class="chip bock">Bock: zählt doppelt</span>');
+    if (st.special === 'bock' && st.phase !== 'play' && st.phase !== 'done') chips.push('<span class="chip bock">Bock: zählt doppelt</span>');
     if (st.phase === 'bidding') {
       const t = E.biddingTurn(st);
       if (t.player === 0) {
@@ -429,26 +477,23 @@
       } else if (p === 0 && S.displayTrick.length < 3) {
         if (!st.trick.length) main = '<em>Du bist dran:</em> Spiel eine Karte aus.';
         else main = '<em>Du bist dran:</em> ' + followText(st);
-      } else if (S.displayTrick.length === 3) main = NAMES[st.lastTrick.winner] + (st.lastTrick.winner === 0 ? ' bekommst den Stich' : ' bekommt den Stich') + ' (' + st.lastTrick.points + ' Augen).';
+      } else if (S.displayTrick.length === 3 && st.lastTrick) main = trickGot(st);
       else main = NAMES[p] + ' ist dran ...';
-      if (st.game.type === 'ramsch') {
-        chips.push('<span class="chip ramsch">Ramsch</span>');
-        chips.push('<span class="chip">Augen <b>Du ' + trickPointsFor([0]) + '</b> · Horst ' + trickPointsFor([1]) + ' · Marg. ' + trickPointsFor([2]) + '</span>');
-      } else {
-        chips.push('<span class="chip">Spiel <b>' + esc(E.gameLabel(st.game)) + '</b> (' + (st.declarer === 0 ? 'Du' : NAMES[st.declarer]) + ')</span>');
-        if (st.kontra) chips.push('<span class="chip kontra">' + (st.re ? 'Kontra · Re' : 'Kontra') + '</span>');
-        chips.push('<span class="chip">Reizwert <b>' + st.bid + '</b></span>');
-        if (st.game.type !== 'null') {
-          const d = st.declarer;
-          chips.push('<span class="chip">Augen <b>' + (d === 0 ? 'Du' : NAMES[d]) + ' ' + trickPointsFor([d]) + '</b> · Gegner ' + trickPointsFor([0, 1, 2].filter((x) => x !== d)) + '</span>');
-        } else chips.push('<span class="chip">Stiche Alleinspieler <b>' + st.tricks.filter((t) => t.winner === st.declarer).length + '</b></span>');
-      }
-      chips.push('<span class="chip">Stich <b>' + Math.min(10, st.tricks.length + (st.trick.length ? 1 : 0) || 1) + '/10</b></span>');
+      chips.push.apply(chips, playChips(st));
     } else if (st.phase === 'done') {
-      main = 'Spiel vorbei.';
+      if (S.showResult && st.result) main = resultLine(st);
+      else if (st.lastTrick && S.displayTrick.length === 3) main = trickGot(st);
+      else if (st.result && st.game) main = resultLine(st);
+      else main = 'Spiel vorbei.';
+      if (st.game) chips.push.apply(chips, playChips(st));
     }
+    const box = $('st-chips');
     $('st-main').innerHTML = main;
-    $('st-chips').innerHTML = chips.join('');
+    if (!chips.length && box.children.length) box.classList.add('is-held');
+    else {
+      box.classList.remove('is-held');
+      box.innerHTML = chips.join('');
+    }
     $('btn-last').disabled = !(st.lastTrick || S.prevLastTrick);
   }
 
@@ -728,7 +773,7 @@
     if (!roundGate()) return;
     S.gen++;
     S.prevLastTrick = S.st && S.st.lastTrick ? { trick: S.st.lastTrick, game: S.st.game } : S.prevLastTrick;
-    S.displayTrick = []; S.collectTo = null; S.winIdx = -1; S.ringHold = null; S.trickFlight = null; S.selected = []; S.fresh = []; S.busy = false; S.declareSel = null;
+    S.displayTrick = []; S.collectTo = null; S.winIdx = -1; S.ringHold = null; S.trickFlight = null; S.showResult = false; S.scored = false; S.selected = []; S.fresh = []; S.busy = false; S.declareSel = null;
     hideModal('modal-summary');
     hidePanel();
     match.rules.mode = settings.mode;
@@ -852,6 +897,7 @@
     const info = E.playCard(st, p, card);
     const fly = !motionReduced();
     S.ringHold = p;
+    if (info.gameOver) S.ringHold = null;
     S.trickFlight = card;
     if (!info.trickComplete) {
       S.displayTrick = st.trick.slice();
@@ -874,6 +920,13 @@
     renderSeats();
     renderCenter();
     await hold(TRICK_REST_MS);
+    if (info.gameOver) {
+      S.showResult = true;
+      S.ringHold = null;
+      commitScore();
+      render();
+      await hold(RESULT_MS);
+    }
     S.collectTo = info.winner;
     renderCenter();
     if (fly) await hold(COLLECT_MS);
@@ -910,6 +963,18 @@
     }
   }
 
+  function commitScore() {
+    const st = S.st;
+    const r = st && st.result;
+    if (!r || S.scored) return null;
+    S.scored = true;
+    const rec = match.record(st);
+    match.rows.push(rowFor(st, r));
+    saveMatch();
+    renderScore();
+    return rec;
+  }
+
   async function finishGame() {
     const st = S.st;
     const r = st.result;
@@ -919,12 +984,7 @@
       newGame();
       return;
     }
-    noteFinishedRound();
-    await delay(350);
-    const rec = match.record(st);
-    match.rows.push(rowFor(st, r));
-    saveMatch();
-    renderScore();
+    const rec = commitScore() || {};
     S.lastLine = null;
     endTalk(r);
     const quote = S.lastLine;
@@ -933,6 +993,7 @@
     else sys((r.declarer === 0 ? 'Du hast ' : NAMES[r.declarer] + ' hat ') + E.gameLabel(r.game) + (r.won ? ' gewonnen' : ' verloren') + ' (' + (r.scoreChange > 0 ? '+' : '') + r.scoreChange + ').');
     if (rec.bockAdded) sys('Verlorener Grand: Jetzt kommen 3 Bockspiele und danach 3 Ramschspiele.');
     render();
+    noteFinishedRound();
     showSummary(r, quote, E.sessionWinner(match.scores, targetValue()));
   }
 

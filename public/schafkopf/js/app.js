@@ -83,6 +83,8 @@
     const trump = (c) => E.isTrump(c, st.game);
     const leading = !lead;
     const bedient = !leading && (trump(lead) ? trump(played) : (!trump(played) && E.suitOf(played) === E.suitOf(lead)));
+    const abwurf = !leading && !bedient && !(trump(played) && !trump(lead));
+    const nochTrumpf = after.some(trump);
     return zui().erklaere('stich', {
       name: name,
       karte: E.cardName(played),
@@ -90,7 +92,9 @@
       raus: leading,
       trumpf: leading ? trump(played) : trump(lead),
       bedienen: bedient,
-      stechen: !leading && !bedient && trump(played) && !trump(lead)
+      stechen: !leading && !bedient && trump(played) && !trump(lead),
+      trumpDa: abwurf && nochTrumpf,
+      ohneTrumpf: abwurf && !nochTrumpf
     });
   }
 

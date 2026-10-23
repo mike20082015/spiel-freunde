@@ -41,6 +41,29 @@ test('ein fertiger Stich ruht und wird dann eingesammelt', () => {
   assert.match(play, /motionReduced\(\)/);
 });
 
+test('am Spielende bleibt die Chipzeile und der letzte Stich sichtbar', () => {
+  const status = app.slice(app.indexOf('function renderStatus'), app.indexOf('function effName'));
+  assert.match(status, /if \(!chips\.length && box\.children\.length\) box\.classList\.add\('is-held'\)/);
+  assert.match(status, /playChips\(st\)/);
+  assert.match(status, /trickGot\(st\)/);
+  assert.match(status, /resultLine\(st\)/);
+  assert.match(app, /const RESULT_MS = 2000/);
+  assert.match(app, /S\.showResult = true/);
+  assert.match(app, /await hold\(RESULT_MS\)/);
+  const play = app.slice(app.indexOf('async function doPlay'), app.indexOf('function team'));
+  const commit = play.indexOf('commitScore()');
+  const resultWait = play.indexOf('await hold(RESULT_MS)');
+  assert.ok(commit > 0 && commit < resultWait, 'die Punkteliste steht, bevor das Ergebnis zwei Sekunden liegt');
+  const active = app.slice(app.indexOf('function isActive'), app.indexOf('function renderCenter'));
+  assert.match(active, /st\.phase === 'done'\) return false/);
+  assert.match(app, /if \(info\.gameOver\) S\.ringHold = null/);
+  const finish = app.slice(app.indexOf('async function finishGame'), app.indexOf('function endTalk'));
+  const score = finish.indexOf('commitScore()');
+  const signup = finish.indexOf('noteFinishedRound()');
+  assert.ok(score > 0 && signup > score, 'die Punkteliste steht, bevor die Anmeldekarte kommt');
+  assert.match(css, /\.st-chips\.is-held\{visibility:hidden\}/);
+});
+
 test('der Einflug startet sichtbar und ohne Wiederholung', () => {
   assert.match(css, /\.trick \.card\.arriving\.p0\{animation:in0 \.36s ease-out\}/);
   assert.match(css, /\.trick \.card\.arriving\.p1\{animation:in1 \.36s ease-out\}/);
