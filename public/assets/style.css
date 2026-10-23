@@ -76,6 +76,9 @@ button.link-login:hover{color:var(--cream)}
 .hero-trust{list-style:none;display:flex;flex-wrap:wrap;gap:8px 22px;font-size:.88rem;color:rgba(247,241,227,.75)}
 .hero-trust li::before{content:"♦";color:var(--gold);margin-right:8px}
 .hero-trust b{color:var(--cream);font-weight:600}
+.hero-trust .trust-login{flex:1 0 100%;display:flex;align-items:flex-start;gap:8px;margin-top:6px;text-align:left;max-width:36rem}
+.hero-trust .trust-login::before{content:none;margin:0}
+.hero-trust .trust-login svg{flex:none;width:16px;height:16px;margin-top:2px;color:var(--gold)}
 .scroll-hint{text-align:center;margin-top:34px;font-family:var(--hand);font-size:1.35rem;color:rgba(233,201,119,.75);animation:bob 3s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(5px)}}
 

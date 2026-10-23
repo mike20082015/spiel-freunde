@@ -511,10 +511,18 @@
       '<p class="pw-status" data-resend-status role="status"></p>';
   }
 
+  var LOCK_ICON = '<svg class="pw-lock" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+
+  function trustMarkup() {
+    return '<p class="pw-trust">' + LOCK_ICON +
+      '<span>Sichere Anmeldung per Link oder Code. Ohne Passwort, es wird keins gespeichert.</span></p>';
+  }
+
   function signupMarkup() {
     return '<p class="pw-kicker">Eine Runde hast Du</p>' +
       '<h3 id="signup-title">Setz Dich richtig dazu</h3>' +
       '<p class="pw-lead">Wir schicken Dir einen Anmeldecode und einen Anmeldelink, kein Passwort nötig.</p>' +
+      trustMarkup() +
       '<form data-signup>' +
       '<label class="pw-field">E-Mail' +
       '<input data-email type="email" autocomplete="email" inputmode="email" maxlength="200" required placeholder="du@example.com">' +
@@ -586,6 +594,7 @@
       '<h3 id="signup-title">Der Link ist unterwegs</h3>' +
       '<p class="pw-lead">Schau in Dein Postfach' + (email ? ' bei ' + escapeText(email) : '') +
       '. Dort sind Dein Anmeldecode und ein Anmeldelink.</p>' +
+      trustMarkup() +
       codeMarkup() +
       mailHintMarkup() +
       resendButton() +

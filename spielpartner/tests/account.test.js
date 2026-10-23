@@ -96,6 +96,9 @@ test('Proberunde, dann die Anmeldekarte, kein lokaler 14-Tage-Test', () => {
     assert.strictEqual(Rounds.gate(storage, START + 1), false);
     assert.strictEqual(paywall, 0);
     assert.match(Account.signupMarkup(), /Wir schicken Dir einen Anmeldecode und einen Anmeldelink, kein Passwort nötig/);
+    assert.match(Account.signupMarkup(), /Sichere Anmeldung per Link oder Code\. Ohne Passwort, es wird keins gespeichert\./);
+    assert.match(Account.signupMarkup(), /<svg/);
+    assert.doesNotMatch(Account.signupMarkup(), /—|–|absolut sicher/);
     assert.match(Account.signupMarkup(), /E-Mail/);
     assert.match(Account.signupMarkup(), /Spielername/);
     assert.match(Account.signupMarkup(), /Spam- oder Werbe-Ordner/);
@@ -104,6 +107,7 @@ test('Proberunde, dann die Anmeldekarte, kein lokaler 14-Tage-Test', () => {
     assert.match(Account.sentMarkup('helga@example.com'), /E-Mail erneut senden/);
     assert.match(Account.sentMarkup('helga@example.com'), /data-resend/);
     assert.match(Account.sentMarkup('helga@example.com'), /Code aus der E-Mail eingeben/);
+    assert.match(Account.sentMarkup('helga@example.com'), /es wird keins gespeichert/);
     assert.match(Account.sentMarkup('helga@example.com'), /inputmode="numeric"/);
     assert.match(Account.sentMarkup('helga@example.com'), /autocomplete="one-time-code"/);
     assert.match(Account.sentMarkup('helga@example.com'), /Spam- oder Werbe-Ordner/);
@@ -164,6 +168,10 @@ test('Anmelden auf der Startseite öffnet die Karte und bleibt auf dem Handy sic
   assert.match(card, /#modal-signup/);
   assert.match(card, /#modal-signup\[hidden\]\{display:none !important\}/);
   assert.doesNotMatch(home + css + card, /—/);
+  assert.match(home, /Sichere Anmeldung ohne Passwort/);
+  assert.match(home, /Du bekommst einen Link und einen Code per E-Mail\. Es gibt kein Passwort, das gestohlen werden könnte\./);
+  assert.match(home, /<summary>Brauche ich ein Passwort\?<\/summary>/);
+  assert.doesNotMatch(home, /absolut sicher/);
 });
 
 test('Anmeldelink schickt den gespeicherten Empfehlungscode mit', async () => {
