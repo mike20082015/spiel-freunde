@@ -25,10 +25,11 @@
 }
 
 /* Eine Zeile, kurze Beschriftung, solange die langen Wörter den Kopf sprengen.
-   Ab 561px, also auch iPad mini und 7–8"-Tablets. Telefone im Hochformat
-   bleiben bei ihrer eigenen Leiste. Kurze Telefone im Querformat (unter 500px
-   hoch) ebenfalls. */
-@media (min-width:561px) and (max-width:1400px) and (min-height:500px){
+   Ab 561px, also auch iPad mini, 7–8"-Tablets und Laptops bis 1599px.
+   „Spiel wechseln“ braucht den Platz, den die langen Wörter sonst umbrechen.
+   Telefone im Hochformat bleiben bei ihrer eigenen Leiste. Kurze Telefone
+   im Querformat (unter 500px hoch) ebenfalls. */
+@media (min-width:561px) and (max-width:1599px) and (min-height:500px){
   .topbar,
   .topbar:has(.sf-report),
   .topbar:has([data-sf-account]){
@@ -48,6 +49,7 @@
     min-width:0;
     overflow-x:auto;
     row-gap:0;
+    gap:4px;
   }
   .topbar .sf-who{
     flex:0 1 auto;
