@@ -1,0 +1,425 @@
+/* Ort hinter dem Kartentisch. Leer (ohne data-ort) lässt jedes Spiel
+   seinen eigenen Hintergrund. Eine Wahl legt eine dunkle Schicht darüber,
+   damit Karten und Schrift lesbar bleiben. */
+
+.ort-pop{
+  position:fixed;
+  z-index:60;
+  right:12px;
+  top:68px;
+  width:min(460px, calc(100vw - 24px));
+  max-height:min(72vh, 640px);
+  overflow:auto;
+  padding:14px 14px 16px;
+  border-radius:18px;
+  background:linear-gradient(170deg,#fffaf0,#efe5cf);
+  color:#2a2420;
+  box-shadow:0 0 0 1px rgba(176,133,50,.5), 0 24px 50px -18px rgba(0,0,0,.75);
+}
+.ort-pop-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+.ort-pop-head b{
+  font-family:Georgia, 'Times New Roman', serif;
+  font-size:1.15rem;
+  color:#6e2424;
+}
+.ort-close{
+  border:1px solid rgba(110,36,36,.35);
+  background:transparent;
+  color:#6e2424;
+  border-radius:999px;
+  padding:4px 10px;
+  font:inherit;
+  font-size:.82rem;
+  font-weight:700;
+  cursor:pointer;
+}
+.ort-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(128px, 1fr));
+  gap:8px;
+}
+.ort-choice{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin:0;
+  padding:6px;
+  border-radius:14px;
+  border:2px solid transparent;
+  background:rgba(255,255,255,.45);
+  color:#2a2420;
+  font:inherit;
+  cursor:pointer;
+  text-align:left;
+}
+.ort-choice:hover{border-color:rgba(176,133,50,.7)}
+.ort-choice.is-on,
+.ort-choice[aria-pressed="true"]{
+  border-color:#b08532;
+  background:#fff6dc;
+  box-shadow:inset 0 0 0 1px #b08532;
+}
+.ort-thumb{
+  display:block;
+  aspect-ratio:16/10;
+  border-radius:10px;
+  background:#3a2616 center/cover no-repeat;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.28);
+}
+.ort-name{
+  display:block;
+  font-size:.78rem;
+  font-weight:700;
+  line-height:1.25;
+  color:#2a2420;
+}
+.ort-thumb{position:relative}
+.ort-badge{
+  position:absolute;
+  left:6px;
+  bottom:6px;
+  max-width:calc(100% - 12px);
+  padding:2px 6px;
+  border-radius:999px;
+  background:#6e2424;
+  color:#fffaf0;
+  font-size:.62rem;
+  font-weight:800;
+  line-height:1.3;
+  letter-spacing:.01em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.ort-glow,.ort-snow{display:none;pointer-events:none}
+.ort-settings{grid-column:1 / -1}
+.ort-settings .note{margin:8px 2px 0}
+.ort-intro-btn{
+  display:inline-flex;
+  margin:0 0 12px;
+  padding:8px 14px;
+  border-radius:999px;
+  border:1.5px solid #8a2f2f;
+  background:transparent;
+  color:#6e2424;
+  font:inherit;
+  font-weight:700;
+  cursor:pointer;
+}
+.ort-intro-btn:hover{background:rgba(138,47,47,.08)}
+.ort-banner{
+  position:absolute;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:3;
+  margin:0;
+  max-width:calc(100% - 24px);
+  padding:4px 12px;
+  border-radius:999px;
+  background:rgba(18,10,6,.78);
+  color:#f7f1e3;
+  border:1px solid rgba(233,201,119,.5);
+  font-size:.82rem;
+  font-weight:700;
+  line-height:1.3;
+  letter-spacing:.01em;
+  pointer-events:none;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+html[data-ort] .app{
+  background-repeat:no-repeat;
+  background-size:cover;
+  background-position:center 30%;
+}
+html[data-ort] .app{background-color:#140c08}
+html[data-ort] .tabletop{inset:78px 22px 12px}
+
+.ort-thumb.is-default{
+  background-image:
+    radial-gradient(ellipse at 50% 62%, #8a5a32 0 38%, transparent 40%),
+    linear-gradient(#2b1a0f, #1a100c);
+}
+.ort-thumb.is-stammtisch{background-image:linear-gradient(rgba(0,0,0,.05), rgba(0,0,0,.18)), url(/assets/stammtisch-szene.jpg)}
+.ort-thumb.is-kneipe{background-image:linear-gradient(rgba(0,0,0,.05), rgba(0,0,0,.2)), url(/assets/ort-kneipe.jpg)}
+.ort-thumb.is-rayong{background-image:linear-gradient(rgba(0,0,0,.02), rgba(0,0,0,.18)), url(/assets/ort-rayong.jpg)}
+.ort-thumb.is-anden{background-image:linear-gradient(rgba(0,0,0,.05), rgba(0,0,0,.2)), url(/assets/ort-anden.jpg)}
+
+.ort-thumb.is-wohnzimmer,
+html[data-ort="wohnzimmer"] .app{
+  background-image:
+    linear-gradient(180deg, rgba(16,10,6,.28), rgba(16,10,6,.62)),
+    radial-gradient(ellipse at 50% 92%, rgba(255,150,40,.95), rgba(160,40,8,.28) 18%, transparent 36%),
+    linear-gradient(#c5e4f2, #f4e2c4),
+    linear-gradient(180deg, #5a3a3a 0%, #4a3028 48%, #2c1a12 48%, #1a100c 100%);
+  background-size:auto, auto, 22% 18%, auto;
+  background-position:center, center, 20% 16%, center;
+  background-repeat:no-repeat;
+}
+.ort-thumb.is-wohnzimmer{
+  background-image:
+    radial-gradient(ellipse at 50% 92%, rgba(255,160,50,.95), rgba(160,40,8,.2) 20%, transparent 38%),
+    linear-gradient(#c5e4f2, #f7e7cf),
+    linear-gradient(180deg, #6a4544 0%, #5a3c30 46%, #3a2418 46%, #24160f 100%);
+  background-size:auto, 28% 24%, auto;
+  background-position:center, 18% 14%, center;
+}
+
+.ort-thumb.is-biergarten,
+html[data-ort="biergarten"] .app{
+  background-image:
+    linear-gradient(180deg, rgba(10,24,12,.22), rgba(10,18,8,.58)),
+    radial-gradient(circle at 14% 24%, #ffe08a 0 5px, transparent 7px),
+    radial-gradient(circle at 30% 20%, #ffe08a 0 4px, transparent 7px),
+    radial-gradient(circle at 46% 26%, #ffe08a 0 5px, transparent 7px),
+    radial-gradient(circle at 64% 18%, #ffe08a 0 4px, transparent 7px),
+    radial-gradient(circle at 82% 24%, #ffe08a 0 5px, transparent 7px),
+    linear-gradient(180deg, #7eb6e0 0%, #d5ecc4 38%, #2f7a3e 58%, #1d5a30 100%);
+  background-repeat:no-repeat;
+}
+.ort-thumb.is-biergarten{
+  background-image:
+    radial-gradient(circle at 16% 30%, #ffe08a 0 5px, transparent 7px),
+    radial-gradient(circle at 36% 24%, #ffe08a 0 4px, transparent 7px),
+    radial-gradient(circle at 56% 32%, #ffe08a 0 5px, transparent 7px),
+    radial-gradient(circle at 76% 26%, #ffe08a 0 4px, transparent 7px),
+    linear-gradient(180deg, #8ec8ee 0%, #e7f4d4 42%, #3c8f4c 62%, #1f6a34 100%);
+}
+
+.ort-thumb.is-terrasse,
+html[data-ort="terrasse"] .app{
+  background-image:
+    linear-gradient(180deg, rgba(12,8,20,.24), rgba(8,10,16,.6)),
+    linear-gradient(180deg, transparent 61%, rgba(42,28,18,.95) 61%, rgba(42,28,18,.95) 64%, transparent 64%),
+    radial-gradient(circle at 18% 34%, #ffd27a 0 4px, transparent 6px),
+    radial-gradient(circle at 40% 30%, #ffd27a 0 4px, transparent 6px),
+    radial-gradient(circle at 62% 36%, #ffd27a 0 4px, transparent 6px),
+    radial-gradient(circle at 84% 30%, #ffd27a 0 4px, transparent 6px),
+    linear-gradient(180deg, #2a1848 0%, #c45c4a 40%, #f0a060 50%, #1d4e6f 50%, #0c2a42 100%);
+  background-repeat:no-repeat;
+}
+.ort-thumb.is-terrasse{
+  background-image:
+    linear-gradient(180deg, transparent 62%, #3a2a1c 62%, #3a2a1c 66%, transparent 66%),
+    radial-gradient(circle at 20% 40%, #ffd27a 0 4px, transparent 6px),
+    radial-gradient(circle at 50% 36%, #ffd27a 0 4px, transparent 6px),
+    radial-gradient(circle at 78% 42%, #ffd27a 0 4px, transparent 6px),
+    linear-gradient(180deg, #3a2060 0%, #d46a52 38%, #f2b070 52%, #1a5278 52%, #0d314c 100%);
+}
+
+html[data-ort="stammtisch"] .app{
+  background-image:
+    linear-gradient(180deg, rgba(18,10,6,.26), rgba(16,10,6,.62)),
+    url(/assets/stammtisch-szene.jpg);
+}
+html[data-ort="kneipe"] .app{
+  background-image:
+    linear-gradient(180deg, rgba(18,10,6,.24), rgba(16,10,6,.6)),
+    url(/assets/ort-kneipe.jpg);
+}
+html[data-ort="rayong"] .app{
+  background-image:
+    linear-gradient(180deg, rgba(18,10,6,.2), rgba(12,10,8,.58)),
+    url(/assets/ort-rayong.jpg);
+}
+html[data-ort="anden"] .app{
+  background-image:
+    linear-gradient(180deg, rgba(16,10,8,.24), rgba(12,10,8,.6)),
+    url(/assets/ort-anden.jpg);
+}
+html[data-ort="stammtisch"] .app,
+html[data-ort="kneipe"] .app,
+html[data-ort="rayong"] .app,
+html[data-ort="anden"] .app{background-position:center 48%}
+
+html[data-ort="halloween"] .app,
+.ort-thumb.is-halloween{
+  background-color:#1a1024;
+  background-image:
+    linear-gradient(180deg, rgba(18,10,16,.32), rgba(12,8,14,.6)),
+    radial-gradient(circle at 22% 9%, rgba(255,198,96,.95) 0 4px, rgba(255,140,40,.4) 14px, transparent 30px),
+    radial-gradient(circle at 74% 7%, rgba(255,214,130,.9) 0 3px, rgba(255,120,36,.38) 13px, transparent 28px),
+    radial-gradient(ellipse 78px 56px at 16% 16%, #e8842a 0 56%, #8d3d12 58%, transparent 62%),
+    radial-gradient(ellipse 16px 12px at 16% 10%, #3f7a38 0 70%, transparent 74%),
+    radial-gradient(ellipse 70px 50px at 82% 15%, #d86a1c 0 56%, #7a3010 58%, transparent 62%),
+    radial-gradient(ellipse 14px 11px at 82% 9%, #3f7a38 0 70%, transparent 74%),
+    radial-gradient(circle at 38% 13%, #c4522c 0 7px, transparent 8px),
+    radial-gradient(circle at 47% 10%, #e0a24a 0 6px, transparent 7px),
+    radial-gradient(circle at 56% 14%, #a33b2a 0 8px, transparent 9px),
+    radial-gradient(circle at 64% 11%, #d07030 0 5px, transparent 6px),
+    linear-gradient(180deg, #3a2460 0%, #5c3458 26%, #4a2a22 48%, #2a160e 100%);
+  background-repeat:no-repeat;
+}
+.ort-thumb.is-halloween{
+  background-image:
+    radial-gradient(circle at 24% 28%, rgba(255,198,96,.95) 0 4px, rgba(255,140,40,.35) 12px, transparent 22px),
+    radial-gradient(circle at 72% 24%, rgba(255,214,130,.9) 0 3px, rgba(255,120,36,.3) 11px, transparent 20px),
+    radial-gradient(ellipse 42% 36% at 22% 62%, #e8842a 0 56%, #8d3d12 58%, transparent 62%),
+    radial-gradient(ellipse 10% 12% at 22% 42%, #3f7a38 0 70%, transparent 74%),
+    radial-gradient(ellipse 38% 34% at 76% 60%, #d86a1c 0 56%, #7a3010 58%, transparent 62%),
+    radial-gradient(circle at 48% 38%, #c4522c 0 6px, transparent 7px),
+    radial-gradient(circle at 58% 32%, #e0a24a 0 5px, transparent 6px),
+    linear-gradient(180deg, #4a2c78 0%, #6a3a58 34%, #5a3224 70%, #2a160e 100%);
+}
+html[data-ort="halloween"] .ort-glow{
+  display:block;
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height:74px;
+  z-index:3;
+  background:
+    radial-gradient(circle at 22% 42%, rgba(255,206,110,.95) 0 3px, rgba(255,150,50,.28) 16px, transparent 30px),
+    radial-gradient(circle at 74% 36%, rgba(255,220,140,.9) 0 3px, rgba(255,130,40,.24) 14px, transparent 28px);
+  animation:ort-candle 2.8s ease-in-out infinite;
+}
+@keyframes ort-candle{
+  0%,100%{opacity:.5}
+  42%{opacity:1}
+  70%{opacity:.62}
+}
+@media (prefers-reduced-motion:reduce){
+  html[data-ort="halloween"] .ort-glow,
+  html[data-ort="nikolaus"] .ort-glow{animation:none;opacity:.8}
+  html[data-ort="weihnachten"] .ort-snow{animation:none}
+}
+
+html[data-ort="nikolaus"] .app,
+.ort-thumb.is-nikolaus{
+  background-color:#2a140e;
+  background-image:
+    linear-gradient(180deg, rgba(28,12,8,.3), rgba(16,8,6,.58)),
+    radial-gradient(ellipse 40px 16px at 20% 7%, #f7f1e4 0 62%, transparent 64%),
+    linear-gradient(#c42932, #8e1c24),
+    radial-gradient(ellipse 28px 14px at 78% 16%, #f0d7a2 0 55%, transparent 58%),
+    linear-gradient(#6a3a1c, #3d2412),
+    radial-gradient(circle at 42% 13%, #f08a28 0 11px, #c45c12 12px, transparent 13px),
+    radial-gradient(circle at 50% 16%, #ef7d22 0 8px, #c45c12 9px, transparent 10px),
+    radial-gradient(circle at 60% 11%, #d4b483 0 5px, #8a6840 6px, transparent 7px),
+    radial-gradient(circle at 66% 15%, #c4a06a 0 4px, transparent 5px),
+    radial-gradient(ellipse at 50% 0%, rgba(255,186,96,.42), transparent 46%),
+    linear-gradient(180deg, #7a2430 0%, #4a2218 42%, #2a140e 100%);
+  background-repeat:no-repeat;
+  background-size:auto, auto, 26px 36px, auto, 20px 46px, auto, auto, auto, auto, auto, auto;
+  background-position:center, 20% 5%, 20% 12%, 78% 14%, 78% 8%, center, center, center, center, center, center;
+}
+.ort-thumb.is-nikolaus{
+  background-image:
+    radial-gradient(ellipse 28% 14% at 24% 22%, #f7f1e4 0 62%, transparent 64%),
+    linear-gradient(#c42932, #8e1c24),
+    radial-gradient(ellipse 22% 16% at 74% 58%, #f0d7a2 0 50%, transparent 54%),
+    linear-gradient(#6a3a1c, #3d2412),
+    radial-gradient(circle at 40% 62%, #f08a28 0 12px, #c45c12 13px, transparent 14px),
+    radial-gradient(circle at 55% 68%, #ef7d22 0 9px, transparent 10px),
+    radial-gradient(circle at 46% 48%, #d4b483 0 5px, transparent 6px),
+    radial-gradient(ellipse at 50% 0%, rgba(255,186,96,.5), transparent 55%),
+    linear-gradient(180deg, #8a2c38 0%, #5a2a1c 48%, #2a140e 100%);
+  background-size:auto, 22% 28%, auto, 16% 34%, auto, auto, auto, auto, auto;
+  background-position:center, 24% 18%, center, 74% 42%, center, center, center, center, center;
+  background-repeat:no-repeat;
+}
+html[data-ort="nikolaus"] .ort-glow{
+  display:block;
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height:74px;
+  z-index:3;
+  background:
+    radial-gradient(circle at 20% 48%, rgba(255,210,120,.9) 0 3px, rgba(255,140,40,.25) 16px, transparent 30px),
+    radial-gradient(circle at 76% 40%, rgba(255,196,110,.85) 0 3px, rgba(196,40,48,.2) 18px, transparent 32px);
+  animation:ort-candle 3s ease-in-out infinite;
+}
+
+html[data-ort="weihnachten"] .app,
+.ort-thumb.is-weihnachten{
+  background-color:#102018;
+  background-image:
+    linear-gradient(180deg, rgba(10,16,12,.32), rgba(8,12,10,.6)),
+    radial-gradient(circle at 46% 8%, #f2d27a 0 3px, transparent 4px),
+    radial-gradient(circle at 52% 12%, #e25a4a 0 3px, transparent 4px),
+    radial-gradient(circle at 40% 14%, #f7f1e3 0 2px, transparent 3.5px),
+    radial-gradient(ellipse 90px 70px at 50% 16%, #1f6b3a 0 58%, transparent 60%),
+    radial-gradient(ellipse 54px 46px at 50% 10%, #2f8a4a 0 60%, transparent 62%),
+    linear-gradient(#6a3a1c, #6a3a1c),
+    radial-gradient(circle at 30% 18%, #c4783a 0 8px, #8a4a22 9px, transparent 10px),
+    radial-gradient(circle at 68% 16%, #d4924a 0 7px, #8a4a22 8px, transparent 9px),
+    radial-gradient(ellipse at 50% 0%, rgba(255,210,140,.28), transparent 40%),
+    linear-gradient(180deg, #14324a 0%, #1a3a2c 36%, #1a2418 100%);
+  background-repeat:no-repeat;
+  background-size:auto, auto, auto, auto, auto, auto, 14px 28px, auto, auto, auto, auto;
+  background-position:center, center, center, center, center, center, 50% 22%, center, center, center, center;
+}
+.ort-thumb.is-weihnachten{
+  background-image:
+    radial-gradient(circle at 46% 28%, #f2d27a 0 3px, transparent 4px),
+    radial-gradient(circle at 54% 36%, #e25a4a 0 3px, transparent 4px),
+    radial-gradient(circle at 40% 40%, #f7f1e3 0 2px, transparent 3.5px),
+    radial-gradient(ellipse 46% 42% at 50% 58%, #1f6b3a 0 58%, transparent 60%),
+    radial-gradient(ellipse 28% 30% at 50% 40%, #2f8a4a 0 60%, transparent 62%),
+    linear-gradient(#6a3a1c, #6a3a1c),
+    radial-gradient(circle at 28% 72%, #c4783a 0 8px, #8a4a22 9px, transparent 10px),
+    radial-gradient(ellipse at 50% 0%, rgba(255,210,140,.35), transparent 50%),
+    linear-gradient(180deg, #16344c 0%, #1c4030 40%, #142016 100%);
+  background-size:auto, auto, auto, auto, auto, 12% 22%, auto, auto, auto;
+  background-position:center, center, center, center, center, 50% 72%, center, center, center;
+  background-repeat:no-repeat;
+}
+html[data-ort="weihnachten"] .tabletop{z-index:2}
+html[data-ort="weihnachten"] .ort-snow{
+  display:block;
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,.9) 0 1.4px, transparent 2.1px),
+    radial-gradient(circle, rgba(255,255,255,.55) 0 1.1px, transparent 1.8px);
+  background-size:86px 120px, 128px 150px;
+  animation:ort-snow 10s linear infinite;
+}
+@keyframes ort-snow{
+  from{background-position:0 -40px, 30px -20px}
+  to{background-position:18px 220px, -12px 260px}
+}
+
+@media (max-width:760px){
+  .ort-pop{
+    left:0;
+    right:0;
+    top:auto;
+    bottom:0;
+    width:auto;
+    max-height:78dvh;
+    border-radius:18px 18px 0 0;
+    padding-bottom:calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+  html[data-ort] .tabletop{inset:52px 10px 8px}
+  .ort-banner{top:6px;font-size:.74rem}
+  html[data-ort="halloween"] .ort-glow,
+  html[data-ort="nikolaus"] .ort-glow{height:46px}
+  .ort-grid{grid-template-columns:repeat(2, minmax(0, 1fr));gap:6px}
+  .ort-thumb{aspect-ratio:2/1}
+  .ort-name{font-size:.72rem}
+}
+@media (min-width:761px) and (max-width:1100px){
+  html[data-ort] .tabletop{inset:64px 16px 10px}
+}
+@media (max-height:640px){
+  html[data-ort] .tabletop{inset:36px 10px 6px}
+  .ort-banner{top:4px}
+}
+@media (max-width:560px){
+  #btn-ort{flex:none}
+  .topbar-actions{overflow-x:auto}
+}
