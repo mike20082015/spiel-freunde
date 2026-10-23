@@ -32,6 +32,7 @@
 .signup-card .pw-lead{font-size:1.28rem;line-height:1.45}
 .signup-card .pw-field{display:block;font-size:1.2rem;font-weight:700;margin:14px 0}
 .signup-card .pw-field input{display:block;width:100%;margin-top:6px;font:inherit;font-size:1.25rem;padding:.72em .85em;border-radius:12px;border:1.5px solid var(--line,#e3d6b8);background:#fff;color:var(--ink,#2a2420)}
+.signup-card .pw-field.pw-code input{font-size:2rem;font-weight:800;letter-spacing:.22em;text-align:center}
 .signup-card .btn{font-size:1.2rem;padding:.9em 1.3em}
 .signup-card form .btn{width:100%;margin-top:6px}
 .signup-card .pw-status{font-size:1.05rem;min-height:1.3em}
