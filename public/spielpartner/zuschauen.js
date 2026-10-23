@@ -320,8 +320,34 @@
     malen();
   }
 
+  function probeSpent() {
+    try {
+      var host = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : null);
+      var Acc = host && host.SpielpartnerAccount;
+      var store = null;
+      try { store = typeof localStorage !== 'undefined' ? localStorage : null; }
+      catch (err) { store = null; }
+      if (!Acc || !store || typeof Acc.probeUsed !== 'function') return false;
+      if (!Acc.probeUsed(store)) return false;
+      if (typeof Acc.readSession === 'function' && Acc.readSession(store, Date.now())) return false;
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
   function nachRunde(fn) {
     if (!state.aktiv) return;
+    if (probeSpent()) {
+      state.aktiv = false;
+      state.modus = 'laufen';
+      if (state.timer) { clearTimeout(state.timer); state.timer = null; }
+      if (state.dock) state.dock.hidden = true;
+      try {
+        if (typeof document !== 'undefined' && document.body) document.body.classList.remove('zuschauen-an');
+      } catch (err) { /* ohne Seite */ }
+      return;
+    }
     kommentar('Die Runde ist zu Ende. Gleich geht die nächste, damit du noch ein paar Beispiele siehst.', { still: true });
     takt().then(function () {
       if (state.aktiv && typeof fn === 'function') fn();

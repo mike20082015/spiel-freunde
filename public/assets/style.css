@@ -325,8 +325,9 @@ button.link-login:hover{color:var(--cream)}
   .nav-links{display:none}
   .nav-cta{gap:10px}
   .link-login{white-space:nowrap;font-size:.9rem}
-  .hero-ctas{order:3}
-  .lead{order:4}
+  .hero-ctas{order:4}
+  .lead{order:5}
+  .lead.lead-offer{order:3}
   .scene{order:5;margin:8px 0 18px}
   .band-in{grid-template-columns:1fr;gap:18px}
   .chars,.places{grid-template-columns:1fr;max-width:480px;margin:0 auto}
@@ -352,7 +353,8 @@ button.link-login:hover{color:var(--cream)}
   .you-tag{left:auto;right:3%;bottom:4%}.ava-you{width:26px;height:26px;font-size:.62rem}.chat-chip{font-size:.68rem;padding:3px 8px}
   .kicker{font-size:.72rem}
   .nav-in{height:auto;min-height:58px;gap:8px;padding-top:8px;padding-bottom:8px}
-  .nav-cta{gap:8px}
+  .nav-cta{flex:1 0 100%;justify-content:flex-end;gap:8px}
+  .nav-cta .btn{white-space:nowrap}
   .link-login{font-size:.82rem}
   .logo img{height:30px}
   .games{grid-template-columns:1fr 1fr;gap:12px}.game{padding:16px 14px 14px}.game h3{font-size:1.2rem}.game p{font-size:.84rem}.game .badge{font-size:.6rem;padding:2px 7px}.fl{width:22px;height:15px}.fl.ch{width:15px}

@@ -119,6 +119,8 @@ test('der Herzschlag läuft nur im sichtbaren Spiel-Tab und nennt den Namen nich
 
   const src = fs.readFileSync(path.join(__dirname, '../../public/spielpartner/entitlement.js'), 'utf8');
   assert.match(src, /api\.startPresence\(/);
+  assert.match(src, /\/event/);
+  assert.doesNotMatch(src.slice(src.indexOf('function trackEvent'), src.indexOf('function validEmail')), /Authorization/);
   assert.match(src, /visibilityState === 'hidden'/);
   assert.doesNotMatch(src, /—|–/);
 });

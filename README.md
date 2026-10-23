@@ -30,7 +30,7 @@ Statische Website für [spiel-freunde.com](https://spiel-freunde.com). Deutsch, 
 | `/german/` | Dieselbe Technik-Referenz auf Deutsch. Umschalter zur englischen Fassung, keine Spielübersicht |
 | `/<partner>/` | Kurze Seite zum Teilen, zum Beispiel `/michael/`. Film, ein Satz, Button auf den Partnerlink. Unbekannte Slugs bleiben auf der Fehlerseite und der Button führt auf die Startseite |
 
-Die großen Buttons auf der Startseite führen nach `/skat/`: „14 Tage kostenlos spielen“, „Jetzt Skat ausprobieren“, „Kostenlos testen“ und „Jetzt starten“. „Standard ansehen“ und „Premium ansehen“ führen nach `/spielpartner/#mitgliedschaft`. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. „Freunde einladen“ führt nach `/freunde/`. Einen Shop und Einzelkäufe von Spielen, Avataren, Orten, Kartendecks oder Tischdesigns gibt es nicht. Das steckt in Premium.
+Die großen Buttons auf der Startseite führen nach `/skat/`: „Jetzt eine Runde spielen“ und „Jetzt Skat ausprobieren“. Eine Runde geht sofort, die 14 Tage starten nach der Anmeldung per E-Mail. „Standard ansehen“ und „Premium ansehen“ führen nach `/spielpartner/#mitgliedschaft`. „Deine Spielpartner“ und die Leiste darunter führen nach `/spielpartner/`. „Freunde einladen“ führt nach `/freunde/`. Einen Shop und Einzelkäufe von Spielen, Avataren, Orten, Kartendecks oder Tischdesigns gibt es nicht. Das steckt in Premium.
 
 Veröffentlicht wird nur der Ordner `public/`. Tests, Werkzeuge und die Startskripte bleiben außerhalb.
 

@@ -75,6 +75,11 @@
   }
   function stepDelay() { return rush ? 70 : (DELAY[settings.speed] || DELAY.normal); }
   function roundsAllow() { return !window.SpielpartnerRounds || SpielpartnerRounds.gate(); }
+  function dealLabel(label) {
+    var rounds = window.SpielpartnerRounds;
+    if (rounds && typeof rounds.nextPlayLabel === 'function') return rounds.nextPlayLabel(label);
+    return label;
+  }
   function sortCards(cards) {
     return (cards || []).slice().sort(function (a, b) {
       if (a.suit !== b.suit) return b.suit - a.suit;
@@ -503,7 +508,8 @@
     var html = '<p class="intro-kicker">Blatt</p><h3 class="sum-title">' + esc(result.text || '') + '</h3>';
     html += '<p>Wir ' + (result.ns || 0) + ', sie ' + (result.ew || 0) + '. Stand ' + scoresOf()[0] + ' zu ' + scoresOf()[1] + '.</p>';
     if (quote) html += '<p class="sum-quote">' + esc(quote) + '</p>';
-    html += '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next">' + (result.passed ? 'Neu geben' : 'Nächstes Blatt') + '</button></div>';
+    var playing = result.passed ? 'Neu geben' : 'Nächstes Blatt';
+    html += '<div class="modal-actions"><button class="btn btn-gold" type="button" id="btn-next" data-play-label="' + playing + '">' + dealLabel(playing) + '</button></div>';
     $('summary').innerHTML = html;
     $('modal-summary').hidden = false;
     if (lernen()) zui().nachRunde(function () { var btn = $('btn-next'); if (btn) btn.click(); });

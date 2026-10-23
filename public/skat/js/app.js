@@ -677,6 +677,19 @@
     return !window.SpielpartnerRounds || SpielpartnerRounds.gate();
   }
 
+  function dealLabel(label) {
+    const rounds = window.SpielpartnerRounds;
+    if (rounds && typeof rounds.nextPlayLabel === 'function') return rounds.nextPlayLabel(label);
+    return label;
+  }
+
+  function probeStillFree() {
+    const Acc = window.SpielpartnerAccount;
+    if (!Acc || typeof Acc.probeStillFree !== 'function') return false;
+    try { return Acc.probeStillFree() === true; }
+    catch (err) { return false; }
+  }
+
   function paintFreeRounds() {
     if (window.SpielpartnerRounds) SpielpartnerRounds.paint($('intro-rounds'));
   }
@@ -856,9 +869,15 @@
   }
 
   async function finishGame() {
-    noteFinishedRound();
     const st = S.st;
     const r = st.result;
+    if (r && r.passedIn && probeStillFree()) {
+      sys('Alle haben gepasst. Es wird neu gegeben, Deine kostenlose Runde zählt noch.');
+      talk(randomAI(), 'passedIn', 0.9, true);
+      newGame();
+      return;
+    }
+    noteFinishedRound();
     await delay(350);
     const rec = match.record(st);
     match.rows.push(rowFor(st, r));
@@ -1032,7 +1051,9 @@
     html += q;
     const done = sessionWinner != null;
     if (done) html += '<p class="sum-target">' + (sessionWinner === 0 ? 'Du hast' : NAMES[sessionWinner] + ' hat') + ' das Ziel von ' + targetValue() + ' Punkten erreicht!</p>';
-    html += '<div class="modal-actions"><button class="btn btn-ghost-dark" data-a="last">Letzten Stich ansehen</button><button class="btn btn-gold" data-a="next">' + (done ? 'Zur Siegerehrung' : 'Nächstes Spiel') + '</button></div>';
+    const playing = done ? 'Zur Siegerehrung' : 'Nächstes Spiel';
+    const nextLabel = done ? playing : dealLabel(playing);
+    html += '<div class="modal-actions"><button class="btn btn-ghost-dark" data-a="last">Letzten Stich ansehen</button><button class="btn btn-gold" data-a="next" data-play-label="' + playing + '">' + nextLabel + '</button></div>';
     $('summary').innerHTML = html;
     if (r.passedIn) $('summary').querySelector('[data-a=last]').remove();
     showModal('modal-summary');

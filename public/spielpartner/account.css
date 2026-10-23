@@ -3,7 +3,7 @@
 #modal-signup{
   position:fixed;
   inset:0;
-  z-index:80;
+  z-index:220;
   display:grid;
   place-items:center;
   padding:18px;
@@ -20,6 +20,10 @@
   padding:24px 26px;
   box-shadow:0 0 0 1px rgba(176,133,50,.5),0 0 0 7px rgba(58,36,20,.7),0 40px 80px -20px rgba(0,0,0,.85);
 }
+body.sf-signup-offen #zuschauen-dock{display:none !important}
+.signup-card .pw-horst{display:flex;align-items:center;gap:14px;margin:0 0 14px}
+.signup-card .pw-horst img{width:72px;height:72px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 3px #e9c977}
+.signup-card .pw-horst-line{margin:0;font-family:Georgia,serif;font-size:1.15rem;line-height:1.35;color:#3a2414}
 .signup-card .btn-ghost-dark{
   background:transparent;
   border:1.5px solid rgba(42,36,32,.3);
@@ -52,6 +56,8 @@
 .anmelden-card{width:min(640px,100%);background:linear-gradient(170deg,#fffaf0,#efe5cf);color:#2a2420;border-radius:20px;padding:28px 26px;box-shadow:0 0 0 1px rgba(176,133,50,.5),0 0 0 7px rgba(58,36,20,.7),0 40px 80px -20px rgba(0,0,0,.85)}
 .anmelden-card .btn{margin-top:8px}
 @media (max-width:560px){
+  .signup-card .pw-horst img{width:64px;height:64px}
+  .signup-card .pw-horst-line{font-size:1.02rem}
   .signup-card h3{font-size:1.75rem}
   .signup-card .pw-lead,.signup-card .pw-field,.signup-card .pw-field input,.signup-card .btn{font-size:1.12rem}
   .pw-spam{font-size:1rem;padding:12px 12px}

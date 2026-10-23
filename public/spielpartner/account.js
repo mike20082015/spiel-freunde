@@ -1,7 +1,9 @@
 /*
  * Spielerkonto im Browser.
- * Eine Proberunde ohne Konto. Danach E-Mail und Spielername, der Server
- * schickt einen Anmeldelink. Der Bearer-Token liegt in localStorage, kein Cookie.
+ * Eine Proberunde ohne Konto. Danach reicht die E-Mail, der Server
+ * schickt einen Anmeldecode und einen Anmeldelink. Der Name am Tisch
+ * kommt aus dem Teil vor dem @, bis er später geändert werden kann.
+ * Der Bearer-Token liegt in localStorage, kein Cookie.
  * Test und Tageslimit kommen angemeldet aus GET /me. Ist die API nicht
  * erreichbar, bleibt der Tisch offen und wir schreiben eine Zeile in die Konsole.
  *
@@ -28,6 +30,7 @@
   var FAILOPEN_KEY = 'sf-failopen';
   var FAILOPEN_MS = 12 * 60 * 60 * 1000;
   var booted = false;
+  var shownAt = 0;
 
   function entitlement() {
     if (typeof window !== 'undefined' && window.SpielpartnerEntitlement) return window.SpielpartnerEntitlement;
@@ -119,6 +122,22 @@
   function markProbe(storage) {
     try { storage.setItem(PROBE_KEY, '1'); }
     catch (err) { /* privat */ }
+  }
+
+  function probeStillFree(storage, now) {
+    var store = storageOf(storage);
+    if (!store) return false;
+    if (readSession(store, nowOf(now))) return false;
+    return !probeUsed(store);
+  }
+
+  function nextPlayLabel(label, storage, now) {
+    var playing = label ? String(label) : 'Nächstes Spiel';
+    var store = storageOf(storage);
+    if (!store) return playing;
+    if (readSession(store, nowOf(now))) return playing;
+    if (probeUsed(store)) return NEXT_LOCKED;
+    return playing;
   }
 
   function markFailOpen(storage, now) {
@@ -258,7 +277,7 @@
   }
 
   function messageFor(code) {
-    if (code === 'invalid_request') return 'Prüfe E-Mail und Spielername.';
+    if (code === 'invalid_request') return 'Prüfe Deine E-Mail.';
     if (code === 'origin_not_allowed') return 'Die Anmeldung ist von hier gerade nicht erlaubt.';
     if (code === 'rate_limited') return 'Das war zu oft hintereinander. Warte einen Moment.';
     if (code === 'mail_failed' || code === 'mail_unavailable') return 'Die Mail ist gerade nicht rausgegangen. Versuch es noch einmal.';
@@ -275,14 +294,25 @@
     return 'Das hat gerade nicht geklappt. Du kannst weiter spielen.';
   }
 
+  function nameFromEmail(email) {
+    var local = String(email || '').split('@')[0].replace(/[._+\-]+/g, ' ');
+    var name = validName(local);
+    if (!name) return 'Freund';
+    return name.replace(/\p{L}+/gu, function (word) {
+      return word.charAt(0).toLocaleUpperCase('de') + word.slice(1);
+    });
+  }
+
   function signupBody(storage, input, now) {
     var email = validEmail(input && input.email);
-    var name = validName(input && input.name);
-    if (!email || !name) {
+    var rawName = input && input.name;
+    var name = validName(rawName);
+    if (!email || (rawName != null && String(rawName).trim() !== '' && !name)) {
       var error = new Error('invalid_request');
       error.code = 'invalid_request';
       throw error;
     }
+    if (!name) name = nameFromEmail(email);
     var body = { email: email, name: name };
     var ref = partnerRef(storage, now);
     if (ref) body.ref = ref;
@@ -517,7 +547,9 @@
     if (wall && typeof wall.open === 'function') wall.open();
   }
 
-  var MAIL_HINT = 'Keine E-Mail bekommen? Bitte schau auch im Spam- oder Werbe-Ordner nach, bei Gmail, GMX, web.de und T-Online, und markiere sie als „Kein Spam“.';
+  var HORST_LINE = 'Schöne Runde! Melde Dich an, dann spielst Du 14 Tage kostenlos weiter, und Dein Punktestand bleibt.';
+  var NEXT_LOCKED = 'Anmelden und weiterspielen';
+  var MAIL_HINT = 'Falls die Mail fehlt, schau kurz in den Spam-Ordner.';
 
   function mailHintMarkup() {
     return '<p class="pw-spam">' + MAIL_HINT + '</p>';
@@ -535,8 +567,16 @@
       '<span>Sichere Anmeldung per Link oder Code. Ohne Passwort, es wird keins gespeichert.</span></p>';
   }
 
+  function horstMarkup() {
+    return '<div class="pw-horst">' +
+      '<img src="/media/spielpartner/horst.jpg" alt="Horst" width="72" height="72">' +
+      '<p class="pw-horst-line">' + escapeText(HORST_LINE) + '</p>' +
+      '</div>';
+  }
+
   function signupMarkup() {
-    return '<p class="pw-kicker">Eine Runde hast Du</p>' +
+    return horstMarkup() +
+      '<p class="pw-kicker">Eine Runde hast Du</p>' +
       '<h3 id="signup-title">Setz Dich richtig dazu</h3>' +
       '<p class="pw-lead">Wir schicken Dir einen Anmeldecode und einen Anmeldelink, kein Passwort nötig.</p>' +
       trustMarkup() +
@@ -544,10 +584,7 @@
       '<label class="pw-field">E-Mail' +
       '<input data-email type="email" autocomplete="email" inputmode="email" maxlength="200" required placeholder="du@example.com">' +
       '</label>' +
-      '<label class="pw-field">Spielername' +
-      '<input data-name type="text" autocomplete="nickname" maxlength="24" required placeholder="Wie Du am Tisch heißt">' +
-      '</label>' +
-      '<button type="submit" class="btn btn-gold">Link schicken</button>' +
+      '<button type="submit" class="btn btn-gold">Code schicken</button>' +
       '<p class="pw-status" data-status role="status"></p>' +
       '</form>' +
       mailHintMarkup() +
@@ -610,7 +647,7 @@
     return '<p class="pw-kicker">Postfach</p>' +
       '<h3 id="signup-title">Der Link ist unterwegs</h3>' +
       '<p class="pw-lead">Schau in Dein Postfach' + (email ? ' bei ' + escapeText(email) : '') +
-      '. Dort sind Dein Anmeldecode und ein Anmeldelink.</p>' +
+      '. Gib den Code hier ein. Der Link in der Mail geht auch.</p>' +
       trustMarkup() +
       codeMarkup() +
       mailHintMarkup() +
@@ -684,9 +721,86 @@
       '<div class="pw signup-card" id="signup-root"></div></div>';
     document.body.appendChild(modal);
     modal.addEventListener('click', function (event) {
-      if (event.target === modal) modal.hidden = true;
+      if (event.target === modal) hideSignup(modal);
     });
     return modal;
+  }
+
+  function hideSignup(modal) {
+    if (!modal) return;
+    modal.hidden = true;
+    paintSignupOpen(false);
+  }
+
+  function paintSignupOpen(open) {
+    if (typeof document === 'undefined' || !document.body) return;
+    if (open) {
+      document.body.classList.add('sf-signup-offen');
+      var dock = document.getElementById('zuschauen-dock');
+      if (dock) dock.hidden = true;
+      document.body.classList.remove('zuschauen-an');
+    } else {
+      document.body.classList.remove('sf-signup-offen');
+    }
+  }
+
+  function track(type, storage) {
+    var Ent = entitlement();
+    if (!Ent || typeof Ent.trackEvent !== 'function') return;
+    var fetchFn = null;
+    var path = '/';
+    try {
+      var win = typeof window !== 'undefined' ? window : null;
+      if (win && win.fetch) fetchFn = win.fetch.bind(win);
+      if (win && win.location && win.location.pathname) path = win.location.pathname;
+      else if (typeof location !== 'undefined' && location.pathname) path = location.pathname;
+    } catch (err) { /* ohne Fenster */ }
+    try { Ent.trackEvent(storage || storageOf(null), type, { fetch: fetchFn, path: path }); }
+    catch (err) { /* Netz */ }
+  }
+
+  function speakHorst(modal) {
+    if (!modal || !modal.querySelector || !modal.querySelector('.pw-horst')) return;
+    var Stimmen = null;
+    try { Stimmen = typeof window !== 'undefined' ? window.SpielpartnerStimmen : null; }
+    catch (err) { Stimmen = null; }
+    if (!Stimmen || typeof Stimmen.speak !== 'function') return;
+    var pending;
+    try { pending = Stimmen.speak('horst', HORST_LINE); }
+    catch (err) { return; }
+    if (!pending || typeof pending.then !== 'function') return;
+    pending.then(function (url) {
+      if (!url) return;
+      try {
+        var AudioRef = typeof Audio === 'function' ? Audio : null;
+        if (!AudioRef && typeof window !== 'undefined') AudioRef = window.Audio;
+        if (typeof AudioRef !== 'function') return;
+        var audio = new AudioRef(url);
+        var played = audio.play();
+        if (played && typeof played.catch === 'function') played.catch(function () {});
+      } catch (err) { /* der Text bleibt stehen */ }
+    }).catch(function () {});
+  }
+
+  function nextControl() {
+    if (typeof document === 'undefined' || !document.querySelectorAll) return null;
+    var list = document.querySelectorAll('[data-a="next"], #btn-next, [data-next]');
+    for (var i = 0; i < list.length; i++) {
+      var node = list[i];
+      if (node.closest && node.closest('[hidden]')) continue;
+      return node;
+    }
+    return null;
+  }
+
+  function continueAtTable() {
+    var button = nextControl();
+    if (!button) return false;
+    var playing = button.getAttribute('data-play-label');
+    if (playing) button.textContent = playing;
+    try { button.click(); }
+    catch (err) { return false; }
+    return true;
   }
 
   function bindSignup(modal, storage, fetcher) {
@@ -695,28 +809,33 @@
     root.innerHTML = signupMarkup();
     var form = root.querySelector('[data-signup]');
     var close = root.querySelector('[data-signup-close]');
-    if (close) close.addEventListener('click', function () { modal.hidden = true; });
+    if (close) close.addEventListener('click', function () { hideSignup(modal); });
     if (!form) return;
     form.addEventListener('submit', function (event) {
       event.preventDefault();
       var status = root.querySelector('[data-status]');
       var email = form.querySelector('[data-email]').value;
-      var name = form.querySelector('[data-name]').value;
       var button = form.querySelector('button[type="submit"]');
       if (button) button.disabled = true;
-      requestLink(storage, { email: email, name: name }, Date.now(), fetcher).then(function (result) {
+      requestLink(storage, { email: email }, Date.now(), fetcher).then(function (result) {
         root.innerHTML = sentMarkup(result.email, { standalone: standaloneNow() });
         var later = root.querySelector('[data-signup-close]');
-        if (later) later.addEventListener('click', function () { modal.hidden = true; });
+        if (later) later.addEventListener('click', function () { hideSignup(modal); });
         bindResend(root, storage, fetcher, { email: result.email, name: result.name });
         var welcome = function (session) {
           var name = session && session.player ? session.player.displayName : '';
+          var atTable = !!nextControl();
           root.innerHTML = '<p class="pw-kicker">Angemeldet</p>' +
             '<h3 id="signup-title">Willkommen</h3>' +
-            '<p class="pw-lead">' + escapeText(welcomeLine(name)) + '</p>' +
-            '<div class="pw-actions"><button type="button" class="btn btn-ghost-dark" data-signup-close>Weiter</button></div>';
+            '<p class="pw-lead">' + escapeText(welcomeLine(name)) +
+            (atTable ? ' Dein Punktestand bleibt, Du spielst an diesem Tisch weiter.' : '') + '</p>' +
+            '<div class="pw-actions"><button type="button" class="btn btn-ghost-dark" data-signup-close>' +
+            (atTable ? 'Weiter spielen' : 'Weiter') + '</button></div>';
           var next = root.querySelector('[data-signup-close]');
-          if (next) next.addEventListener('click', function () { modal.hidden = true; });
+          if (next) next.addEventListener('click', function () {
+            hideSignup(modal);
+            continueAtTable();
+          });
           mountHeader(storage);
         };
         bindCode(root, storage, fetcher, result.email, welcome);
@@ -733,11 +852,18 @@
     if (!modal) return;
     modal.hidden = false;
     if (modal.removeAttribute) modal.removeAttribute('hidden');
-    modal.style.display = 'grid';
-    var card = modal.querySelector('.modal-card');
+    if (modal.style) modal.style.display = 'grid';
+    paintSignupOpen(true);
+    var card = modal.querySelector && modal.querySelector('.modal-card');
     if (card && typeof card.scrollIntoView === 'function') {
       try { card.scrollIntoView({ block: 'center' }); } catch (err) { /* altes Handy */ }
     }
+    var stamp = Date.now();
+    if (stamp - shownAt > 50) {
+      shownAt = stamp;
+      track('signup_prompt_shown', storageOf(null));
+    }
+    speakHorst(modal);
   }
 
   function openSignup(storage, fetcher) {
@@ -837,6 +963,7 @@
     }
     if (!probeUsed(storage)) {
       markProbe(storage);
+      track('trial_finished', storage);
       openSignup(storage);
       return { proberunde: true, signup: true };
     }
@@ -866,7 +993,7 @@
       }
     }
     if (!session) {
-      if (!probeUsed(storage)) return 'Eine Proberunde ohne Anmeldung.';
+      if (!probeUsed(storage)) return 'Diese eine Runde geht ohne Anmeldung. Die 14 Tage starten, sobald Du Dich anmeldest.';
       return 'Melde Dich an, dann laufen 14 Testtage.';
     }
     return '';
@@ -1094,6 +1221,8 @@
     acceptLink: acceptLink,
     messageFor: messageFor,
     probeUsed: probeUsed,
+    probeStillFree: probeStillFree,
+    nextPlayLabel: nextPlayLabel,
     boot: boot,
     mountHeader: mountHeader
   };

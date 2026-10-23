@@ -710,6 +710,30 @@
     return { stop: function () { if (timer) clearInterval(timer); timer = null; } };
   }
 
+  var EVENT_TYPES = { trial_finished: true, signup_prompt_shown: true };
+
+  function trackEvent(storage, type, env) {
+    if (!EVENT_TYPES[type]) return;
+    var store = storage;
+    var fetchFn = env && env.fetch;
+    var base = (env && env.base) || BILLING_API_BASE;
+    var path = env && env.path;
+    if (!path && env && env.location && env.location.pathname) path = env.location.pathname;
+    if (!store || !fetchFn || !base) return;
+    var id = clientId(store);
+    if (!id) return;
+    var body = { clientId: id, type: type, game: gameFromPath(path || '/') };
+    try {
+      var pending = fetchFn(base + '/event', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+        keepalive: true
+      });
+      if (pending && typeof pending.catch === 'function') pending.catch(function () {});
+    } catch (err) { /* Netz */ }
+  }
+
   function validEmail(value) {
     var email = String(value || '').trim();
     if (!email) return '';
@@ -886,6 +910,7 @@
     gameFromPath: gameFromPath,
     presenceBody: presenceBody,
     startPresence: startPresence,
+    trackEvent: trackEvent,
     validEmail: validEmail,
     checkoutBody: checkoutBody,
     startCheckout: startCheckout,
