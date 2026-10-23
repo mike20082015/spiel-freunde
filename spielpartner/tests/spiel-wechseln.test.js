@@ -22,7 +22,7 @@ test('jeder Tisch hat Spiel wechseln und die Startseite landet bei den Spielen',
   assert.match(home, /src="\/assets\/spiel-wechseln\.js"/);
   assert.match(home, /__sfReleaseSpiele/);
   assert.match(css, /#spiele\{scroll-margin-top:86px\}/);
-  assert.match(sw, /sf-pwa-v15/);
+  assert.match(sw, /sf-pwa-v16/);
   assert.match(home, /id="btn-anmelden"/);
   GAMES.forEach((game) => {
     const html = fs.readFileSync(path.join(root, 'public', game, 'index.html'), 'utf8');

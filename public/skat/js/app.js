@@ -447,8 +447,13 @@
     } else if (st.phase === 'done') {
       main = 'Spiel vorbei.';
     }
+    const box = $('st-chips');
     $('st-main').innerHTML = main;
-    $('st-chips').innerHTML = chips.join('');
+    if (st.phase === 'done') box.classList.add('is-held');
+    else {
+      box.classList.remove('is-held');
+      box.innerHTML = chips.join('');
+    }
     $('btn-last').disabled = !(st.lastTrick || S.prevLastTrick);
   }
 

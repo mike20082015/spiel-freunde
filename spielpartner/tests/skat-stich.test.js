@@ -41,6 +41,18 @@ test('ein fertiger Stich ruht und wird dann eingesammelt', () => {
   assert.match(play, /motionReduced\(\)/);
 });
 
+test('am Spielende bleibt die Chipzeile in der Höhe', () => {
+  const status = app.slice(app.indexOf('function renderStatus'), app.indexOf('function effName'));
+  assert.match(status, /if \(st\.phase === 'done'\) box\.classList\.add\('is-held'\)/);
+  assert.match(status, /box\.classList\.remove\('is-held'\)/);
+  assert.match(status, /box\.innerHTML = chips\.join\(''\)/);
+  assert.doesNotMatch(status, /\$\('st-chips'\)\.innerHTML = chips\.join\(''\)/);
+  const done = status.indexOf("box.classList.add('is-held')");
+  const write = status.indexOf('box.innerHTML = chips.join');
+  assert.ok(done > 0 && write > done);
+  assert.match(css, /\.st-chips\.is-held\{visibility:hidden\}/);
+});
+
 test('der Einflug startet sichtbar und ohne Wiederholung', () => {
   assert.match(css, /\.trick \.card\.arriving\.p0\{animation:in0 \.36s ease-out\}/);
   assert.match(css, /\.trick \.card\.arriving\.p1\{animation:in1 \.36s ease-out\}/);
