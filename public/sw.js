@@ -5,7 +5,7 @@
    hinter einer alten Fassung hängen bleibt. */
 importScripts('/assets/pwa-policy.js');
 
-var VERSION = 'sf-pwa-v16';
+var VERSION = 'sf-pwa-v17';
 var SHELL = VERSION + '-shell';
 var PAGES = VERSION + '-pages';
 var FILES = VERSION + '-files';
