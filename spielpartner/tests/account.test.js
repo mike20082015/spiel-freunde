@@ -484,6 +484,7 @@ test('die Anmeldekarte meldet sich, ein kaputtes Netz bleibt still', () => {
   global.localStorage = storage;
   try {
     assert.equal(Account.openSignup(storage), true);
+    assert.equal(Account.openSignup(storage), true);
     assert.equal(modal.hidden, false);
     assert.equal(calls.length, 1);
     assert.equal(calls[0].body.type, 'signup_prompt_shown');

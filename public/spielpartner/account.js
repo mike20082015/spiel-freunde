@@ -30,6 +30,7 @@
   var FAILOPEN_KEY = 'sf-failopen';
   var FAILOPEN_MS = 12 * 60 * 60 * 1000;
   var booted = false;
+  var shownAt = 0;
 
   function entitlement() {
     if (typeof window !== 'undefined' && window.SpielpartnerEntitlement) return window.SpielpartnerEntitlement;
@@ -857,7 +858,11 @@
     if (card && typeof card.scrollIntoView === 'function') {
       try { card.scrollIntoView({ block: 'center' }); } catch (err) { /* altes Handy */ }
     }
-    track('signup_prompt_shown', storageOf(null));
+    var stamp = Date.now();
+    if (stamp - shownAt > 50) {
+      shownAt = stamp;
+      track('signup_prompt_shown', storageOf(null));
+    }
     speakHorst(modal);
   }
 
