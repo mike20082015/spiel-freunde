@@ -11,6 +11,12 @@
    (dvh) plus Safe Area, und eine Hand, deren Rang und Farbe ohne Hover
    lesbar und mit dem Finger treffbar sind. Gegner zeigen weiter nur Rückseiten. */
 
+.topbar .tswitch{flex:none;border-color:rgba(233,201,119,.7);color:#e9c977}
+@media (max-width:560px){
+  .topbar-actions{overflow-x:auto;flex-wrap:nowrap}
+  .topbar .tswitch{font-size:.75rem;padding:6px 8px}
+}
+
 .app{
   height:100vh;
   height:100dvh;

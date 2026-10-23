@@ -132,7 +132,7 @@ test('jedes Spiel bindet die Ortswahl ein', () => {
   assert.match(tisch, /href="\/assets\/orte\.css"/);
   assert.match(tisch, /src="\/assets\/orte\.js"/);
   const sw = fs.readFileSync(path.join(root, 'public/sw.js'), 'utf8');
-  assert.match(sw, /sf-pwa-v11/);
+  assert.match(sw, /sf-pwa-v12/);
 });
 
 const INSIDE = '2026-10-30T18:00:00+07:00';

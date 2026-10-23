@@ -40,7 +40,17 @@
 <meta name="apple-mobile-web-app-title" content="Spiel-Freunde">
 <link rel="stylesheet" href="/assets/pwa.css">
 <script>(function(){try{if(matchMedia('(display-mode: standalone)').matches||navigator.standalone)document.documentElement.classList.add('sf-standalone')}catch(e){}})();</script>
+<script>
+(function () {
+  if (location.hash !== '#spiele') return;
+  try { history.scrollRestoration = 'manual'; } catch (e) {}
+  function pin() { window.scrollTo(0, 0); }
+  window.addEventListener('scroll', pin, { passive: true });
+  window.__sfReleaseSpiele = function () { window.removeEventListener('scroll', pin); };
+})();
+</script>
 <script src="/assets/pwa.js" defer></script>
+<script src="/assets/spiel-wechseln.js" defer></script>
 </head>
 <body>
 
