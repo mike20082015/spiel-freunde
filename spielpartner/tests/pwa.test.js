@@ -102,3 +102,26 @@ test('der Service Worker fasst API und Anmeldung nicht an', () => {
   assert.equal(kind(ORIGIN + '/skat/assets/voice/horst.mp3'), 'bypass');
   assert.equal(kind(ORIGIN + '/spielpartner/avatare.json'), 'bypass');
 });
+
+test('die Werbebanner sind PNG und keine Seite', () => {
+  const names = ['spielfreunde-88x31.png', 'spielfreunde-468x60.png', 'spielfreunde-300x250.png'];
+  const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  names.forEach((name) => {
+    const buf = fs.readFileSync(path.join(root, 'public/werbung', name));
+    assert.ok(buf.subarray(0, 8).equals(png), name);
+    assert.equal(policy.classify(ORIGIN + '/werbung/' + name, {
+      origin: ORIGIN,
+      destination: 'image',
+      accept: 'image/avif,image/webp,image/png,image/*,*/*;q=0.8'
+    }), 'cache-first', name);
+  });
+  const spec = fs.readFileSync(path.join(root, '.do/app.yaml'), 'utf8');
+  assert.match(spec, /error_document:\s*404\.html/);
+  assert.doesNotMatch(spec, /^\s*catchall_document\s*:/m);
+  const sw = fs.readFileSync(path.join(root, 'public/sw.js'), 'utf8');
+  assert.match(sw, /sf-pwa-v15/);
+  assert.doesNotMatch(sw, /\/werbung\//);
+  htmlFiles(path.join(root, 'public'), []).forEach((file) => {
+    assert.doesNotMatch(fs.readFileSync(file, 'utf8'), /\/werbung\//, path.relative(root, file));
+  });
+});
