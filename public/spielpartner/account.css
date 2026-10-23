@@ -23,7 +23,7 @@
 body.sf-signup-offen #zuschauen-dock{display:none !important}
 .signup-card .pw-horst{display:flex;align-items:center;gap:14px;margin:0 0 14px}
 .signup-card .pw-horst img{width:72px;height:72px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 3px #e9c977}
-.signup-card .pw-horst-line{margin:0;font-family:Georgia,serif;font-size:1.15rem;line-height:1.35;color:#3a2414}
+.signup-card .pw-horst-line{margin:0;font-family:var(--serif, Fraunces, Georgia, serif);font-style:italic;font-weight:500;font-size:1.15rem;line-height:1.35;color:#3a2414}
 .signup-card .btn-ghost-dark{
   background:transparent;
   border:1.5px solid rgba(42,36,32,.3);
