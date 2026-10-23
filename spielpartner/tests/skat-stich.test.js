@@ -50,11 +50,15 @@ test('am Spielende bleibt die Chipzeile und der letzte Stich sichtbar', () => {
   assert.match(app, /const RESULT_MS = 2000/);
   assert.match(app, /S\.showResult = true/);
   assert.match(app, /await hold\(RESULT_MS\)/);
+  const play = app.slice(app.indexOf('async function doPlay'), app.indexOf('function team'));
+  const commit = play.indexOf('commitScore()');
+  const resultWait = play.indexOf('await hold(RESULT_MS)');
+  assert.ok(commit > 0 && commit < resultWait, 'die Punkteliste steht, bevor das Ergebnis zwei Sekunden liegt');
   const active = app.slice(app.indexOf('function isActive'), app.indexOf('function renderCenter'));
   assert.match(active, /st\.phase === 'done'\) return false/);
   assert.match(app, /if \(info\.gameOver\) S\.ringHold = null/);
   const finish = app.slice(app.indexOf('async function finishGame'), app.indexOf('function endTalk'));
-  const score = finish.indexOf('renderScore()');
+  const score = finish.indexOf('commitScore()');
   const signup = finish.indexOf('noteFinishedRound()');
   assert.ok(score > 0 && signup > score, 'die Punkteliste steht, bevor die Anmeldekarte kommt');
   assert.match(css, /\.st-chips\.is-held\{visibility:hidden\}/);

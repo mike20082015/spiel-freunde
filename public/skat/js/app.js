@@ -437,7 +437,10 @@
       chips.push('<span class="chip">Reizwert <b>' + st.bid + '</b></span>');
       if (st.game.type !== 'null') {
         const d = st.declarer;
-        chips.push('<span class="chip">Augen <b>' + (d === 0 ? 'Du' : NAMES[d]) + ' ' + trickPointsFor([d]) + '</b> · Gegner ' + trickPointsFor([0, 1, 2].filter((x) => x !== d)) + '</span>');
+        const fertig = st.phase === 'done' && st.result;
+        const solo = fertig ? st.result.declarerPoints : trickPointsFor([d]);
+        const gegner = fertig ? st.result.defenderPoints : trickPointsFor([0, 1, 2].filter((x) => x !== d));
+        chips.push('<span class="chip">Augen <b>' + (d === 0 ? 'Du' : NAMES[d]) + ' ' + solo + '</b> · Gegner ' + gegner + '</span>');
       } else chips.push('<span class="chip">Stiche Alleinspieler <b>' + st.tricks.filter((t) => t.winner === st.declarer).length + '</b></span>');
     }
     chips.push('<span class="chip">Stich <b>' + Math.min(10, st.tricks.length + (st.trick.length ? 1 : 0) || 1) + '/10</b></span>');
@@ -770,7 +773,7 @@
     if (!roundGate()) return;
     S.gen++;
     S.prevLastTrick = S.st && S.st.lastTrick ? { trick: S.st.lastTrick, game: S.st.game } : S.prevLastTrick;
-    S.displayTrick = []; S.collectTo = null; S.winIdx = -1; S.ringHold = null; S.trickFlight = null; S.showResult = false; S.selected = []; S.fresh = []; S.busy = false; S.declareSel = null;
+    S.displayTrick = []; S.collectTo = null; S.winIdx = -1; S.ringHold = null; S.trickFlight = null; S.showResult = false; S.scored = false; S.selected = []; S.fresh = []; S.busy = false; S.declareSel = null;
     hideModal('modal-summary');
     hidePanel();
     match.rules.mode = settings.mode;
@@ -920,6 +923,7 @@
     if (info.gameOver) {
       S.showResult = true;
       S.ringHold = null;
+      commitScore();
       render();
       await hold(RESULT_MS);
     }
@@ -959,6 +963,18 @@
     }
   }
 
+  function commitScore() {
+    const st = S.st;
+    const r = st && st.result;
+    if (!r || S.scored) return null;
+    S.scored = true;
+    const rec = match.record(st);
+    match.rows.push(rowFor(st, r));
+    saveMatch();
+    renderScore();
+    return rec;
+  }
+
   async function finishGame() {
     const st = S.st;
     const r = st.result;
@@ -968,10 +984,7 @@
       newGame();
       return;
     }
-    const rec = match.record(st);
-    match.rows.push(rowFor(st, r));
-    saveMatch();
-    renderScore();
+    const rec = commitScore() || {};
     S.lastLine = null;
     endTalk(r);
     const quote = S.lastLine;
